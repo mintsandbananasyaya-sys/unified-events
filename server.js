@@ -11,7 +11,7 @@ const CLIENT_SECRET = "r7gPl_0HqiMqXgbB2nB3ie7csPuR6tw5";
 
 // CHANGE THIS when deploying to Render
 const REDIRECT_URI =
-  process.env.REDIRECT_URI || "http://localhost:3000/auth/discord/callback";
+  process.env.REDIRECT_URI || "https://unified-events.onrender.com/auth/discord/callback";
 
 // ---------------- MIDDLEWARE ----------------
 
