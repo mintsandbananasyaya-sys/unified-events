@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -98,4 +99,106 @@ async function saveSettings() {
 </script>
 
 </body>
+=======
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bot Dashboard</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #111;
+      color: white;
+      display: flex;
+      justify-content: center;
+      padding: 40px;
+    }
+
+    .box {
+      background: #1c1c1c;
+      padding: 20px;
+      border-radius: 10px;
+      width: 400px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: none;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #4f46e5;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #3730a3;
+    }
+
+    .title {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+
+    .label {
+      font-size: 12px;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+
+<div class="box">
+
+  <div class="title">Bot Dashboard ⚙️</div>
+
+  <div class="label">Staff Channel ID</div>
+  <input id="staffChannelId" placeholder="Paste channel ID">
+
+  <div class="label">Staff Role ID</div>
+  <input id="staffRoleId" placeholder="Paste role ID">
+
+  <div class="label">Enable Forms System</div>
+  <input id="formsEnabled" placeholder="true / false">
+
+  <div class="label">Enable Ticket System</div>
+  <input id="ticketsEnabled" placeholder="true / false">
+
+  <button onclick="saveSettings()">Save Settings</button>
+
+</div>
+
+<script>
+async function saveSettings() {
+  const data = {
+    staffChannelId: document.getElementById("staffChannelId").value,
+    staffRoleId: document.getElementById("staffRoleId").value,
+    formsEnabled: document.getElementById("formsEnabled").value === "true",
+    ticketsEnabled: document.getElementById("ticketsEnabled").value === "true"
+  };
+
+  const res = await fetch("/api/settings", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  });
+
+  const result = await res.json();
+
+  alert("Saved ✔");
+  console.log(result);
+}
+</script>
+
+</body>
+>>>>>>> 9d3c923b9a64bb0393372fd5ef35f9939242526e
 </html>
