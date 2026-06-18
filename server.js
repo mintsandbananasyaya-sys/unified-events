@@ -1,4 +1,5 @@
 require("dotenv").config();
+require("./bot.js");
 
 const express = require("express");
 const session = require("express-session");
@@ -133,22 +134,23 @@ app.get("/auth/discord/callback", async (req, res) => {
 // =====================
 // API - GET SETTINGS
 // =====================
-app.get("/api/settings", (req, res) => {
-  res.json(settings);
+app.get("/api/settings/:guildId", (req, res) => {
+  const guildId = req.params.guildId;
+
+  res.json(settings[guildId] || {});
 });
 
 // =====================
 // API - SAVE SETTINGS
 // =====================
 app.post("/api/settings", (req, res) => {
-  settings = {
-    ...settings,
-    ...req.body,
-  };
+  const { guildId, ...data } = req.body;
+
+  settings[guildId] = data;
 
   res.json({
     ok: true,
-    settings,
+    settings: settings[guildId]
   });
 });
 
