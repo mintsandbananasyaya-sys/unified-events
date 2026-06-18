@@ -52,6 +52,11 @@ client.once("ready", () => {
 // MESSAGE HANDLER
 // =====================
 client.on("messageCreate", async (message) => {
+  console.log("MSG RECEIVED:", {
+  content: message.content,
+  dm: message.channel.isDMBased(),
+  user: message.author.id
+});
   if (message.author.bot) return;
 
   const userId = message.author.id;
@@ -60,6 +65,7 @@ client.on("messageCreate", async (message) => {
   // DM → STAFF FORWARD
   // =====================
   if (message.channel.isDMBased()) {
+    console.log("STAFF CHANNEL ID:", settings.staffChannelId);
     try {
       if (!tickets.has(userId)) {
         tickets.set(userId, true);
@@ -74,16 +80,29 @@ client.on("messageCreate", async (message) => {
         return;
       }
 
-      const channel = await client.channels.fetch(settings.staffChannelId);
+      try {
+  console.log("Trying staff channel:", settings.staffChannelId);
 
-      if (!channel) {
-        console.log("Staff channel not found");
-        return;
-      }
+  const channel = await client.channels.fetch(settings.staffChannelId).catch(err => {
+    console.log("FETCH ERROR:", err.message);
+    return null;
+  });
 
-      await channel.send(
-        `📩 **New DM from <@${userId}>**\n\n${message.content}`
-      );
+  if (!channel) {
+    console.log("Staff channel not found / inaccessible");
+    return;
+  }
+
+  console.log("Channel OK:", channel.name);
+
+  await channel.send(
+    `📩 **New DM from <@${userId}>**\n\n${message.content}`
+  );
+
+  console.log("Sent to staff channel successfully");
+} catch (err) {
+  console.log("FULL SEND ERROR:", err);
+}
     } catch (err) {
       console.log("DM forward error:", err);
     }
