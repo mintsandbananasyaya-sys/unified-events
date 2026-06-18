@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -451,6 +450,7 @@
 
 <header class="nav">
   <div class="wrap nav-inner">
+
     <a href="index.html" class="brand">
       <svg class="brand-mark" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <path d="M16 2 L29 16 L16 30 L16 16 Z" fill="#4169ff"/>
@@ -459,7 +459,7 @@
       UNIFIED EVENTS
     </a>
 
-    <nav class="nav-links" aria-label="Primary">
+    <nav class="nav-links" aria-label="Primary Navigation">
       <a href="index.html">Home</a>
       <a href="event.html" class="active" aria-current="page">Events</a>
       <a href="dashboard.html">Dashboard</a>
@@ -471,31 +471,42 @@
     </nav>
 
     <div class="nav-more" id="moreMenu">
-      <button id="moreBtn" aria-expanded="false" aria-controls="moreDropdown">More <span class="caret"></span></button>
+      <button id="moreBtn" aria-expanded="false" aria-controls="moreDropdown">
+        More <span class="caret"></span>
+      </button>
+
       <div class="dropdown" id="moreDropdown">
         <a href="forms.html">Other Forms</a>
         <a href="tickets.html">Claims</a>
         <a href="notifications.html">Announcements</a>
         <a href="perks.html">Advantages</a>
-        <a href="terms.html">Rules &amp; & Conditions</a>
+        <a href="terms.html">Rules & Conditions</a>
         <a href="staff.html">Staff</a>
       </div>
     </div>
 
     <div class="nav-actions">
+
       <div class="auth-chip" id="authChip">
         <span class="avatar">GU</span>
-        guest_user
+        <span class="username">guest_user</span>
       </div>
-      <button class="btn btn-primary btn-small" id="navAuthBtn" data-auth-btn>Login with Discord</button>
+
+      <button class="btn btn-primary btn-small" id="navAuthBtn" data-auth-btn>
+        Login with Discord
+      </button>
+
       <button class="nav-burger" id="burgerBtn" aria-label="Open menu" aria-expanded="false">
         <span></span>
       </button>
+
     </div>
+
   </div>
 
   <div class="mobile-panel" id="mobilePanel">
     <div class="wrap">
+
       <a href="index.html">Home</a>
       <a href="event.html" class="active" aria-current="page">Events</a>
       <a href="dashboard.html">Dashboard</a>
@@ -504,40 +515,52 @@
       <a href="shop.html">Shop</a>
       <a href="youtube.html">Content</a>
       <a href="faq.html">Chat Bot</a>
+
       <div class="mobile-divider">More</div>
+
       <a href="forms.html">Other Forms</a>
       <a href="tickets.html">Claims</a>
       <a href="notifications.html">Announcements</a>
       <a href="perks.html">Advantages</a>
-      <a href="terms.html">Rules &amp; & Conditions</a>
+      <a href="terms.html">Rules & Conditions</a>
       <a href="staff.html">Staff</a>
-      <button class="btn btn-primary" data-auth-btn>Login with Discord</button>
+
+      <button class="btn btn-primary" data-auth-btn>
+        Login with Discord
+      </button>
+
     </div>
   </div>
 </header>
 
 <main id="top">
 
-  <!-- HERO -->
   <section class="hero">
+
     <div class="hero-glow blue"></div>
     <div class="hero-glow red"></div>
     <div class="seam"></div>
 
     <div class="wrap hero-content">
+
       <span class="eyebrow">Season System</span>
+
       <h1 class="wordmark page-wordmark">EVENTS</h1>
+
       <p class="hero-sub">
         Every season Unified Events has run or is running, plus the civilization network behind them.
       </p>
 
       <div class="hero-actions">
-        <a href="#network" class="btn btn-ghost">View participating civilizations ↓</a>
+        <a href="#network" class="btn btn-ghost">
+          View participating civilizations ↓
+        </a>
       </div>
+
     </div>
+
   </section>
 
-  <!-- SEASONS -->
   <section id="season-system">
     <div class="wrap">
 
@@ -556,7 +579,6 @@
 
       <div class="season-grid">
 
-        <!-- FIXED CARD (your broken div was here) -->
         <article class="season-card reveal" data-status="upcoming">
 
           <div class="season-card-top">
@@ -570,10 +592,10 @@
         </article>
 
       </div>
+
     </div>
   </section>
 
-  <!-- CIV NETWORK -->
   <section id="network" class="civ-network">
     <div class="wrap">
 
@@ -585,71 +607,64 @@
 
       <div class="civ-grid">
 
-        <!-- CIV 1 -->
         <div class="civ-card reveal">
           <span class="slot-tag">Slot 01</span>
           <h3 class="civ-name">Liquid's Civilization Experiments</h3>
           <p class="civ-desc">Big PvP civilization server.</p>
 
           <span class="status-badge status-connected">
-            <span class="status-dot"></span>External Website Available
+            <span class="status-dot"></span>
+            External Website Available
           </span>
 
           <div class="civ-footer">
-            <a class="btn btn-ghost btn-small"
-               href="https://event.liquidmc.net/#home"
-               target="_blank">
+            <a class="btn btn-ghost btn-small" href="https://event.liquidmc.net/#home" target="_blank">
               Visit Website ↗
             </a>
           </div>
         </div>
 
-        <!-- CIV 2 -->
         <div class="civ-card reveal">
           <span class="slot-tag">Slot 02</span>
           <h3 class="civ-name">Prite's Events</h3>
           <p class="civ-desc">Mini + large scale Minecraft events.</p>
 
           <span class="status-badge status-connected">
-            <span class="status-dot"></span>External Website Available
+            <span class="status-dot"></span>
+            External Website Available
           </span>
 
           <div class="civ-footer">
-            <a class="btn btn-ghost btn-small"
-               href="https://prite-events.com/"
-               target="_blank">
+            <a class="btn btn-ghost btn-small" href="https://prite-events.com/" target="_blank">
               Visit Website ↗
             </a>
           </div>
         </div>
 
-        <!-- CIV 3 -->
         <div class="civ-card reveal">
           <span class="slot-tag">Slot 03</span>
           <h3 class="civ-name">Crabby's Civilization Experiments</h3>
           <p class="civ-desc">Long running civ server.</p>
 
           <span class="status-badge status-connected">
-            <span class="status-dot"></span>External Website Available
+            <span class="status-dot"></span>
+            External Website Available
           </span>
 
           <div class="civ-footer">
-            <a class="btn btn-ghost btn-small"
-               href="https://mintsandbananasyaya-sys.github.io/Crabby-Official-Page/index.html"
-               target="_blank">
+            <a class="btn btn-ghost btn-small" href="https://mintsandbananasyaya-sys.github.io/Crabby-Official-Page/index.html" target="_blank">
               Visit Website ↗
             </a>
           </div>
         </div>
 
-        <!-- LEGACY 1 -->
         <div class="civ-card is-legacy reveal">
           <span class="slot-tag">Slot 04</span>
           <h3 class="civ-name">Oracles</h3>
-          <p class="civ-desc">Legacy civilization server.</p>
 
           <span class="status-badge status-archived">
-            <span class="status-dot"></span>Legacy Archive
+            <span class="status-dot"></span>
+            Legacy Archive
           </span>
 
           <div class="civ-footer">
@@ -659,13 +674,13 @@
           </div>
         </div>
 
-        <!-- LEGACY 2 -->
         <div class="civ-card is-legacy reveal">
           <span class="slot-tag">Slot 05</span>
           <h3 class="civ-name">JCrimzy's Civilization</h3>
 
           <span class="status-badge status-archived">
-            <span class="status-dot"></span>Legacy Archive
+            <span class="status-dot"></span>
+            Legacy Archive
           </span>
 
           <div class="civ-footer">
@@ -675,13 +690,13 @@
           </div>
         </div>
 
-        <!-- LEGACY 3 -->
         <div class="civ-card is-legacy reveal">
           <span class="slot-tag">Slot 06</span>
           <h3 class="civ-name">Archie's Civilization</h3>
 
           <span class="status-badge status-archived">
-            <span class="status-dot"></span>Legacy Archive
+            <span class="status-dot"></span>
+            Legacy Archive
           </span>
 
           <div class="civ-footer">
@@ -692,100 +707,34 @@
         </div>
 
       </div>
+
     </div>
   </section>
 
 </main>
 
-<footer>
-  <div class="wrap">
-    <div class="footer-grid">
-      <div class="footer-brand">
-        <a href="index.html" class="brand">
-          <svg class="brand-mark" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path d="M16 2 L29 16 L16 30 L16 16 Z" fill="#4169ff"/>
-            <path d="M16 2 L3 16 L16 30 L16 16 Z" fill="#ff3b4e"/>
-          </svg>
-          UNIFIED EVENTS
-        </a>
-        <p>A competitive Minecraft civilization event platform, run on Discord identity and structured seasons.</p>
-        <button class="btn btn-ghost btn-small" style="margin-top:1.1rem;" data-auth-btn>Login with Discord</button>
-      </div>
-
-      <div class="footer-col">
-        <h4>Platform</h4>
-        <a href="index.html">Home</a>
-        <a href="event.html">Events</a>
-        <a href="schedule.html">Timings</a>
-        <a href="shop.html">Shop</a>
-      </div>
-
-      <div class="footer-col">
-        <h4>Account</h4>
-        <a href="dashboard.html">Dashboard</a>
-        <a href="apply.html">Enlist</a>
-        <a href="tickets.html">Claims</a>
-        <a href="notifications.html">Announcements</a>
-      </div>
-
-      <div class="footer-col">
-        <h4>Info</h4>
-        <a href="faq.html">Chat Bot</a>
-        <a href="terms.html">Rules &amp; & Conditions</a>
-        <a href="staff.html">Staff</a>
-        <a href="forms.html">Other Forms</a>
-      </div>
-    </div>
-
-    <div class="footer-bottom">
-      <span>© 2026 Unified Events. Not affiliated with Mojang or Microsoft.</span>
-      <span>Built for structured competition.</span>
-    </div>
-  </div>
-</footer>
-
-<div class="modal-overlay" id="legacyModal" aria-hidden="true">
-  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="legacyModalTitle">
-    <button class="modal-close" id="modalClose" aria-label="Close archive">&times;</button>
-
-    <div class="modal-header">
-      <span class="eyebrow is-red">Legacy Civilization Profile</span>
-      <h2 class="modal-title" id="legacyModalTitle">—</h2>
-      <span class="status-badge status-archived" id="legacyModalStatus"><span class="status-dot"></span>Archived · Historical</span>
-    </div>
-
-    <div class="modal-body">
-      <div class="modal-section">
-        <h3 class="modal-subhead">Past Participation Timeline</h3>
-        <div class="timeline-list" id="legacyTimeline"></div>
-      </div>
-      <div class="modal-section">
-        <h3 class="modal-subhead">Key Moments</h3>
-        <div class="moments-list" id="legacyMoments"></div>
-      </div>
-    </div>
-
-    <div class="modal-footer">
-      <button class="btn btn-ghost btn-small" id="modalBack">← Back to Events</button>
-      <div class="modal-switch">
-        <span class="civ-note">View other civilizations:</span>
-        <div class="switch-chips" id="switchChips"></div>
-      </div>
-    </div>
-  </div>
-</div>
-
 <script>
 /* =========================
-   GLOBAL STATE (FAKE AUTH)
+   AUTH STATE (LOCAL + SAFE)
 ========================= */
 const state = {
-  user: {
-    loggedIn: false,
-    username: "guest_user",
-    avatar: "GU"
-  }
+  user: null // null = not logged in
 };
+
+/* load from storage */
+function loadAuth() {
+  const saved = localStorage.getItem("ue_user");
+  state.user = saved ? JSON.parse(saved) : null;
+}
+
+/* save to storage */
+function saveAuth() {
+  if (state.user) {
+    localStorage.setItem("ue_user", JSON.stringify(state.user));
+  } else {
+    localStorage.removeItem("ue_user");
+  }
+}
 
 /* =========================
    ELEMENTS
@@ -793,80 +742,95 @@ const state = {
 const authButtons = document.querySelectorAll("[data-auth-btn]");
 const authChip = document.getElementById("authChip");
 
-const burgerBtn = document.getElementById("burgerBtn");
-const mobilePanel = document.getElementById("mobilePanel");
-
-const moreMenu = document.getElementById("moreMenu");
-const moreBtn = document.getElementById("moreBtn");
-
-const legacyModal = document.getElementById("legacyModal");
-
 /* =========================
-   AUTH RENDER
+   RENDER AUTH UI
 ========================= */
 function renderAuth() {
-  const { loggedIn, username, avatar } = state.user;
+  const isLoggedIn = !!state.user;
 
-  // chip update
+  // chip
   if (authChip) {
-    authChip.innerHTML = `
-      <span class="avatar">${avatar}</span>
-      ${username}
-    `;
+    const avatar = authChip.querySelector(".avatar");
+
+    if (isLoggedIn) {
+      if (avatar) avatar.textContent = state.user.avatar;
+      authChip.querySelector(".username").textContent = state.user.username;
+    } else {
+        if (avatar) avatar.textContent = "GU";
+        authChip.querySelector(".username").textContent = "guest_user";
+      }
   }
 
-  // button update
+  // buttons
   authButtons.forEach(btn => {
-    btn.textContent = loggedIn ? "Go to Dashboard" : "Login with Discord";
+    btn.textContent = isLoggedIn ? "Go to Dashboard" : "Login with Discord";
   });
+
+  document.body.classList.toggle("is-authed", isLoggedIn);
 }
 
-/* fake login toggle (replace later with real Discord OAuth) */
-function toggleLogin() {
-  state.user.loggedIn = !state.user.loggedIn;
+/* =========================
+   REAL LOGIN FLOW (HOOK POINT)
+   =========================
+   replace this with Discord OAuth redirect later
+========================= */
+function login() {
+  state.user = {
+    username: "real_user",
+    avatar: "RU"
+  };
 
-  if (state.user.loggedIn) {
-    state.user.username = "real_user";
-    state.user.avatar = "RU";
-  } else {
-    state.user.username = "guest_user";
-    state.user.avatar = "GU";
-  }
-
+  saveAuth();
   renderAuth();
 }
 
-/* =========================
-   NAV + MOBILE
-========================= */
-function setupNav() {
-  // mobile menu
-  if (burgerBtn && mobilePanel) {
-    burgerBtn.addEventListener("click", () => {
-      const open = mobilePanel.classList.toggle("open");
-      burgerBtn.setAttribute("aria-expanded", open);
-    });
-  }
+/* logout */
+function logout() {
+  state.user = null;
+  saveAuth();
+  renderAuth();
+}
 
-  // more dropdown
-  if (moreBtn && moreMenu) {
-    moreBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const open = moreMenu.classList.toggle("open");
-      moreBtn.setAttribute("aria-expanded", open);
-    });
-
-    document.addEventListener("click", (e) => {
-      if (!moreMenu.contains(e.target)) {
-        moreMenu.classList.remove("open");
-        moreBtn.setAttribute("aria-expanded", "false");
-      }
-    });
+/* toggle handler */
+function handleAuthClick() {
+  if (!state.user) {
+    login();
+  } else {
+    alert("Already logged in 😭👉 going dashboard");
+    window.location.href = "dashboard.html";
   }
 }
 
 /* =========================
-   SEASON FILTERS
+   NAV / MOBILE (unchanged but safe)
+========================= */
+const burgerBtn = document.getElementById("burgerBtn");
+const mobilePanel = document.getElementById("mobilePanel");
+const moreMenu = document.getElementById("moreMenu");
+const moreBtn = document.getElementById("moreBtn");
+
+function setupNav() {
+  burgerBtn?.addEventListener("click", () => {
+    const open = mobilePanel.classList.toggle("open");
+    burgerBtn.setAttribute("aria-expanded", open);
+  });
+
+  moreBtn?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const open = moreMenu.classList.toggle("open");
+    moreBtn.setAttribute("aria-expanded", open);
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!moreMenu?.contains(e.target)) {
+      moreMenu?.classList.remove("open");
+      moreBtn?.setAttribute("aria-expanded", "false");
+    }
+  });
+}
+
+/* =========================
+   SEASON FILTERS (same logic, cleaner)
 ========================= */
 function setupFilters() {
   const tabs = document.querySelectorAll(".tab");
@@ -881,116 +845,40 @@ function setupFilters() {
 
       cards.forEach(card => {
         const match = filter === "all" || card.dataset.status === filter;
-        card.style.display = match ? "" : "none";
+        card.hidden = !match;
       });
     });
   });
 }
 
 /* =========================
-   LEGACY MODAL
-========================= */
-const legacyData = {
-  oracles: {
-    name: "Oracles",
-    timeline: [
-      { season: "Season 1", role: "Post-Apocalypse", event: "First major event hosted", outcome: "200 players ACTIVE!" },
-      { season: "Season 2", role: "Vacation Disaster", event: "Second event (WIP)", outcome: "WIP" }
-    ],
-    moments: [
-      { type: "war", text: "Vespera vs The Eye conflict" },
-      { type: "achievement", text: "The Eye was largest nation" }
-    ]
-  },
-  jcrimzy: {
-    name: "JCrimzy's Civilization",
-    timeline: [
-      { season: "Season 1", role: "Ants v Humans", event: "Chaos event", outcome: "70 players ACTIVE!" }
-    ],
-    moments: []
-  },
-  archie: {
-    name: "Archie's Civilization",
-    timeline: [
-      { season: "Season 1", role: "Archipelago", event: "Election arc", outcome: "150 players ACTIVE!" }
-    ],
-    moments: [
-      { type: "election", text: "DundeeYT wins landslide" },
-      { type: "war", text: "Copperdale dominates" }
-    ]
-  }
-};
-
-let lastFocused = null;
-
-function openLegacy(id, trigger) {
-  const data = legacyData[id];
-  if (!data) return;
-
-  lastFocused = trigger;
-
-  document.getElementById("legacyModalTitle").textContent = data.name;
-
-  document.getElementById("legacyTimeline").innerHTML = data.timeline
-    .map(t => `
-      <div class="timeline-item">
-        <span class="t-season">${t.season}</span>
-        <span class="t-role">${t.role}</span>
-        <p class="t-event">${t.event}</p>
-        <span class="t-outcome">${t.outcome}</span>
-      </div>
-    `).join("");
-
-  document.getElementById("legacyMoments").innerHTML = data.moments
-    .map(m => `
-      <div class="moment-item">
-        <span class="moment-tag ${m.type}">${m.type}</span>
-        <span class="moment-text">${m.text}</span>
-      </div>
-    `).join("");
-
-  legacyModal.classList.add("open");
-  legacyModal.setAttribute("aria-hidden", "false");
-  document.body.style.overflow = "hidden";
-}
-
-function closeLegacy() {
-  legacyModal.classList.remove("open");
-  legacyModal.setAttribute("aria-hidden", "true");
-  document.body.style.overflow = "";
-
-  if (lastFocused) lastFocused.focus();
-}
-
-/* =========================
    INIT
 ========================= */
 function init() {
+  loadAuth();
   renderAuth();
   setupNav();
+  document.querySelectorAll("#mobilePanel a, #mobilePanel button").forEach(el => {
+  el.addEventListener("click", () => {
+    mobilePanel.classList.remove("open");
+    burgerBtn?.setAttribute("aria-expanded", "false");
+  });
+});
   setupFilters();
 
   authButtons.forEach(btn => {
-    btn.addEventListener("click", toggleLogin);
-  });
-
-  document.querySelectorAll("[data-legacy]").forEach(btn => {
-    btn.addEventListener("click", () => openLegacy(btn.dataset.legacy, btn));
-  });
-
-  document.getElementById("modalClose")?.addEventListener("click", closeLegacy);
-  document.getElementById("modalBack")?.addEventListener("click", closeLegacy);
-
-  legacyModal?.addEventListener("click", (e) => {
-    if (e.target === legacyModal) closeLegacy();
-  });
-
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeLegacy();
+    btn.addEventListener("click", handleAuthClick);
   });
 }
 
 init();
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    moreMenu?.classList.remove("open");
+    moreBtn?.setAttribute("aria-expanded", "false");
+  }
+});
 </script>
 
 </body>
