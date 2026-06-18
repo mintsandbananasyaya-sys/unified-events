@@ -83,18 +83,14 @@
 
 <script>
 async function saveSettings() {
+  async function saveSettings() {
   const data = {
-    guildId: document.getElementById("guildId").value.trim(),
-    staffChannelId: document.getElementById("staffChannelId").value.trim(),
-    staffRoleId: document.getElementById("staffRoleId").value.trim(),
+    guildId: "1517281649375707176", // your server id
+    staffChannelId: document.getElementById("staffChannelId").value,
+    staffRoleId: document.getElementById("staffRoleId").value,
     formsEnabled: document.getElementById("formsEnabled").value === "true",
     ticketsEnabled: document.getElementById("ticketsEnabled").value === "true"
   };
-
-  if (!data.guildId) {
-    alert("Guild ID missing 💀");
-    return;
-  }
 
   const res = await fetch("/api/settings", {
     method: "POST",
@@ -104,8 +100,9 @@ async function saveSettings() {
 
   const result = await res.json();
 
-  console.log("SAVED:", result);
+  console.log(result);
   alert("Saved ✔");
+}
 }
 </script>
 
