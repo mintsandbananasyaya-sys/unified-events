@@ -132,29 +132,6 @@ app.get("/auth/discord/callback", async (req, res) => {
 });
 
 // =====================
-// API - GET SETTINGS
-// =====================
-app.get("/api/settings/:guildId", (req, res) => {
-  const guildId = req.params.guildId;
-
-  res.json(settings[guildId] || {});
-});
-
-// =====================
-// API - SAVE SETTINGS
-// =====================
-app.post("/api/settings", (req, res) => {
-  const { guildId, ...data } = req.body;
-
-  settings[guildId] = data;
-
-  res.json({
-    ok: true,
-    settings: settings[guildId]
-  });
-});
-
-// =====================
 // USER INFO
 // =====================
 app.get("/api/me", (req, res) => {
@@ -174,20 +151,27 @@ app.get("/api/me", (req, res) => {
 });
 
 // =====================
-// LOGOUT
+// SETTINGS API
 // =====================
-app.get("/logout", (req, res) => {
-  req.session.destroy(() => res.redirect("/login"));
+app.get("/api/settings/:guildId", (req, res) => {
+  const guildId = req.params.guildId;
+  res.json(settings[guildId] || {});
+});
+
+app.post("/api/settings", (req, res) => {
+  const { guildId, ...data } = req.body;
+
+  settings[guildId] = data;
+
+  res.json({
+    ok: true,
+    settings: settings[guildId],
+  });
 });
 
 // =====================
-// START SERVER
+// GUILD CHANNELS
 // =====================
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
-
 app.get("/api/guild/:guildId/channels", async (req, res) => {
   try {
     const channels = await axios.get(
@@ -205,10 +189,24 @@ app.get("/api/guild/:guildId/channels", async (req, res) => {
   }
 });
 
+// =====================
+// LOGOUT
+// =====================
+app.get("/logout", (req, res) => {
+  req.session.destroy(() => res.redirect("/login"));
+});
+
+// =====================
+// BOT DASHBOARD PAGE
+// =====================
 app.get("/bot-dashboard", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "bot-dashboard.html"));
-
 });
 
+// =====================
+// START SERVER
+// =====================
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
-
