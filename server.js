@@ -7,21 +7,21 @@ const path = require("path");
 
 const app = express();
 
-// =====================
-// BASIC SETUP
-// =====================
+/* =====================
+   CORE MIDDLEWARE
+===================== */
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
 
 app.set("trust proxy", 1);
 
-// =====================
-// SESSION (SAFE)
-// =====================
+/* =====================
+   SESSION (SAFE)
+===================== */
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || "dev-secret-change-me",
+    secret: process.env.SESSION_SECRET || "dev-secret",
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -33,39 +33,40 @@ app.use(
   })
 );
 
-// =====================
-// BOT LOAD (SAFE)
-// =====================
+/* =====================
+   BOT (SAFE LOAD)
+===================== */
 try {
   require("./bot.js");
   console.log("Bot loaded");
 } catch (err) {
-  console.log("Bot failed to load:", err.message);
+  console.log("Bot failed:", err.message);
 }
 
-// =====================
-// ENV CHECK
-// =====================
+/* =====================
+   ENV CHECK
+===================== */
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
 const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
 
-// =====================
-// IN-MEMORY STORE
-// =====================
-let settings = {};
+/* =====================
+   SIMPLE MEMORY STORE
+===================== */
+// guildId -> settings
+const settings = {};
 
-// =====================
-// AUTH MIDDLEWARE
-// =====================
+/* =====================
+   AUTH CHECK
+===================== */
 function requireAuth(req, res, next) {
   if (!req.session.user) return res.redirect("/login");
   next();
 }
 
-// =====================
-// PAGES
-// =====================
+/* =====================
+   PAGES
+===================== */
 app.get("/", (req, res) => {
   if (req.session.user) return res.redirect("/dashboard");
   res.sendFile(path.join(__dirname, "public", "index.html"));
@@ -83,12 +84,12 @@ app.get("/bot-dashboard", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "bot-dashboard.html"));
 });
 
-// =====================
-// DISCORD LOGIN
-// =====================
+/* =====================
+   DISCORD OAUTH
+===================== */
 app.get("/auth/discord", (req, res) => {
   const url =
-    "https://discord.com/oauth2/authorize" +
+    `https://discord.com/oauth2/authorize` +
     `?client_id=${CLIENT_ID}` +
     `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
     `&response_type=code` +
@@ -97,9 +98,6 @@ app.get("/auth/discord", (req, res) => {
   res.redirect(url);
 });
 
-// =====================
-// CALLBACK
-// =====================
 app.get("/auth/discord/callback", async (req, res) => {
   const code = req.query.code;
   if (!code) return res.redirect("/login");
@@ -121,11 +119,14 @@ app.get("/auth/discord/callback", async (req, res) => {
       }
     );
 
-    const userRes = await axios.get("https://discord.com/api/users/@me", {
-      headers: {
-        Authorization: `Bearer ${tokenRes.data.access_token}`,
-      },
-    });
+    const userRes = await axios.get(
+      "https://discord.com/api/users/@me",
+      {
+        headers: {
+          Authorization: `Bearer ${tokenRes.data.access_token}`,
+        },
+      }
+    );
 
     req.session.user = {
       id: userRes.data.id,
@@ -135,55 +136,53 @@ app.get("/auth/discord/callback", async (req, res) => {
 
     res.redirect("/dashboard");
   } catch (err) {
-    console.log("OAuth error:", err.response?.data || err.message);
+    console.log("OAuth error:", err.message);
     res.redirect("/login");
   }
 });
 
-// =====================
-// API - USER
-// =====================
+/* =====================
+   USER INFO
+===================== */
 app.get("/api/me", (req, res) => {
   if (!req.session.user) return res.json({ loggedIn: false });
 
-  const avatarURL = req.session.user.avatar
+  const avatar = req.session.user.avatar
     ? `https://cdn.discordapp.com/avatars/${req.session.user.id}/${req.session.user.avatar}.png`
     : null;
 
   res.json({
     loggedIn: true,
     ...req.session.user,
-    avatar: avatarURL,
+    avatar,
   });
 });
 
-// =====================
-// SETTINGS GET
-// =====================
+/* =====================
+   SETTINGS API (FIXED — THIS WAS YOUR ISSUE)
+===================== */
+
+// GET SETTINGS
 app.get("/api/settings/:guildId", (req, res) => {
   const { guildId } = req.params;
-
-  console.log("GET SETTINGS:", guildId);
-
   res.json(settings[guildId] || {});
 });
 
-// =====================
-// SETTINGS SAVE (FIXED — ONLY ONE ROUTE)
-// =====================
+// SAVE SETTINGS
 app.post("/api/settings", (req, res) => {
-  console.log("🔥 SAVE HIT:", req.body);
-
-  const { guildId, ...data } = req.body;
+  const { guildId, staffChannelId, staffRoleId, formsEnabled, ticketsEnabled } =
+    req.body;
 
   if (!guildId) {
-    console.log("❌ Missing guildId");
     return res.status(400).json({ error: "Missing guildId" });
   }
 
-  settings[guildId] = data;
-
-  console.log("✅ SAVED:", guildId, settings[guildId]);
+  settings[guildId] = {
+    staffChannelId,
+    staffRoleId,
+    formsEnabled,
+    ticketsEnabled,
+  };
 
   res.json({
     ok: true,
@@ -191,22 +190,11 @@ app.post("/api/settings", (req, res) => {
   });
 });
 
-// =====================
-// LOGOUT
-// =====================
-app.get("/logout", (req, res) => {
-  req.session.destroy(() => res.redirect("/login"));
-});
-
-// =====================
-// GUILD CHANNELS
-// =====================
+/* =====================
+   GUILD CHANNELS
+===================== */
 app.get("/api/guild/:guildId/channels", async (req, res) => {
   try {
-    if (!process.env.BOT_TOKEN) {
-      return res.status(500).json({ error: "Missing BOT_TOKEN" });
-    }
-
     const channels = await axios.get(
       `https://discord.com/api/guilds/${req.params.guildId}/channels`,
       {
@@ -218,16 +206,22 @@ app.get("/api/guild/:guildId/channels", async (req, res) => {
 
     res.json(channels.data);
   } catch (err) {
-    console.log(err.message);
     res.status(500).json({ error: "failed to fetch channels" });
   }
 });
 
-// =====================
-// START SERVER
-// =====================
+/* =====================
+   LOGOUT
+===================== */
+app.get("/logout", (req, res) => {
+  req.session.destroy(() => res.redirect("/login"));
+});
+
+/* =====================
+   START SERVER
+===================== */
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on ${PORT}`);
 });
