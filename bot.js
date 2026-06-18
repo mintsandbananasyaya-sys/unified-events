@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 require("dotenv").config();
 
 const { Client, GatewayIntentBits, Partials } = require("discord.js");
@@ -114,7 +114,6 @@ client.on("messageCreate", async (message) => {
 // =====================
 
 client.login(process.env.BOT_TOKEN);
-=======
 require("dotenv").config();
 
 const { Client, GatewayIntentBits, Partials } = require("discord.js");
@@ -229,4 +228,4 @@ client.on("messageCreate", async (message) => {
 // LOGIN
 // =====================
 client.login(process.env.BOT_TOKEN);
->>>>>>> 9d3c923b9a64bb0393372fd5ef35f9939242526e
+
