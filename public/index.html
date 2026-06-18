@@ -629,25 +629,65 @@
   display:flex;align-items:center;justify-content:center;
   cursor:pointer;
 ">
-  <div id="intro-logo" style="position:relative;display:flex;align-items:center;justify-content:center;">
-    <svg id="intro-svg" width="120" height="120" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M16 2 L29 16 L16 30 L16 16 Z" fill="#4169ff"/>
-      <path d="M16 2 L3 16 L16 30 L16 16 Z" fill="#ff3b4e"/>
-    </svg>
-    <div id="intro-glow" style="
-      position:absolute;
-      width:300px;height:300px;border-radius:50%;
-      background:radial-gradient(circle, rgba(65,105,255,0.45) 0%, rgba(255,59,78,0.3) 40%, transparent 70%);
-      opacity:0;pointer-events:none;
-    "></div>
+  <div style="position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2.5rem;">
+    
+    <!-- Logo -->
+    <div style="position:relative;display:flex;align-items:center;justify-content:center;">
+      <svg id="intro-svg" width="100" height="100" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M16 2 L29 16 L16 30 L16 16 Z" fill="#4169ff"/>
+        <path d="M16 2 L3 16 L16 30 L16 16 Z" fill="#ff3b4e"/>
+      </svg>
+      <div id="intro-glow" style="
+        position:absolute;
+        width:300px;height:300px;border-radius:50%;
+        background:radial-gradient(circle, rgba(65,105,255,0.45) 0%, rgba(255,59,78,0.3) 40%, transparent 70%);
+        opacity:0;pointer-events:none;
+      "></div>
+    </div>
+
+    <!-- Click to enter -->
+    <div id="intro-cta" style="
+      display:flex;flex-direction:column;align-items:center;gap:0.9rem;
+    ">
+      <span style="
+        font-family:'IBM Plex Mono',monospace;
+        font-size:0.72rem;letter-spacing:0.22em;text-transform:uppercase;
+        color:rgba(139,146,166,0.7);
+      ">Unified Events</span>
+
+      <span id="intro-label" style="
+        font-family:'Big Shoulders Display',sans-serif;
+        font-weight:800;font-size:clamp(1.4rem,4vw,2.2rem);
+        letter-spacing:0.08em;text-transform:uppercase;
+        background:linear-gradient(92deg,#4169ff,#edeff5,#ff3b4e);
+        -webkit-background-clip:text;background-clip:text;color:transparent;
+        transition:opacity 0.25s ease;
+      ">Click to Enter</span>
+
+      <!-- Animated dots -->
+      <div style="display:flex;gap:6px;align-items:center;">
+        <span class="idot"></span>
+        <span class="idot" style="animation-delay:0.2s"></span>
+        <span class="idot" style="animation-delay:0.4s"></span>
+      </div>
+    </div>
+
   </div>
 </div>
 
 <style>
-  #intro { transition: opacity 0.7s ease; }
-  #intro-svg { opacity: 0; transform: scale(0.6); transition: opacity 0.5s ease, transform 0.5s ease; }
+  .idot {
+    display:inline-block;width:5px;height:5px;border-radius:50%;
+    background:linear-gradient(135deg,#4169ff,#ff3b4e);
+    animation:idot-pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes idot-pulse {
+    0%,100%{opacity:0.25;transform:scale(0.8);}
+    50%{opacity:1;transform:scale(1.2);}
+  }
+  #intro-svg { transition: opacity 0.5s ease, transform 0.5s ease; }
   #intro-glow { transition: opacity 0.6s ease, transform 0.6s ease; }
-  body.intro-done { overflow: auto; }
+  #intro { transition: opacity 0.7s ease; }
   body:not(.intro-done) { overflow: hidden; }
 </style>
 
@@ -656,6 +696,8 @@
   const overlay = document.getElementById("intro");
   const svg     = document.getElementById("intro-svg");
   const glow    = document.getElementById("intro-glow");
+  const cta     = document.getElementById("intro-cta");
+  const label   = document.getElementById("intro-label");
 
   let triggered = false;
 
@@ -663,52 +705,65 @@
     if (triggered) return;
     triggered = true;
 
-    // Step 1 — logo fades + scales in (0ms)
-    requestAnimationFrame(() => {
+    // Instantly hide the "Click to Enter" text
+    cta.style.transition = "opacity 0.2s ease";
+    cta.style.opacity = "0";
+    setTimeout(() => cta.style.display = "none", 200);
+
+    // Step 1 — logo fades + scales in (250ms after click)
+    setTimeout(() => {
       svg.style.opacity = "1";
       svg.style.transform = "scale(1)";
-    });
+    }, 250);
 
-    // Step 2 — glow blooms (400ms)
+    // Step 2 — glow blooms (600ms)
     setTimeout(() => {
       glow.style.opacity = "1";
       glow.style.transform = "scale(1.15)";
-    }, 400);
+    }, 600);
 
-    // Step 3 — glow fades out (1400ms)
+    // Step 3 — glow fades out (1500ms)
     setTimeout(() => {
       glow.style.opacity = "0";
       glow.style.transform = "scale(0.9)";
-    }, 1400);
+    }, 1500);
 
-    // Step 4 — second glow pulse (1900ms)
+    // Step 4 — second glow pulse (2000ms)
     setTimeout(() => {
       glow.style.transition = "opacity 0.4s ease, transform 0.4s ease";
-      glow.style.opacity = "0.6";
-      glow.style.transform = "scale(1.3)";
-    }, 1900);
+      glow.style.opacity = "0.65";
+      glow.style.transform = "scale(1.35)";
+    }, 2000);
 
-    // Step 5 — everything fades out (2400ms)
+    // Step 5 — everything fades out (2500ms)
     setTimeout(() => {
-      svg.style.opacity  = "0";
+      svg.style.opacity = "0";
       svg.style.transform = "scale(1.1)";
       glow.style.opacity = "0";
       overlay.style.opacity = "0";
       overlay.style.pointerEvents = "none";
-    }, 2400);
+    }, 2500);
 
-    // Step 6 — remove overlay from DOM (3100ms)
+    // Step 6 — remove overlay (3200ms)
     setTimeout(() => {
       overlay.remove();
       document.body.classList.add("intro-done");
-    }, 3100);
+    }, 3200);
   }
 
-  // Trigger on first click anywhere
+  // Add a subtle hover pulse to the label before click
+  label.addEventListener("mouseenter", () => {
+    label.style.letterSpacing = "0.14em";
+    label.style.transition = "letter-spacing 0.2s ease, opacity 0.25s ease";
+  });
+  label.addEventListener("mouseleave", () => {
+    label.style.letterSpacing = "0.08em";
+  });
+
   document.addEventListener("click", runIntro, { once: true });
 
-  // Also auto-trigger after 5 seconds if user never clicks
-  setTimeout(runIntro, 5000);
+  // Safety auto-trigger after 30 seconds
+  setTimeout(runIntro, 30000);
 })();
 </script>
 <script>
