@@ -775,221 +775,175 @@
 </div>
 
 <script>
-/* =========================
-   GLOBAL STATE (FAKE AUTH)
-========================= */
-const state = {
-  user: {
-    loggedIn: false,
-    username: "guest_user",
-    avatar: "GU"
-  }
-};
 
-/* =========================
-   ELEMENTS
-========================= */
-const authButtons = document.querySelectorAll("[data-auth-btn]");
-const authChip = document.getElementById("authChip");
+// ===============================
+// CIVILIZATION LEGACY SYSTEM
+// Unified Events - Clean Version
+// ===============================
 
-const burgerBtn = document.getElementById("burgerBtn");
-const mobilePanel = document.getElementById("mobilePanel");
-
-const moreMenu = document.getElementById("moreMenu");
-const moreBtn = document.getElementById("moreBtn");
-
-const legacyModal = document.getElementById("legacyModal");
-
-/* =========================
-   AUTH RENDER
-========================= */
-function renderAuth() {
-  const { loggedIn, username, avatar } = state.user;
-
-  // chip update
-  if (authChip) {
-    authChip.innerHTML = `
-      <span class="avatar">${avatar}</span>
-      ${username}
-    `;
-  }
-
-  // button update
-  authButtons.forEach(btn => {
-    btn.textContent = loggedIn ? "Go to Dashboard" : "Login with Discord";
-  });
-}
-
-/* fake login toggle (replace later with real Discord OAuth) */
-function toggleLogin() {
-  state.user.loggedIn = !state.user.loggedIn;
-
-  if (state.user.loggedIn) {
-    state.user.username = "real_user";
-    state.user.avatar = "RU";
-  } else {
-    state.user.username = "guest_user";
-    state.user.avatar = "GU";
-  }
-
-  renderAuth();
-}
-
-/* =========================
-   NAV + MOBILE
-========================= */
-function setupNav() {
-  // mobile menu
-  if (burgerBtn && mobilePanel) {
-    burgerBtn.addEventListener("click", () => {
-      const open = mobilePanel.classList.toggle("open");
-      burgerBtn.setAttribute("aria-expanded", open);
-    });
-  }
-
-  // more dropdown
-  if (moreBtn && moreMenu) {
-    moreBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const open = moreMenu.classList.toggle("open");
-      moreBtn.setAttribute("aria-expanded", open);
-    });
-
-    document.addEventListener("click", (e) => {
-      if (!moreMenu.contains(e.target)) {
-        moreMenu.classList.remove("open");
-        moreBtn.setAttribute("aria-expanded", "false");
-      }
-    });
-  }
-}
-
-/* =========================
-   SEASON FILTERS
-========================= */
-function setupFilters() {
-  const tabs = document.querySelectorAll(".tab");
-  const cards = document.querySelectorAll(".season-card");
-
-  tabs.forEach(tab => {
-    tab.addEventListener("click", () => {
-      tabs.forEach(t => t.classList.remove("active"));
-      tab.classList.add("active");
-
-      const filter = tab.dataset.filter;
-
-      cards.forEach(card => {
-        const match = filter === "all" || card.dataset.status === filter;
-        card.style.display = match ? "" : "none";
-      });
-    });
-  });
-}
-
-/* =========================
-   LEGACY MODAL
-========================= */
 const legacyData = {
   oracles: {
     name: "Oracles",
     timeline: [
-      { season: "Season 1", role: "Post-Apocalypse", event: "First major event hosted", outcome: "200 players ACTIVE!" },
-      { season: "Season 2", role: "Vacation Disaster", event: "Second event (WIP)", outcome: "WIP" }
+      {
+        season: "Season 1",
+        role: "Post-Apocalyptic Era",
+        event: "First major civilization event hosted, massive player turnout.",
+        outcome: "200 players ACTIVE"
+      },
+      {
+        season: "Season 2",
+        role: "Vacation Disaster",
+        event: "Second event with unstable alliances and chaos arcs.",
+        outcome: "WIP"
+      }
     ],
     moments: [
-      { type: "war", text: "Vespera vs The Eye conflict" },
-      { type: "achievement", text: "The Eye was largest nation" }
+      { type: "war", text: "The Eye vs Vespera conflict ended in Vespera victory." },
+      { type: "achievement", text: "The Eye became the largest nation during peak era." },
+      { type: "achievement", text: "Community-first major civilization experiment milestone reached." }
     ]
   },
+
   jcrimzy: {
     name: "JCrimzy's Civilization",
     timeline: [
-      { season: "Season 1", role: "Ants v Humans", event: "Chaos event", outcome: "70 players ACTIVE!" }
+      {
+        season: "Season 1",
+        role: "Ants vs Humans",
+        event: "First hosted civilization event, chaotic faction warfare.",
+        outcome: "70 players ACTIVE"
+      },
+      {
+        season: "Season 2",
+        role: "Fresh Start",
+        event: "Solo-start survival experiment, no alliances initially.",
+        outcome: "60 players ACTIVE"
+      }
     ],
-    moments: []
+    moments: [
+      { type: "war", text: "Ant faction collapsed after early dominance shift." },
+      { type: "achievement", text: "Human faction coordinated large-scale victory." }
+    ]
   },
+
   archie: {
     name: "Archie's Civilization",
     timeline: [
-      { season: "Season 1", role: "Archipelago", event: "Election arc", outcome: "150 players ACTIVE!" }
+      {
+        season: "Season 1",
+        role: "Archipelago Era",
+        event: "Leadership shift after Crabby collapse, new presidency formed.",
+        outcome: "150 players ACTIVE"
+      }
     ],
     moments: [
-      { type: "election", text: "DundeeYT wins landslide" },
-      { type: "war", text: "Copperdale dominates" }
+      { type: "election", text: "DundeeYT won presidency by landslide vote." },
+      { type: "war", text: "Copperdale faction defeated Dundee-aligned forces." },
+      { type: "betrayal", text: "Internal collapse of Crabby-led structure." }
     ]
   }
 };
 
+// ===============================
+// LEGACY MODAL ELEMENTS
+// ===============================
+const legacyModal = document.getElementById('legacyModal');
+const modalTitle = document.getElementById('legacyModalTitle');
+const modalTimeline = document.getElementById('legacyTimeline');
+const modalMoments = document.getElementById('legacyMoments');
+const switchChips = document.getElementById('switchChips');
+const modalClose = document.getElementById('modalClose');
+const modalBack = document.getElementById('modalBack');
+
 let lastFocused = null;
 
+// ===============================
+// RENDER CIV DATA
+// ===============================
+function renderLegacy(id) {
+  const civ = legacyData[id];
+  if (!civ) return;
+
+  modalTitle.textContent = civ.name;
+
+  // timeline
+  modalTimeline.innerHTML = civ.timeline.map(t => `
+    <div class="timeline-item">
+      <span class="t-season">${t.season}</span>
+      <span class="t-role">${t.role}</span>
+      <p class="t-event">${t.event}</p>
+      <span class="t-outcome">${t.outcome}</span>
+    </div>
+  `).join('');
+
+  // moments
+  modalMoments.innerHTML = civ.moments.map(m => `
+    <div class="moment-item">
+      <span class="moment-tag ${m.type || 'achievement'}">${m.type || 'event'}</span>
+      <span class="moment-text">${m.text}</span>
+    </div>
+  `).join('');
+
+  // switch buttons
+  switchChips.innerHTML = Object.keys(legacyData)
+    .filter(k => k !== id)
+    .map(k => `
+      <button class="switch-chip" data-switch="${k}">
+        ${legacyData[k].name}
+      </button>
+    `).join('');
+
+  document.querySelectorAll('[data-switch]').forEach(btn => {
+    btn.addEventListener('click', () => renderLegacy(btn.dataset.switch));
+  });
+}
+
+// ===============================
+// OPEN / CLOSE MODAL
+// ===============================
 function openLegacy(id, trigger) {
-  const data = legacyData[id];
-  if (!data) return;
+  lastFocused = trigger || document.activeElement;
 
-  lastFocused = trigger;
+  renderLegacy(id);
 
-  document.getElementById("legacyModalTitle").textContent = data.name;
+  legacyModal.classList.add('open');
+  legacyModal.setAttribute('aria-hidden', 'false');
 
-  document.getElementById("legacyTimeline").innerHTML = data.timeline
-    .map(t => `
-      <div class="timeline-item">
-        <span class="t-season">${t.season}</span>
-        <span class="t-role">${t.role}</span>
-        <p class="t-event">${t.event}</p>
-        <span class="t-outcome">${t.outcome}</span>
-      </div>
-    `).join("");
+  document.body.style.overflow = 'hidden';
 
-  document.getElementById("legacyMoments").innerHTML = data.moments
-    .map(m => `
-      <div class="moment-item">
-        <span class="moment-tag ${m.type}">${m.type}</span>
-        <span class="moment-text">${m.text}</span>
-      </div>
-    `).join("");
-
-  legacyModal.classList.add("open");
-  legacyModal.setAttribute("aria-hidden", "false");
-  document.body.style.overflow = "hidden";
+  modalClose?.focus();
 }
 
 function closeLegacy() {
-  legacyModal.classList.remove("open");
-  legacyModal.setAttribute("aria-hidden", "true");
-  document.body.style.overflow = "";
+  legacyModal.classList.remove('open');
+  legacyModal.setAttribute('aria-hidden', 'true');
+
+  document.body.style.overflow = '';
 
   if (lastFocused) lastFocused.focus();
 }
 
-/* =========================
-   INIT
-========================= */
-function init() {
-  renderAuth();
-  setupNav();
-  setupFilters();
-
-  authButtons.forEach(btn => {
-    btn.addEventListener("click", toggleLogin);
+// ===============================
+// EVENTS
+// ===============================
+document.querySelectorAll('[data-legacy]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    openLegacy(btn.dataset.legacy, btn);
   });
+});
 
-  document.querySelectorAll("[data-legacy]").forEach(btn => {
-    btn.addEventListener("click", () => openLegacy(btn.dataset.legacy, btn));
-  });
+modalClose?.addEventListener('click', closeLegacy);
+modalBack?.addEventListener('click', closeLegacy);
 
-  document.getElementById("modalClose")?.addEventListener("click", closeLegacy);
-  document.getElementById("modalBack")?.addEventListener("click", closeLegacy);
+legacyModal?.addEventListener('click', (e) => {
+  if (e.target === legacyModal) closeLegacy();
+});
 
-  legacyModal?.addEventListener("click", (e) => {
-    if (e.target === legacyModal) closeLegacy();
-  });
-
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeLegacy();
-  });
-}
-
-init();
+// ESC key support
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeLegacy();
+});
 </script>
 
 </body>
