@@ -405,26 +405,32 @@
     </nav>
 
     <div class="nav-more" id="moreMenu">
-      <button id="moreBtn" aria-expanded="false" aria-controls="moreDropdown">More <span class="caret"></span></button>
+      <button id="moreBtn" aria-expanded="false">More <span class="caret"></span></button>
       <div class="dropdown" id="moreDropdown">
         <a href="forms.html">Other Forms</a>
         <a href="tickets.html">Claims</a>
         <a href="notifications.html">Announcements</a>
         <a href="perks.html">Advantages</a>
-        <a href="terms.html">Rules &amp; & Conditions</a>
+        <a href="terms.html">Rules & Conditions</a>
         <a href="staff.html">Staff</a>
       </div>
     </div>
 
     <div class="nav-actions">
+
       <div class="auth-chip" id="authChip">
-        <span class="avatar">GU</span>
-        guest_user
+        <div class="avatar" id="avatar">GU</div>
+        <span id="username">Guest</span>
       </div>
-      <button class="btn btn-primary btn-small" id="navAuthBtn" data-auth-btn>Login with Discord</button>
-      <button class="nav-burger" id="burgerBtn" aria-label="Open menu" aria-expanded="false">
+
+      <button class="btn btn-primary btn-small" data-auth-btn>
+        Login with Discord
+      </button>
+
+      <button class="nav-burger" id="burgerBtn" aria-label="Open menu">
         <span></span>
       </button>
+
     </div>
   </div>
 
@@ -438,13 +444,16 @@
       <a href="shop.html">Shop</a>
       <a href="youtube.html">Content</a>
       <a href="faq.html">Chat Bot</a>
+
       <div class="mobile-divider">More</div>
+
       <a href="forms.html">Other Forms</a>
       <a href="tickets.html">Claims</a>
       <a href="notifications.html">Announcements</a>
       <a href="perks.html">Advantages</a>
-      <a href="terms.html">Rules &amp; & Conditions</a>
+      <a href="terms.html">Rules & Conditions</a>
       <a href="staff.html">Staff</a>
+
       <button class="btn btn-primary" data-auth-btn>Login with Discord</button>
     </div>
   </div>
@@ -578,7 +587,9 @@
           UNIFIED EVENTS
         </a>
         <p>A competitive Minecraft civilization event platform, run on Discord identity and structured seasons.</p>
-        <button class="btn btn-ghost btn-small" style="margin-top:1.1rem;" data-auth-btn>Login with Discord</button>
+        <button class="btn btn-ghost btn-small" style="margin-top:1.1rem;" data-auth-btn>
+          Login with Discord
+        </button>
       </div>
 
       <div class="footer-col">
@@ -600,7 +611,7 @@
       <div class="footer-col">
         <h4>Info</h4>
         <a href="faq.html">Chat Bot</a>
-        <a href="terms.html">Rules &amp; & Conditions</a>
+        <a href="terms.html">Rules & Conditions</a>
         <a href="staff.html">Staff</a>
         <a href="forms.html">Other Forms</a>
       </div>
@@ -612,83 +623,103 @@
     </div>
   </div>
 </footer>
+
 <script>
-  // Mobile nav toggle
-  const burgerBtn = document.getElementById('burgerBtn');
-  const mobilePanel = document.getElementById('mobilePanel');
-  burgerBtn.addEventListener('click', () => {
-    const open = mobilePanel.classList.toggle('open');
-    burgerBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
-  });
+/* ---------------- NAV ---------------- */
+const burgerBtn = document.getElementById("burgerBtn");
+const mobilePanel = document.getElementById("mobilePanel");
 
-  // "More" dropdown toggle
-  const moreMenu = document.getElementById('moreMenu');
-  const moreBtn = document.getElementById('moreBtn');
-  moreBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const open = moreMenu.classList.toggle('open');
-    moreBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
-  });
-  document.addEventListener('click', (e) => {
-    if (!moreMenu.contains(e.target)) {
-      moreMenu.classList.remove('open');
-      moreBtn.setAttribute('aria-expanded', 'false');
-    }
-  });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      moreMenu.classList.remove('open');
-      moreBtn.setAttribute('aria-expanded', 'false');
-      mobilePanel.classList.remove('open');
-    }
-  });
+burgerBtn?.addEventListener("click", () => {
+  mobilePanel.classList.toggle("open");
+});
 
-  // Auth — check session then update UI
-  fetch('/api/me')
-    .then(r => r.json())
-    .then(user => {
-      if (user.loggedIn) {
-        document.body.classList.add('is-authed');
-        const chip = document.getElementById('authChip');
-        if (chip) {
-          chip.querySelector('.avatar').textContent = user.username.slice(0, 2).toUpperCase();
-          chip.querySelector('span:not(.avatar)').textContent = user.username;
-        }
-        document.querySelectorAll('[data-auth-btn]').forEach(btn => {
-          btn.textContent = 'Go to Dashboard';
-          btn.addEventListener('click', () => window.location.href = '/dashboard');
-        });
-        const authStatus = document.getElementById('authStatus');
-        if (authStatus) authStatus.textContent = `Signed in as ${user.username}`;
-      } else {
-        document.querySelectorAll('[data-auth-btn]').forEach(btn => {
-          btn.textContent = 'Login with Discord';
-          btn.addEventListener('click', () => window.location.href = '/auth/discord');
-        });
-      }
-    })
-    .catch(() => {
-      document.querySelectorAll('[data-auth-btn]').forEach(btn => {
-        btn.textContent = 'Login with Discord';
-        btn.addEventListener('click', () => window.location.href = 'login.html');
-      });
-    });
+/* dropdown */
+const moreMenu = document.getElementById("moreMenu");
+const moreBtn = document.getElementById("moreBtn");
 
-  // Scroll-reveal
-  const revealEls = document.querySelectorAll('.reveal');
-  if ('IntersectionObserver' in window) {
-    const obs = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('in');
-          obs.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.15 });
-    revealEls.forEach(el => obs.observe(el));
-  } else {
-    revealEls.forEach(el => el.classList.add('in'));
+moreBtn?.addEventListener("click", (e) => {
+  e.stopPropagation();
+  moreMenu.classList.toggle("open");
+});
+
+document.addEventListener("click", (e) => {
+  if (!moreMenu.contains(e.target)) {
+    moreMenu.classList.remove("open");
   }
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    moreMenu.classList.remove("open");
+    mobilePanel.classList.remove("open");
+  }
+});
+
+/* ---------------- AUTH (FIXED CLEAN VERSION) ---------------- */
+async function loadUser() {
+  try {
+    const res = await fetch("/api/me");
+    const user = await res.json();
+
+    const btns = document.querySelectorAll("[data-auth-btn]");
+    const chip = document.getElementById("authChip");
+    const usernameEl = document.getElementById("username");
+    const avatarEl = document.getElementById("avatar");
+    const status = document.getElementById("authStatus");
+
+    if (user.loggedIn) {
+      document.body.classList.add("is-authed");
+
+      if (usernameEl) usernameEl.textContent = user.username;
+      if (avatarEl) avatarEl.textContent = user.username.slice(0, 2).toUpperCase();
+
+      if (chip) chip.style.display = "flex";
+
+      btns.forEach(btn => {
+        btn.textContent = "Go to Dashboard";
+        btn.onclick = () => (window.location.href = "/dashboard");
+      });
+
+      if (status) status.textContent = `Signed in as ${user.username}`;
+    } else {
+      document.body.classList.remove("is-authed");
+
+      btns.forEach(btn => {
+        btn.textContent = "Login with Discord";
+        btn.onclick = () => (window.location.href = "/auth/discord");
+      });
+
+      if (status) status.textContent = "";
+    }
+  } catch (err) {
+    console.log("Auth failed:", err);
+
+    document.querySelectorAll("[data-auth-btn]").forEach(btn => {
+      btn.textContent = "Login with Discord";
+      btn.onclick = () => (window.location.href = "/auth/discord");
+    });
+  }
+}
+
+loadUser();
+
+/* ---------------- REVEAL ---------------- */
+const revealEls = document.querySelectorAll(".reveal");
+
+if ("IntersectionObserver" in window) {
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("in");
+        obs.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+
+  revealEls.forEach(el => obs.observe(el));
+} else {
+  revealEls.forEach(el => el.classList.add("in"));
+}
 </script>
 
 </body>
