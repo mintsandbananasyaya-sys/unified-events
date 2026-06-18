@@ -722,9 +722,16 @@ const state = {
 };
 
 /* load from storage */
-function loadAuth() {
-  const saved = localStorage.getItem("ue_user");
-  state.user = saved ? JSON.parse(saved) : null;
+async function loadAuth() {
+  const res = await fetch("/api/me", {
+    credentials: "include"
+  });
+
+  if (res.ok) {
+    state.user = await res.json();
+  } else {
+    state.user = null;
+  }
 }
 
 /* save to storage */
