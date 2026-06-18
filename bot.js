@@ -26,8 +26,11 @@ let settings = {};
 // =====================
 async function loadSettings() {
   try {
-    const res = await axios.get("http://localhost:3000/api/settings");
-    settings = res.data;
+const res = await axios.get(
+  "https://unified-events.onrender.com/api/settings/1517281649375707176"
+);
+
+settings = res.data;
   } catch (err) {
     console.log("settings fetch failed:", err.message);
   }
