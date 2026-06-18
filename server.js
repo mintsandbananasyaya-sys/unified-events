@@ -97,7 +97,7 @@ app.get("/auth/discord/callback", async (req, res) => {
     params.append("redirect_uri", REDIRECT_URI);
 
     const tokenRes = await axios.post(
-      "https://discord.com/api/oauth2/token",
+      "https://discord.com/api/v10/oauth2/token",
       params,
       {
         headers: {
