@@ -1,1 +1,654 @@
-WIp
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enlist — Unified Events</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+
+  /* ---------- TOKENS ---------- */
+  :root{
+    --void:#0a0d14;
+    --void-soft:#11151f;
+    --panel:#141925;
+    --line:rgba(255,255,255,0.09);
+    --line-soft:rgba(255,255,255,0.05);
+    --ink:#edeff5;
+    --mist:#8b92a6;
+    --mist-dim:#5b6175;
+    --blue:#4169ff;
+    --blue-dim:#1c2c66;
+    --red:#ff3b4e;
+    --red-dim:#5e1620;
+    --violet:#a25cff;
+    --radius:7px;
+    --radius-lg:10px;
+    --font-display:'Big Shoulders Display', sans-serif;
+    --font-body:'IBM Plex Sans', sans-serif;
+    --font-mono:'IBM Plex Mono', monospace;
+    --container:1180px;
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--void);
+    color:var(--ink);
+    font-family:var(--font-body);
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+  }
+  a{color:inherit;text-decoration:none;}
+  ul{list-style:none;}
+  button{font-family:inherit;cursor:pointer;}
+
+  *:focus-visible{outline:2px solid var(--blue);outline-offset:3px;border-radius:3px;}
+
+  .wrap{
+    max-width:var(--container);
+    margin:0 auto;
+    padding-inline:clamp(20px,5vw,56px);
+  }
+
+  .eyebrow{
+    font-family:var(--font-mono);
+    font-size:0.72rem;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    font-weight:500;
+  }
+  .eyebrow.is-blue{color:var(--blue);}
+  .eyebrow.is-red{color:var(--red);}
+  .eyebrow.is-mist{color:var(--mist-dim);}
+
+  /* ---------- BUTTONS ---------- */
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    gap:0.55rem;
+    font-family:var(--font-body);
+    font-weight:600;
+    font-size:0.92rem;
+    padding:0.8rem 1.5rem;
+    border-radius:var(--radius);
+    border:1px solid transparent;
+    transition:transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+    white-space:nowrap;
+  }
+  .btn-primary{
+    background:linear-gradient(115deg, var(--blue), var(--red));
+    color:#fff;
+    box-shadow:0 0 0 1px rgba(255,255,255,0.06) inset, 0 10px 26px -12px rgba(255,59,78,0.45);
+  }
+  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 0 0 1px rgba(255,255,255,0.1) inset, 0 14px 30px -10px rgba(65,105,255,0.5);}
+  .btn-ghost{
+    background:transparent;
+    color:var(--ink);
+    border-color:var(--line);
+  }
+  .btn-ghost:hover{border-color:rgba(255,255,255,0.3);background:rgba(255,255,255,0.03);}
+  .btn-small{padding:0.55rem 1.05rem;font-size:0.82rem;}
+
+  /* ---------- NAV ---------- */
+  .nav{
+    position:sticky;top:0;z-index:60;
+    background:rgba(10,13,20,0.78);
+    backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--line-soft);
+  }
+  .nav-inner{
+    display:flex;align-items:center;justify-content:space-between;
+    height:72px;
+  }
+  .brand{display:flex;align-items:center;gap:0.65rem;font-family:var(--font-display);font-weight:700;font-size:1.15rem;letter-spacing:0.01em;}
+  .brand-mark{width:30px;height:30px;flex-shrink:0;}
+
+  .nav-links{display:flex;align-items:center;gap:1.7rem;}
+  .nav-links a{
+    font-family:var(--font-mono);
+    font-size:0.78rem;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--mist);
+    transition:color 0.15s ease;
+  }
+  .nav-links a:hover{color:var(--ink);}
+  .nav-links a.active{color:var(--ink);}
+
+  .nav-more{position:relative;}
+  .nav-more > button{
+    display:flex;align-items:center;gap:0.35rem;
+    background:none;border:none;
+    font-family:var(--font-mono);font-size:0.78rem;letter-spacing:0.06em;text-transform:uppercase;
+    color:var(--mist);
+  }
+  .nav-more > button:hover{color:var(--ink);}
+  .nav-more .caret{width:8px;height:8px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg);margin-top:-3px;transition:transform 0.15s ease;}
+  .nav-more.open .caret{transform:rotate(225deg);margin-top:3px;}
+
+  .dropdown{
+    position:absolute;top:calc(100% + 14px);right:0;
+    min-width:220px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius-lg);
+    padding:0.4rem;
+    opacity:0;visibility:hidden;transform:translateY(-6px);
+    transition:opacity 0.16s ease, transform 0.16s ease, visibility 0.16s;
+    box-shadow:0 20px 40px -16px rgba(0,0,0,0.6);
+  }
+  .nav-more.open .dropdown{opacity:1;visibility:visible;transform:translateY(0);}
+  .dropdown a{
+    display:block;padding:0.6rem 0.75rem;
+    font-family:var(--font-body);font-size:0.88rem;text-transform:none;letter-spacing:0;
+    color:var(--mist);border-radius:6px;
+  }
+  .dropdown a:hover{background:var(--void-soft);color:var(--ink);}
+
+  .nav-actions{display:flex;align-items:center;gap:0.85rem;}
+
+  .auth-chip{
+    display:none;align-items:center;gap:0.55rem;
+    font-family:var(--font-mono);font-size:0.78rem;color:var(--mist);
+    border:1px solid var(--line);border-radius:99px;padding:0.35rem 0.85rem 0.35rem 0.4rem;
+  }
+  .auth-chip .avatar{
+    width:24px;height:24px;border-radius:50%;
+    background:linear-gradient(135deg,var(--blue),var(--red));
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-display);font-size:0.7rem;color:#fff;
+  }
+  body.is-authed .auth-chip{display:flex;}
+
+  .nav-burger{
+    display:none;
+    width:38px;height:38px;align-items:center;justify-content:center;
+    background:transparent;border:1px solid var(--line);border-radius:var(--radius);
+  }
+  .nav-burger span{display:block;width:16px;height:1.5px;background:var(--ink);position:relative;}
+  .nav-burger span::before,.nav-burger span::after{content:"";position:absolute;left:0;width:16px;height:1.5px;background:var(--ink);transition:transform 0.2s ease;}
+  .nav-burger span::before{top:-5px;}
+  .nav-burger span::after{top:5px;}
+
+  .mobile-panel{
+    display:none;
+    border-top:1px solid var(--line-soft);
+    background:var(--void-soft);
+  }
+  .mobile-panel.open{display:block;}
+  .mobile-panel .wrap{padding-block:1.1rem;}
+  .mobile-panel a{
+    display:block;padding:0.7rem 0;
+    font-family:var(--font-mono);font-size:0.85rem;letter-spacing:0.04em;text-transform:uppercase;color:var(--mist);
+    border-bottom:1px solid var(--line-soft);
+  }
+  .mobile-panel a:last-of-type{border-bottom:none;}
+  .mobile-divider{padding-top:0.6rem;margin-top:0.4rem;border-top:1px solid var(--line-soft);font-family:var(--font-mono);font-size:0.68rem;color:var(--mist-dim);letter-spacing:0.12em;text-transform:uppercase;}
+  .mobile-panel .btn{width:100%;justify-content:center;margin-top:1rem;}
+
+  /* ---------- PAGE LAYOUT ---------- */
+  main{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding-block:clamp(72px,14vw,140px);
+    position:relative;
+    overflow:hidden;
+  }
+
+  /* Ambient background glows */
+  .bg-glow{
+    position:absolute;
+    border-radius:50%;
+    pointer-events:none;
+    filter:blur(80px);
+  }
+  .bg-glow.top-left{
+    width:520px;height:420px;
+    top:-80px;left:-100px;
+    background:radial-gradient(circle, rgba(65,105,255,0.12) 0%, transparent 70%);
+    animation:drift-a 18s ease-in-out infinite;
+  }
+  .bg-glow.bottom-right{
+    width:460px;height:360px;
+    bottom:-60px;right:-80px;
+    background:radial-gradient(circle, rgba(255,59,78,0.1) 0%, transparent 70%);
+    animation:drift-b 22s ease-in-out infinite;
+  }
+  @keyframes drift-a{0%,100%{transform:translate(0,0);}50%{transform:translate(20px,14px);}}
+  @keyframes drift-b{0%,100%{transform:translate(0,0);}50%{transform:translate(-16px,18px);}}
+
+  /* ---------- CLOSED CARD ---------- */
+  .closed-card{
+    position:relative;
+    z-index:2;
+    max-width:580px;
+    width:100%;
+    text-align:center;
+  }
+
+  /* Lock icon */
+  .lock-wrap{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:72px;height:72px;
+    border-radius:50%;
+    background:var(--void-soft);
+    border:1px solid var(--line);
+    margin-bottom:2rem;
+    position:relative;
+  }
+  .lock-wrap::after{
+    content:"";
+    position:absolute;inset:-1px;
+    border-radius:50%;
+    background:conic-gradient(from 180deg, var(--blue), var(--red), var(--blue));
+    z-index:-1;
+    opacity:0.5;
+  }
+  .lock-icon{
+    width:28px;height:28px;
+    color:var(--mist);
+  }
+
+  /* Status badge */
+  .status-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:0.5rem;
+    font-family:var(--font-mono);
+    font-size:0.72rem;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--mist-dim);
+    border:1px solid var(--line);
+    border-radius:99px;
+    padding:0.35rem 0.9rem;
+    margin-bottom:1.6rem;
+  }
+  .status-dot{
+    width:6px;height:6px;border-radius:50%;
+    background:var(--mist-dim);
+    flex-shrink:0;
+  }
+
+  .closed-card h1{
+    font-family:var(--font-display);
+    font-weight:800;
+    font-size:clamp(2.4rem,7vw,4rem);
+    line-height:0.97;
+    letter-spacing:0.01em;
+    text-transform:uppercase;
+    margin-bottom:1.2rem;
+  }
+
+  .closed-card h1 .line-dim{
+    display:block;
+    color:var(--mist-dim);
+    font-size:0.58em;
+    letter-spacing:0.04em;
+    margin-bottom:0.15em;
+  }
+
+  .closed-card p{
+    color:var(--mist);
+    font-size:1.02rem;
+    max-width:420px;
+    margin-inline:auto;
+    margin-bottom:2.2rem;
+    line-height:1.65;
+  }
+
+  /* Divider with label */
+  .or-divider{
+    display:flex;
+    align-items:center;
+    gap:0.9rem;
+    margin-block:1.6rem;
+    color:var(--mist-dim);
+    font-family:var(--font-mono);
+    font-size:0.7rem;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+  }
+  .or-divider::before,.or-divider::after{
+    content:"";flex:1;height:1px;background:var(--line);
+  }
+
+  /* Info tiles */
+  .info-tiles{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:0.75rem;
+    margin-top:0.4rem;
+  }
+  .tile{
+    background:var(--void-soft);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:1rem 1.1rem;
+    text-align:left;
+  }
+  .tile-label{
+    font-family:var(--font-mono);
+    font-size:0.68rem;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--mist-dim);
+    margin-bottom:0.3rem;
+  }
+  .tile-value{
+    font-size:0.9rem;
+    font-weight:600;
+    color:var(--ink);
+  }
+  .tile-value.is-blue{color:var(--blue);}
+  .tile-value.is-red{color:var(--red);}
+
+  /* Actions */
+  .card-actions{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:0.8rem;
+    flex-wrap:wrap;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer{border-top:1px solid var(--line-soft);padding-top:3.2rem;padding-bottom:2rem;}
+  .footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:2.5rem;padding-bottom:2.6rem;}
+  .footer-brand .brand{margin-bottom:0.9rem;}
+  .footer-brand p{color:var(--mist);font-size:0.88rem;max-width:280px;}
+  .footer-col h4{font-family:var(--font-mono);font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--mist-dim);margin-bottom:1rem;}
+  .footer-col a{display:block;color:var(--mist);font-size:0.9rem;padding-block:0.4rem;}
+  .footer-col a:hover{color:var(--ink);}
+  .footer-bottom{
+    display:flex;justify-content:space-between;align-items:center;
+    border-top:1px solid var(--line-soft);padding-top:1.6rem;
+    font-family:var(--font-mono);font-size:0.74rem;color:var(--mist-dim);flex-wrap:wrap;gap:0.8rem;
+  }
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width:1080px){
+    .nav-links{display:none;}
+    .nav-more{display:none;}
+    .nav-burger{display:flex;}
+  }
+  @media (max-width:640px){
+    .info-tiles{grid-template-columns:1fr;}
+    .footer-grid{grid-template-columns:1fr 1fr;gap:2rem 1.5rem;}
+    .footer-brand{grid-column:span 2;margin-bottom:0.6rem;}
+  }
+  @media (max-width:900px){
+    .footer-grid{grid-template-columns:1.2fr 1fr 1fr;}
+    .footer-grid .footer-col:last-child{grid-column:span 1;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation-duration:0.001s !important;transition-duration:0.1s !important;}
+  }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a href="index.html" class="brand">
+      <svg class="brand-mark" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M16 2 L29 16 L16 30 L16 16 Z" fill="#4169ff"/>
+        <path d="M16 2 L3 16 L16 30 L16 16 Z" fill="#ff3b4e"/>
+      </svg>
+      UNIFIED EVENTS
+    </a>
+
+    <nav class="nav-links" aria-label="Primary">
+      <a href="index.html">Home</a>
+      <a href="event.html">Events</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="apply.html" class="active">Enlist</a>
+      <a href="schedule.html">Timings</a>
+      <a href="shop.html">Shop</a>
+      <a href="youtube.html">Content</a>
+      <a href="faq.html">Chat Bot</a>
+    </nav>
+
+    <div class="nav-more" id="moreMenu">
+      <button id="moreBtn" aria-expanded="false">More <span class="caret"></span></button>
+      <div class="dropdown" id="moreDropdown">
+        <a href="forms.html">Other Forms</a>
+        <a href="tickets.html">Claims</a>
+        <a href="notifications.html">Announcements</a>
+        <a href="perks.html">Advantages</a>
+        <a href="terms.html">Rules & Conditions</a>
+        <a href="staff.html">Staff</a>
+      </div>
+    </div>
+
+    <div class="nav-actions">
+      <div class="auth-chip" id="authChip">
+            <span class="avatar">GU</span>
+            guest_user
+            </div>
+      <button class="btn btn-primary btn-small" data-auth-btn>Login with Discord</button>
+      <button class="nav-burger" id="burgerBtn" aria-label="Open menu">
+        <span></span>
+      </button>
+    </div>
+  </div>
+
+  <div class="mobile-panel" id="mobilePanel">
+    <div class="wrap">
+      <a href="index.html">Home</a>
+      <a href="event.html">Events</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="apply.html">Enlist</a>
+      <a href="schedule.html">Timings</a>
+      <a href="shop.html">Shop</a>
+      <a href="youtube.html">Content</a>
+      <a href="faq.html">Chat Bot</a>
+      <div class="mobile-divider">More</div>
+      <a href="forms.html">Other Forms</a>
+      <a href="tickets.html">Claims</a>
+      <a href="notifications.html">Announcements</a>
+      <a href="perks.html">Advantages</a>
+      <a href="terms.html">Rules & Conditions</a>
+      <a href="staff.html">Staff</a>
+      <button class="btn btn-primary" data-auth-btn>Login with Discord</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="bg-glow top-left"></div>
+  <div class="bg-glow bottom-right"></div>
+
+  <div class="wrap">
+    <div class="closed-card">
+
+      <div class="lock-wrap" aria-hidden="true">
+        <svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      </div>
+
+      <div class="status-badge">
+        <span class="status-dot"></span>
+        Enlistment Window
+      </div>
+
+      <h1>
+        <span class="line-dim">Season applications</span>
+        Closed
+      </h1>
+
+      <p>The application window for the current season has ended. All slots have been filled and placements are being finalized. Check back when the next season opens.</p>
+
+      <div class="card-actions">
+        <a href="notifications.html" class="btn btn-primary">
+          Get notified
+        </a>
+        <a href="event.html" class="btn btn-ghost">
+          View active events
+        </a>
+      </div>
+
+      <div class="or-divider">What to expect next</div>
+
+      <div class="info-tiles">
+        <div class="tile">
+          <div class="tile-label">Next window opens</div>
+          <div class="tile-value is-blue">TBD</div>
+        </div>
+        <div class="tile">
+          <div class="tile-label">Current season status</div>
+          <div class="tile-value is-red">In progress</div>
+        </div>
+        <div class="tile">
+          <div class="tile-label">Open roles</div>
+          <div class="tile-value">None right now</div>
+        </div>
+        <div class="tile">
+          <div class="tile-label">Watch the season</div>
+          <div class="tile-value"><a href="youtube.html" style="color:var(--blue);">Content hub →</a></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html" class="brand">
+          <svg class="brand-mark" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M16 2 L29 16 L16 30 L16 16 Z" fill="#4169ff"/>
+            <path d="M16 2 L3 16 L16 30 L16 16 Z" fill="#ff3b4e"/>
+          </svg>
+          UNIFIED EVENTS
+        </a>
+        <p>A competitive Minecraft civilization event platform, run on Discord identity and structured seasons.</p>
+        <button class="btn btn-ghost btn-small" style="margin-top:1.1rem;" data-auth-btn>Login with Discord</button>
+      </div>
+      <div class="footer-col">
+        <h4>Platform</h4>
+        <a href="index.html">Home</a>
+        <a href="event.html">Events</a>
+        <a href="schedule.html">Timings</a>
+        <a href="shop.html">Shop</a>
+      </div>
+      <div class="footer-col">
+        <h4>Account</h4>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="apply.html">Enlist</a>
+        <a href="tickets.html">Claims</a>
+        <a href="notifications.html">Advantages</a>
+      </div>
+      <div class="footer-col">
+        <h4>Info</h4>
+        <a href="faq.html">Chat Bot</a>
+        <a href="terms.html">Rules & Conditions</a>
+        <a href="staff.html">Staff</a>
+        <a href="forms.html">Other Forms</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Unified Events. Not affiliated with Mojang or Microsoft.</span>
+      <span>Built for structured competition.</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* NAV */
+async function loadUser() {
+  const btns = document.querySelectorAll("[data-auth-btn]");
+  const chip = document.getElementById("authChip");
+  const usernameEl = document.getElementById("username");
+  const avatarEl = document.getElementById("avatar");
+
+  try {
+    const res = await fetch("/api/me", {
+      credentials: "include"
+    });
+
+    if (!res.ok) {
+      throw new Error("Not logged in");
+    }
+
+    const user = await res.json();
+
+    if (user && user.loggedIn) {
+
+      document.body.classList.add("is-authed");
+
+      if (chip) {
+        chip.style.display = "flex";
+      }
+
+      if (usernameEl) {
+        usernameEl.textContent = user.username;
+      }
+
+      if (avatarEl) {
+        avatarEl.textContent =
+          user.username
+            .substring(0, 2)
+            .toUpperCase();
+      }
+
+      btns.forEach(btn => {
+        btn.textContent = "Dashboard";
+
+        btn.onclick = () => {
+          window.location.href = "/dashboard";
+        };
+      });
+
+    } else {
+      throw new Error("Not logged in");
+    }
+
+  } catch (err) {
+
+    document.body.classList.remove("is-authed");
+
+    if (chip) {
+      chip.style.display = "none";
+    }
+
+    if (usernameEl) {
+      usernameEl.textContent = "guest_user";
+    }
+
+    if (avatarEl) {
+      avatarEl.textContent = "GU";
+    }
+
+    btns.forEach(btn => {
+      btn.textContent = "Login with Discord";
+
+      btn.onclick = () => {
+        window.location.href = "/auth/discord";
+      };
+    });
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  loadUser();
+});
+</script>
+
+</body>
+</html>
