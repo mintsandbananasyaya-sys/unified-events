@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 require("dotenv").config();
 
 const express = require("express");
@@ -156,7 +155,6 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-=======
 require("dotenv").config();
 
 const express = require("express");
@@ -314,4 +312,4 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
->>>>>>> 7b1dd3377dde6f537af91736e3f98f62454d8fdc
+
