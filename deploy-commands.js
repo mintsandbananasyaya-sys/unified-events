@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 require("dotenv").config();
 
 const { REST, Routes, SlashCommandBuilder } = require("discord.js");
@@ -34,7 +34,7 @@ const rest = new REST({ version: "10" }).setToken(process.env.BOT_TOKEN);
   } catch (error) {
     console.error("❌ failed to deploy commands:", error);
   }
-=======
+
 require("dotenv").config();
 
 const { REST, Routes, SlashCommandBuilder } = require("discord.js");
@@ -70,5 +70,4 @@ const rest = new REST({ version: "10" }).setToken(process.env.BOT_TOKEN);
   } catch (error) {
     console.error("❌ failed to deploy commands:", error);
   }
->>>>>>> 9d3c923b9a64bb0393372fd5ef35f9939242526e
 })();
