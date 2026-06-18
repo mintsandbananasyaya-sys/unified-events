@@ -1,5 +1,4 @@
 require("dotenv").config();
-require("./bot.js");
 
 const express = require("express");
 const session = require("express-session");
@@ -18,37 +17,47 @@ app.use(express.static(path.join(__dirname, "public")));
 app.set("trust proxy", 1);
 
 // =====================
-// SESSION
+// SAFE SESSION (PRODUCTION FRIENDLY)
 // =====================
 app.use(
   session({
-    secret: process.env.SESSION_SECRET,
+    secret: process.env.SESSION_SECRET || "dev-secret-change-me",
     resave: false,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 1000 * 60 * 60 * 24, // 1 day
     },
   })
 );
 
 // =====================
-// ENV
+// SAFE BOT LOAD (won’t crash server)
+// =====================
+try {
+  require("./bot.js");
+  console.log("Bot loaded");
+} catch (err) {
+  console.log("Bot failed to load:", err.message);
+}
+
+// =====================
+// ENV VARS CHECK
 // =====================
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
 const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
 
+if (!CLIENT_ID || !CLIENT_SECRET || !REDIRECT_URI) {
+  console.log("Missing Discord OAuth env vars!");
+}
+
 // =====================
-// BOT SETTINGS (GLOBAL MEMORY)
+// MEMORY SETTINGS (simple runtime store)
 // =====================
-let settings = {
-  staffChannelId: "",
-  staffRoleId: "",
-  formsEnabled: true,
-  ticketsEnabled: true,
-};
+let settings = {};
 
 // =====================
 // AUTH MIDDLEWARE
@@ -74,10 +83,16 @@ app.get("/dashboard", requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "dashboard.html"));
 });
 
+app.get("/bot-dashboard", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "bot-dashboard.html"));
+});
+
 // =====================
 // DISCORD LOGIN
 // =====================
 app.get("/auth/discord", (req, res) => {
+  if (!CLIENT_ID || !REDIRECT_URI) return res.send("OAuth not configured");
+
   const url =
     "https://discord.com/oauth2/authorize" +
     `?client_id=${CLIENT_ID}` +
@@ -104,9 +119,11 @@ app.get("/auth/discord/callback", async (req, res) => {
         grant_type: "authorization_code",
         code,
         redirect_uri: REDIRECT_URI,
-      }).toString(),
+      }),
       {
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
       }
     );
 
@@ -116,8 +133,7 @@ app.get("/auth/discord/callback", async (req, res) => {
       },
     });
 
-    req.session.accessToken = tokenRes.data.access_token;
-
+    // SAFE SESSION DATA ONLY
     req.session.user = {
       id: userRes.data.id,
       username: userRes.data.username,
@@ -126,18 +142,16 @@ app.get("/auth/discord/callback", async (req, res) => {
 
     res.redirect("/dashboard");
   } catch (err) {
-    console.log(err.response?.data || err.message);
+    console.log("OAuth error:", err.response?.data || err.message);
     res.redirect("/login");
   }
 });
 
 // =====================
-// USER INFO
+// API - USER
 // =====================
 app.get("/api/me", (req, res) => {
-  if (!req.session.user) {
-    return res.json({ loggedIn: false });
-  }
+  if (!req.session.user) return res.json({ loggedIn: false });
 
   const avatarURL = req.session.user.avatar
     ? `https://cdn.discordapp.com/avatars/${req.session.user.id}/${req.session.user.avatar}.png`
@@ -151,15 +165,19 @@ app.get("/api/me", (req, res) => {
 });
 
 // =====================
-// SETTINGS API
+// API - SETTINGS (SAFE MEMORY STORE)
 // =====================
 app.get("/api/settings/:guildId", (req, res) => {
-  const guildId = req.params.guildId;
+  const { guildId } = req.params;
   res.json(settings[guildId] || {});
 });
 
 app.post("/api/settings", (req, res) => {
   const { guildId, ...data } = req.body;
+
+  if (!guildId) {
+    return res.status(400).json({ error: "Missing guildId" });
+  }
 
   settings[guildId] = data;
 
@@ -170,10 +188,21 @@ app.post("/api/settings", (req, res) => {
 });
 
 // =====================
-// GUILD CHANNELS
+// LOGOUT
+// =====================
+app.get("/logout", (req, res) => {
+  req.session.destroy(() => res.redirect("/login"));
+});
+
+// =====================
+// GUILD CHANNELS (BOT API)
 // =====================
 app.get("/api/guild/:guildId/channels", async (req, res) => {
   try {
+    if (!process.env.BOT_TOKEN) {
+      return res.status(500).json({ error: "Missing BOT_TOKEN" });
+    }
+
     const channels = await axios.get(
       `https://discord.com/api/guilds/${req.params.guildId}/channels`,
       {
@@ -185,28 +214,16 @@ app.get("/api/guild/:guildId/channels", async (req, res) => {
 
     res.json(channels.data);
   } catch (err) {
+    console.log(err.message);
     res.status(500).json({ error: "failed to fetch channels" });
   }
-});
-
-// =====================
-// LOGOUT
-// =====================
-app.get("/logout", (req, res) => {
-  req.session.destroy(() => res.redirect("/login"));
-});
-
-// =====================
-// BOT DASHBOARD PAGE
-// =====================
-app.get("/bot-dashboard", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "bot-dashboard.html"));
 });
 
 // =====================
 // START SERVER
 // =====================
 const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
