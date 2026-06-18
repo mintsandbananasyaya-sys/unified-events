@@ -776,102 +776,97 @@
 
 <script>
 /* =========================
-   SIMPLE STATE (AUTH + UI)
+   GLOBAL STATE (FAKE AUTH)
 ========================= */
-
 const state = {
-  user: null
+  user: {
+    loggedIn: false,
+    username: "guest_user",
+    avatar: "GU"
+  }
 };
 
-// load saved user (fake auth persistence)
-function loadUser() {
-  const saved = localStorage.getItem("ue_user");
-  if (saved) state.user = JSON.parse(saved);
-}
+/* =========================
+   ELEMENTS
+========================= */
+const authButtons = document.querySelectorAll("[data-auth-btn]");
+const authChip = document.getElementById("authChip");
 
-function saveUser() {
-  localStorage.setItem("ue_user", JSON.stringify(state.user));
-}
+const burgerBtn = document.getElementById("burgerBtn");
+const mobilePanel = document.getElementById("mobilePanel");
 
-function logout() {
-  state.user = null;
-  localStorage.removeItem("ue_user");
-  renderAuth();
-}
+const moreMenu = document.getElementById("moreMenu");
+const moreBtn = document.getElementById("moreBtn");
 
-/* fake login (replace later with real Discord OAuth) */
-function login() {
-  state.user = {
-    username: "RealUser_" + Math.floor(Math.random() * 999),
-    avatar: "RU"
-  };
-  saveUser();
-  renderAuth();
-}
+const legacyModal = document.getElementById("legacyModal");
 
 /* =========================
    AUTH RENDER
 ========================= */
-
 function renderAuth() {
-  const chip = document.getElementById("authChip");
-  const avatar = chip.querySelector(".avatar");
+  const { loggedIn, username, avatar } = state.user;
 
-  const buttons = document.querySelectorAll("[data-auth-btn]");
+  // chip update
+  if (authChip) {
+    authChip.innerHTML = `
+      <span class="avatar">${avatar}</span>
+      ${username}
+    `;
+  }
 
-  if (state.user) {
-    document.body.classList.add("is-authed");
+  // button update
+  authButtons.forEach(btn => {
+    btn.textContent = loggedIn ? "Go to Dashboard" : "Login with Discord";
+  });
+}
 
-    avatar.textContent = state.user.avatar;
-    chip.lastChild.textContent = " " + state.user.username;
+/* fake login toggle (replace later with real Discord OAuth) */
+function toggleLogin() {
+  state.user.loggedIn = !state.user.loggedIn;
 
-    buttons.forEach(b => {
-      b.textContent = "Go to Dashboard";
-    });
+  if (state.user.loggedIn) {
+    state.user.username = "real_user";
+    state.user.avatar = "RU";
   } else {
-    document.body.classList.remove("is-authed");
+    state.user.username = "guest_user";
+    state.user.avatar = "GU";
+  }
 
-    avatar.textContent = "GU";
-    chip.lastChild.textContent = " guest_user";
+  renderAuth();
+}
 
-    buttons.forEach(b => {
-      b.textContent = "Login with Discord";
+/* =========================
+   NAV + MOBILE
+========================= */
+function setupNav() {
+  // mobile menu
+  if (burgerBtn && mobilePanel) {
+    burgerBtn.addEventListener("click", () => {
+      const open = mobilePanel.classList.toggle("open");
+      burgerBtn.setAttribute("aria-expanded", open);
+    });
+  }
+
+  // more dropdown
+  if (moreBtn && moreMenu) {
+    moreBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const open = moreMenu.classList.toggle("open");
+      moreBtn.setAttribute("aria-expanded", open);
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!moreMenu.contains(e.target)) {
+        moreMenu.classList.remove("open");
+        moreBtn.setAttribute("aria-expanded", "false");
+      }
     });
   }
 }
 
 /* =========================
-   NAV / MOBILE MENU
+   SEASON FILTERS
 ========================= */
-
-function setupNav() {
-  const burger = document.getElementById("burgerBtn");
-  const mobile = document.getElementById("mobilePanel");
-
-  burger?.addEventListener("click", () => {
-    const open = mobile.classList.toggle("open");
-    burger.setAttribute("aria-expanded", open);
-  });
-
-  const moreMenu = document.getElementById("moreMenu");
-  const moreBtn = document.getElementById("moreBtn");
-
-  moreBtn?.addEventListener("click", (e) => {
-    e.stopPropagation();
-    moreMenu.classList.toggle("open");
-  });
-
-  document.addEventListener("click", (e) => {
-    if (!moreMenu.contains(e.target)) {
-      moreMenu.classList.remove("open");
-    }
-  });
-}
-
-/* =========================
-   FILTER TABS
-========================= */
-
 function setupFilters() {
   const tabs = document.querySelectorAll(".tab");
   const cards = document.querySelectorAll(".season-card");
@@ -884,9 +879,7 @@ function setupFilters() {
       const filter = tab.dataset.filter;
 
       cards.forEach(card => {
-        const match =
-          filter === "all" || card.dataset.status === filter;
-
+        const match = filter === "all" || card.dataset.status === filter;
         card.style.display = match ? "" : "none";
       });
     });
@@ -894,70 +887,51 @@ function setupFilters() {
 }
 
 /* =========================
-   SCROLL REVEAL
-========================= */
-
-function setupReveal() {
-  const els = document.querySelectorAll(".reveal");
-
-  const obs = new IntersectionObserver(entries => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        e.target.classList.add("in");
-        obs.unobserve(e.target);
-      }
-    });
-  }, { threshold: 0.12 });
-
-  els.forEach(el => obs.observe(el));
-}
-
-/* =========================
    LEGACY MODAL
 ========================= */
-
 const legacyData = {
   oracles: {
     name: "Oracles",
     timeline: [
-      { season: "Season 1", role: "Post-Apocalyptic", event: "First major event hosted.", outcome: "200 players ACTIVE!" }
+      { season: "Season 1", role: "Post-Apocalypse", event: "First major event hosted", outcome: "200 players ACTIVE!" },
+      { season: "Season 2", role: "Vacation Disaster", event: "Second event (WIP)", outcome: "WIP" }
     ],
     moments: [
       { type: "war", text: "Vespera vs The Eye conflict" },
-      { type: "achievement", text: "Largest nation: The Eye" }
+      { type: "achievement", text: "The Eye was largest nation" }
     ]
   },
   jcrimzy: {
-    name: "JCrimzy Civilization",
+    name: "JCrimzy's Civilization",
     timeline: [
-      { season: "Season 1", role: "Ants vs Humans", event: "Chaos event", outcome: "70 players ACTIVE!" }
+      { season: "Season 1", role: "Ants v Humans", event: "Chaos event", outcome: "70 players ACTIVE!" }
     ],
     moments: []
   },
   archie: {
     name: "Archie's Civilization",
     timeline: [
-      { season: "Season 1", role: "Archipelago", event: "Election era", outcome: "150 players ACTIVE!" }
+      { season: "Season 1", role: "Archipelago", event: "Election arc", outcome: "150 players ACTIVE!" }
     ],
     moments: [
-      { type: "election", text: "DundeeYT wins landslide" }
+      { type: "election", text: "DundeeYT wins landslide" },
+      { type: "war", text: "Copperdale dominates" }
     ]
   }
 };
 
-function setupLegacyModal() {
-  const modal = document.getElementById("legacyModal");
-  const title = document.getElementById("legacyModalTitle");
-  const timeline = document.getElementById("legacyTimeline");
-  const moments = document.getElementById("legacyMoments");
+let lastFocused = null;
 
-  function open(id) {
-    const data = legacyData[id];
-    if (!data) return;
+function openLegacy(id, trigger) {
+  const data = legacyData[id];
+  if (!data) return;
 
-    title.textContent = data.name;
+  lastFocused = trigger;
 
-    timeline.innerHTML = data.timeline.map(t => `
+  document.getElementById("legacyModalTitle").textContent = data.name;
+
+  document.getElementById("legacyTimeline").innerHTML = data.timeline
+    .map(t => `
       <div class="timeline-item">
         <span class="t-season">${t.season}</span>
         <span class="t-role">${t.role}</span>
@@ -966,69 +940,56 @@ function setupLegacyModal() {
       </div>
     `).join("");
 
-    moments.innerHTML = data.moments.map(m => `
+  document.getElementById("legacyMoments").innerHTML = data.moments
+    .map(m => `
       <div class="moment-item">
-        <span class="moment-tag ${m.type || ""}">${m.type || "event"}</span>
+        <span class="moment-tag ${m.type}">${m.type}</span>
         <span class="moment-text">${m.text}</span>
       </div>
     `).join("");
 
-    modal.classList.add("open");
-    modal.setAttribute("aria-hidden", "false");
-  }
-
-  function close() {
-    modal.classList.remove("open");
-    modal.setAttribute("aria-hidden", "true");
-  }
-
-  document.querySelectorAll("[data-legacy]").forEach(btn => {
-    btn.addEventListener("click", () => open(btn.dataset.legacy));
-  });
-
-  document.getElementById("modalClose").addEventListener("click", close);
-  document.getElementById("modalBack").addEventListener("click", close);
-
-  modal.addEventListener("click", (e) => {
-    if (e.target === modal) close();
-  });
-
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") close();
-  });
+  legacyModal.classList.add("open");
+  legacyModal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
 }
 
-/* =========================
-   AUTH BUTTONS
-========================= */
+function closeLegacy() {
+  legacyModal.classList.remove("open");
+  legacyModal.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
 
-function setupAuthButtons() {
-  document.querySelectorAll("[data-auth-btn]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      if (state.user) {
-        // already logged in → pretend dashboard redirect
-        window.location.href = "dashboard.html";
-      } else {
-        login();
-      }
-    });
-  });
+  if (lastFocused) lastFocused.focus();
 }
 
 /* =========================
    INIT
 ========================= */
-
-document.addEventListener("DOMContentLoaded", () => {
-  loadUser();
+function init() {
   renderAuth();
-
   setupNav();
   setupFilters();
-  setupReveal();
-  setupLegacyModal();
-  setupAuthButtons();
-});
+
+  authButtons.forEach(btn => {
+    btn.addEventListener("click", toggleLogin);
+  });
+
+  document.querySelectorAll("[data-legacy]").forEach(btn => {
+    btn.addEventListener("click", () => openLegacy(btn.dataset.legacy, btn));
+  });
+
+  document.getElementById("modalClose")?.addEventListener("click", closeLegacy);
+  document.getElementById("modalBack")?.addEventListener("click", closeLegacy);
+
+  legacyModal?.addEventListener("click", (e) => {
+    if (e.target === legacyModal) closeLegacy();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeLegacy();
+  });
+}
+
+init();
 </script>
 
 </body>
