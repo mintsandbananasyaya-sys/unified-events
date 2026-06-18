@@ -1,7 +1,16 @@
 require("dotenv").config();
-const { Client, GatewayIntentBits, Partials } = require("discord.js");
+
+const {
+  Client,
+  GatewayIntentBits,
+  Partials,
+} = require("discord.js");
+
 const axios = require("axios");
 
+// =====================
+// CLIENT
+// =====================
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -23,118 +32,104 @@ let settings = {};
 async function loadSettings() {
   try {
     const res = await axios.get(
-      `https://unified-events.onrender.com/api/settings/1517281649375707176`
+      "https://unified-events.onrender.com/api/settings/1517281649375707176"
     );
 
     settings = res.data || {};
-    console.log("Settings loaded:", settings);
+
+    console.log("✅ Settings loaded:", settings);
   } catch (err) {
-    console.log("Settings fetch failed:", err.message);
+    console.log("❌ Settings load failed:", err.message);
   }
 }
 
+// load immediately + refresh loop
+loadSettings();
 setInterval(loadSettings, 5000);
 
 // =====================
-// TICKETS MEMORY
+// SIMPLE TICKET MEMORY
 // =====================
-const tickets = new Map();
+const activeTickets = new Set();
 
 // =====================
 // READY
 // =====================
 client.once("ready", () => {
-  console.log(`Logged in as ${client.user.tag}`);
-  loadSettings();
+  console.log(`🤖 Logged in as ${client.user.tag}`);
 });
 
 // =====================
 // MESSAGE HANDLER
 // =====================
 client.on("messageCreate", async (message) => {
-  console.log("MSG RECEIVED:", {
-  content: message.content,
-  dm: message.channel.isDMBased(),
-  user: message.author.id
-});
   if (message.author.bot) return;
 
-  const userId = message.author.id;
+  const staffChannelId = settings.staffChannelId;
 
   // =====================
-  // DM → STAFF FORWARD
+  // DM -> STAFF
   // =====================
   if (message.channel.isDMBased()) {
-    console.log("STAFF CHANNEL ID:", settings.staffChannelId);
     try {
-      if (!tickets.has(userId)) {
-        tickets.set(userId, true);
-
-        await message.reply(
-          "👮 Staff received your message, hang tight..."
-        );
-      }
-
-      if (!settings.staffChannelId) {
-        console.log("No staffChannelId set");
+      if (!staffChannelId) {
+        console.log("⚠️ No staffChannelId set");
         return;
       }
 
-      try {
-  console.log("Trying staff channel:", settings.staffChannelId);
+      // first message only
+      if (!activeTickets.has(message.author.id)) {
+        activeTickets.add(message.author.id);
 
-  const channel = await client.channels.fetch(settings.staffChannelId).catch(err => {
-    console.log("FETCH ERROR:", err.message);
-    return null;
-  });
+        await message.reply(
+          "👮 Staff has received your message, please wait..."
+        );
+      }
 
-  if (!channel) {
-    console.log("Staff channel not found / inaccessible");
-    return;
-  }
+      const channel = await client.channels.fetch(staffChannelId);
 
-  console.log("Channel OK:", channel.name);
+      if (!channel) {
+        console.log("❌ Staff channel not found");
+        return;
+      }
 
-  await channel.send(
-    `📩 **New DM from <@${userId}>**\n\n${message.content}`
-  );
+      await channel.send(
+        `📩 **New DM from <@${message.author.id}>**\n\n${message.content || "*no text*"}`
+      );
 
-  console.log("Sent to staff channel successfully");
-} catch (err) {
-  console.log("FULL SEND ERROR:", err);
-}
+      console.log("✅ Forwarded DM to staff channel");
     } catch (err) {
-      console.log("DM forward error:", err);
+      console.log("❌ DM forward error:", err.message);
     }
   }
 
   // =====================
   // STAFF REPLY SYSTEM
   // =====================
-  if (message.guild) {
-    if (!settings.staffChannelId) return;
-    if (message.channel.id !== settings.staffChannelId) return;
+  if (!message.guild) return;
 
-    if (message.content.startsWith("/reply")) {
-      const args = message.content.split(" ");
-      const targetId = args[1];
-      const text = args.slice(2).join(" ");
+  if (!staffChannelId) return;
+  if (message.channel.id !== staffChannelId) return;
 
-      if (!targetId || !text) {
-        return message.reply("Usage: /reply userId message");
-      }
+  if (!message.content.startsWith("/reply")) return;
 
-      try {
-        const user = await client.users.fetch(targetId);
+  const args = message.content.split(" ");
+  const userId = args[1];
+  const replyText = args.slice(2).join(" ");
 
-        await user.send(`👮 Staff: ${text}`);
+  if (!userId || !replyText) {
+    return message.reply("Usage: /reply <userId> <message>");
+  }
 
-        message.reply("sent ✔");
-      } catch (err) {
-        console.log(err);
-        message.reply("failed to send 💀");
-      }
-    }
+  try {
+    const user = await client.users.fetch(userId);
+
+    await user.send(`👮 Staff: ${replyText}`);
+
+    message.reply("✅ Sent");
+  } catch (err) {
+    console.log("❌ Reply error:", err.message);
+    message.reply("❌ Failed to send DM");
   }
 });
 
