@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -897,3 +898,904 @@
 
 </body>
 </html>
+=======
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Events — Unified Events</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+
+  /* ---------- TOKENS ---------- */
+  :root{
+    --void:#0a0d14;
+    --void-soft:#11151f;
+    --panel:#141925;
+    --line:rgba(255,255,255,0.09);
+    --line-soft:rgba(255,255,255,0.05);
+    --ink:#edeff5;
+    --mist:#8b92a6;
+    --mist-dim:#5b6175;
+    --blue:#4169ff;
+    --blue-dim:#1c2c66;
+    --red:#ff3b4e;
+    --red-dim:#5e1620;
+    --violet:#a25cff;
+    --radius:7px;
+    --radius-lg:10px;
+    --font-display:'Big Shoulders Display', sans-serif;
+    --font-body:'IBM Plex Sans', sans-serif;
+    --font-mono:'IBM Plex Mono', monospace;
+    --container:1180px;
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--void);
+    color:var(--ink);
+    font-family:var(--font-body);
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  a{color:inherit;text-decoration:none;}
+  ul{list-style:none;}
+  button{font-family:inherit;cursor:pointer;}
+
+  *:focus-visible{outline:2px solid var(--blue);outline-offset:3px;border-radius:3px;}
+
+  .wrap{
+    max-width:var(--container);
+    margin:0 auto;
+    padding-inline:clamp(20px,5vw,56px);
+  }
+
+  .eyebrow{
+    font-family:var(--font-mono);
+    font-size:0.72rem;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    font-weight:500;
+  }
+  .eyebrow.is-blue{color:var(--blue);}
+  .eyebrow.is-red{color:var(--red);}
+
+  /* ---------- BUTTONS ---------- */
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    gap:0.55rem;
+    font-family:var(--font-body);
+    font-weight:600;
+    font-size:0.92rem;
+    padding:0.8rem 1.5rem;
+    border-radius:var(--radius);
+    border:1px solid transparent;
+    transition:transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+    white-space:nowrap;
+  }
+  .btn-primary{
+    background:linear-gradient(115deg, var(--blue), var(--red));
+    color:#fff;
+    box-shadow:0 0 0 1px rgba(255,255,255,0.06) inset, 0 10px 26px -12px rgba(255,59,78,0.45);
+  }
+  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 0 0 1px rgba(255,255,255,0.1) inset, 0 14px 30px -10px rgba(65,105,255,0.5);}
+  .btn-ghost{
+    background:transparent;
+    color:var(--ink);
+    border-color:var(--line);
+  }
+  .btn-ghost:hover{border-color:rgba(255,255,255,0.3);background:rgba(255,255,255,0.03);}
+  .btn-small{padding:0.55rem 1.05rem;font-size:0.82rem;}
+
+  /* ---------- NAV ---------- */
+  .nav{
+    position:sticky;top:0;z-index:60;
+    background:rgba(10,13,20,0.78);
+    backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--line-soft);
+  }
+  .nav-inner{
+    display:flex;align-items:center;justify-content:space-between;
+    height:72px;
+  }
+  .brand{display:flex;align-items:center;gap:0.65rem;font-family:var(--font-display);font-weight:700;font-size:1.15rem;letter-spacing:0.01em;}
+  .brand-mark{width:30px;height:30px;flex-shrink:0;}
+
+  .nav-links{display:flex;align-items:center;gap:1.7rem;}
+  .nav-links a{
+    font-family:var(--font-mono);
+    font-size:0.78rem;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--mist);
+    transition:color 0.15s ease;
+    position:relative;
+  }
+  .nav-links a:hover{color:var(--ink);}
+  .nav-links a.active,.mobile-panel a.active{color:var(--ink);}
+  .nav-links a.active::before,.mobile-panel a.active::before{
+    content:"";display:inline-block;width:5px;height:5px;border-radius:50%;
+    background:linear-gradient(135deg,var(--blue),var(--red));margin-right:7px;vertical-align:middle;
+  }
+
+  .nav-more{position:relative;}
+  .nav-more > button{
+    display:flex;align-items:center;gap:0.35rem;
+    background:none;border:none;
+    font-family:var(--font-mono);font-size:0.78rem;letter-spacing:0.06em;text-transform:uppercase;
+    color:var(--mist);
+  }
+  .nav-more > button:hover{color:var(--ink);}
+  .nav-more .caret{width:8px;height:8px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg);margin-top:-3px;transition:transform 0.15s ease;}
+  .nav-more.open .caret{transform:rotate(225deg);margin-top:3px;}
+
+  .dropdown{
+    position:absolute;top:calc(100% + 14px);right:0;
+    min-width:220px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius-lg);
+    padding:0.4rem;
+    opacity:0;visibility:hidden;transform:translateY(-6px);
+    transition:opacity 0.16s ease, transform 0.16s ease, visibility 0.16s;
+    box-shadow:0 20px 40px -16px rgba(0,0,0,0.6);
+  }
+  .nav-more.open .dropdown{opacity:1;visibility:visible;transform:translateY(0);}
+  .dropdown a{
+    display:block;padding:0.6rem 0.75rem;
+    font-family:var(--font-body);font-size:0.88rem;text-transform:none;letter-spacing:0;
+    color:var(--mist);border-radius:6px;
+  }
+  .dropdown a:hover{background:var(--void-soft);color:var(--ink);}
+
+  .nav-actions{display:flex;align-items:center;gap:0.85rem;}
+
+  .auth-chip{
+    display:none;align-items:center;gap:0.55rem;
+    font-family:var(--font-mono);font-size:0.78rem;color:var(--mist);
+    border:1px solid var(--line);border-radius:99px;padding:0.35rem 0.85rem 0.35rem 0.4rem;
+  }
+  .auth-chip .avatar{
+    width:24px;height:24px;border-radius:50%;
+    background:linear-gradient(135deg,var(--blue),var(--red));
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-display);font-size:0.7rem;color:#fff;
+  }
+  body.is-authed .auth-chip{display:flex;}
+
+  .nav-burger{
+    display:none;
+    width:38px;height:38px;align-items:center;justify-content:center;
+    background:transparent;border:1px solid var(--line);border-radius:var(--radius);
+  }
+  .nav-burger span{display:block;width:16px;height:1.5px;background:var(--ink);position:relative;}
+  .nav-burger span::before,.nav-burger span::after{content:"";position:absolute;left:0;width:16px;height:1.5px;background:var(--ink);transition:transform 0.2s ease;}
+  .nav-burger span::before{top:-5px;}
+  .nav-burger span::after{top:5px;}
+
+  .mobile-panel{
+    display:none;
+    border-top:1px solid var(--line-soft);
+    background:var(--void-soft);
+  }
+  .mobile-panel.open{display:block;}
+  .mobile-panel .wrap{padding-block:1.1rem;}
+  .mobile-panel a{
+    display:block;padding:0.7rem 0;
+    font-family:var(--font-mono);font-size:0.85rem;letter-spacing:0.04em;text-transform:uppercase;color:var(--mist);
+    border-bottom:1px solid var(--line-soft);
+  }
+  .mobile-panel a:last-of-type{border-bottom:none;}
+  .mobile-divider{padding-top:0.6rem;margin-top:0.4rem;border-top:1px solid var(--line-soft);font-family:var(--font-mono);font-size:0.68rem;color:var(--mist-dim);letter-spacing:0.12em;text-transform:uppercase;}
+  .mobile-panel .btn{width:100%;justify-content:center;margin-top:1rem;}
+
+  /* ---------- PAGE HERO (shorter hero variant, shared pattern across inner pages) ---------- */
+  .hero{
+    position:relative;
+    padding-top:clamp(56px,9vw,84px);
+    padding-bottom:clamp(48px,7vw,72px);
+    overflow:hidden;
+    text-align:center;
+  }
+  .hero-glow{
+    position:absolute;top:-20%;width:55%;height:90%;
+    filter:blur(60px);opacity:0.5;border-radius:50%;
+    pointer-events:none;
+  }
+  .hero-glow.blue{left:-12%;background:radial-gradient(circle, var(--blue) 0%, transparent 70%);animation:drift-a 14s ease-in-out infinite;}
+  .hero-glow.red{right:-12%;background:radial-gradient(circle, var(--red) 0%, transparent 70%);animation:drift-b 16s ease-in-out infinite;}
+  @keyframes drift-a{0%,100%{transform:translate(0,0);}50%{transform:translate(18px,12px);}}
+  @keyframes drift-b{0%,100%{transform:translate(0,0);}50%{transform:translate(-18px,16px);}}
+
+  .seam{
+    position:absolute;top:-6%;left:50%;height:112%;width:2px;
+    background:linear-gradient(180deg, rgba(237,239,245,0.05), var(--ink) 45%, var(--ink) 55%, rgba(237,239,245,0.05));
+    box-shadow:-22px 0 70px -10px var(--blue), 22px 0 70px -10px var(--red);
+    transform:translateX(-50%) rotate(5deg);
+    pointer-events:none;
+  }
+  .seam::after{
+    content:"";position:absolute;left:50%;top:0;width:5px;height:5px;border-radius:50%;
+    background:var(--ink);box-shadow:0 0 14px 4px rgba(237,239,245,0.8);
+    transform:translateX(-50%);
+    animation:seam-scan 5s linear infinite;
+  }
+  @keyframes seam-scan{0%{top:2%;opacity:0;}10%{opacity:1;}90%{opacity:1;}100%{top:96%;opacity:0;}}
+
+  .hero-content{position:relative;z-index:2;max-width:680px;margin:0 auto;}
+  .hero-content .eyebrow{display:inline-block;margin-bottom:1.2rem;color:var(--mist);}
+
+  .wordmark{
+    font-family:var(--font-display);
+    font-weight:800;
+    line-height:0.96;
+    letter-spacing:0.01em;
+    text-transform:uppercase;
+    background:linear-gradient(92deg, var(--blue) 0%, var(--blue) 32%, var(--ink) 50%, var(--red) 68%, var(--red) 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .wordmark.page-wordmark{font-size:clamp(2.2rem, 7vw, 4.4rem);}
+
+  .hero-sub{
+    margin-top:1.3rem;
+    font-size:clamp(1rem,2.2vw,1.15rem);
+    color:var(--mist);
+    max-width:560px;margin-inline:auto;
+  }
+
+  .hero-actions{
+    display:flex;align-items:center;justify-content:center;gap:0.9rem;
+    margin-top:1.9rem;flex-wrap:wrap;
+  }
+
+  /* ---------- SECTIONS GENERIC ---------- */
+  section{padding-block:clamp(56px,9vw,104px);}
+  .section-head{max-width:640px;margin-bottom:2.6rem;}
+  .section-head h2{
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:clamp(1.8rem,3.6vw,2.5rem);
+    margin-top:0.6rem;
+    letter-spacing:0.005em;
+  }
+  .section-head p{margin-top:0.9rem;color:var(--mist);font-size:1.02rem;max-width:560px;}
+
+  .reveal{opacity:0;transform:translateY(16px);transition:opacity 0.6s ease, transform 0.6s ease;}
+  .reveal.in{opacity:1;transform:translateY(0);}
+
+  /* ---------- STATUS BADGES (shared visual language: blue = active/connected, red = live/intense, mist = archived/neutral) ---------- */
+  .status-badge{
+    display:inline-flex;align-items:center;gap:0.45rem;
+    font-family:var(--font-mono);font-size:0.66rem;letter-spacing:0.08em;text-transform:uppercase;
+    padding:0.32rem 0.7rem;border-radius:99px;border:1px solid var(--line);
+  }
+  .status-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+  .status-live{color:var(--red);border-color:rgba(255,59,78,0.4);background:rgba(255,59,78,0.08);}
+  .status-live .status-dot{background:var(--red);animation:pulse-op 1.6s ease-in-out infinite;}
+  .status-upcoming{color:var(--blue);border-color:rgba(65,105,255,0.4);background:rgba(65,105,255,0.08);}
+  .status-upcoming .status-dot{background:var(--blue);}
+  .status-completed{color:var(--mist);border-color:var(--line);background:rgba(255,255,255,0.03);}
+  .status-completed .status-dot{background:var(--mist-dim);}
+  .status-connected{color:var(--blue);border-color:rgba(65,105,255,0.4);background:rgba(65,105,255,0.08);}
+  .status-connected .status-dot{background:var(--blue);}
+  .status-archived{color:var(--mist);border-color:var(--line);background:rgba(255,255,255,0.03);}
+  .status-archived .status-dot{background:var(--mist-dim);}
+  @keyframes pulse-op{0%,100%{opacity:1;}50%{opacity:0.25;}}
+
+  /* ---------- FILTER TABS ---------- */
+  .filter-tabs{display:flex;gap:0.6rem;margin-bottom:2.2rem;flex-wrap:wrap;}
+  .tab{
+    background:transparent;border:1px solid var(--line);color:var(--mist);
+    padding:0.55rem 1.15rem;border-radius:99px;
+    font-family:var(--font-mono);font-size:0.76rem;letter-spacing:0.05em;text-transform:uppercase;
+    transition:color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  }
+  .tab:hover{border-color:rgba(255,255,255,0.3);color:var(--ink);}
+  .tab.active{background:linear-gradient(115deg,var(--blue),var(--red));color:#fff;border-color:transparent;}
+
+  /* ---------- SEASON GRID ---------- */
+  .season-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem;}
+  .season-card{
+    background:var(--void-soft);border:1px solid var(--line);border-radius:var(--radius-lg);
+    padding:1.7rem 1.6rem;display:flex;flex-direction:column;
+  }
+  .season-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:0.8rem;margin-bottom:0.7rem;}
+  .season-name{font-family:var(--font-display);font-weight:700;font-size:1.35rem;}
+  .season-meta{font-family:var(--font-mono);font-size:0.76rem;color:var(--mist-dim);margin-bottom:1.3rem;}
+
+  .phase-track{position:relative;display:flex;justify-content:space-between;margin-bottom:1.3rem;}
+  .phase-track::before{content:"";position:absolute;top:5px;left:5px;right:5px;height:2px;background:var(--line);z-index:0;}
+  .phase-step{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:0.45rem;flex:1;}
+  .phase-dot{width:11px;height:11px;border-radius:50%;background:var(--void);border:2px solid var(--line);}
+  .phase-step.done .phase-dot{background:var(--blue);border-color:var(--blue);}
+  .phase-step.current .phase-dot{background:var(--red);border-color:var(--red);box-shadow:0 0 0 4px rgba(255,59,78,0.18);animation:pulse-dot 2s ease-in-out infinite;}
+  @keyframes pulse-dot{0%,100%{box-shadow:0 0 0 4px rgba(255,59,78,0.18);}50%{box-shadow:0 0 0 7px rgba(255,59,78,0.06);}}
+  .phase-label{font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.04em;text-transform:uppercase;color:var(--mist-dim);text-align:center;}
+  .phase-step.done .phase-label,.phase-step.current .phase-label{color:var(--mist);}
+
+  .season-toggle{
+    margin-top:auto;align-self:flex-start;display:inline-flex;align-items:center;gap:0.45rem;
+    background:transparent;border:none;color:var(--mist);
+    font-family:var(--font-mono);font-size:0.76rem;letter-spacing:0.05em;text-transform:uppercase;padding:0;
+  }
+  .season-toggle:hover{color:var(--ink);}
+  .season-toggle .chevron{width:7px;height:7px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg);transition:transform 0.15s ease;}
+  .season-toggle[aria-expanded="true"] .chevron{transform:rotate(225deg);}
+
+  .season-card-body{max-height:0;overflow:hidden;opacity:0;transition:max-height 0.35s ease, opacity 0.3s ease, margin-top 0.3s ease;}
+  .season-card-body.open{max-height:800px;opacity:1;margin-top:1.1rem;padding-top:1.1rem;border-top:1px solid var(--line-soft);}
+  .season-card-body p{font-size:0.87rem;color:var(--mist);margin-bottom:0.7rem;}
+  .phase-detail-list{display:flex;flex-direction:column;gap:0.5rem;}
+  .phase-detail{font-size:0.84rem;color:var(--mist);}
+  .phase-detail strong{color:var(--ink);font-weight:600;}
+
+  /* ---------- CIVILIZATION NETWORK ---------- */
+  .civ-network{background:var(--void-soft);border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft);}
+  .civ-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem;}
+  .civ-card{
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-lg);
+    padding:1.7rem 1.6rem;display:flex;flex-direction:column;gap:0.7rem;
+  }
+  .civ-card.is-legacy{border-style:dashed;}
+  .slot-tag{font-family:var(--font-mono);font-size:0.64rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--mist-dim);}
+  .civ-name{font-family:var(--font-display);font-weight:700;font-size:1.25rem;}
+  .civ-desc{font-size:0.88rem;color:var(--mist);flex-grow:1;}
+  .civ-footer{margin-top:0.4rem;display:flex;flex-direction:column;align-items:flex-start;gap:0.55rem;}
+  .ext-arrow{font-size:0.85em;}
+  .civ-note{font-family:var(--font-mono);font-size:0.68rem;color:var(--mist-dim);letter-spacing:0.02em;}
+
+  /* ---------- MODAL (legacy civilization archive) ---------- */
+  .modal-overlay{
+    position:fixed;inset:0;z-index:200;
+    background:rgba(6,8,13,0.78);backdrop-filter:blur(6px);
+    display:flex;align-items:center;justify-content:center;padding:24px;
+    opacity:0;visibility:hidden;transition:opacity 0.25s ease, visibility 0.25s;
+  }
+  .modal-overlay.open{opacity:1;visibility:visible;}
+  .modal-panel{
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-lg);
+    max-width:640px;width:100%;max-height:86vh;overflow-y:auto;
+    padding:2rem 2rem 1.8rem;position:relative;
+    transform:translateY(14px);transition:transform 0.25s ease;
+    box-shadow:0 30px 80px -20px rgba(0,0,0,0.7);
+  }
+  .modal-overlay.open .modal-panel{transform:translateY(0);}
+  .modal-close{
+    position:absolute;top:1.1rem;right:1.1rem;width:34px;height:34px;border-radius:50%;
+    border:1px solid var(--line);background:transparent;color:var(--mist);
+    font-size:1.15rem;line-height:1;display:flex;align-items:center;justify-content:center;
+  }
+  .modal-close:hover{color:var(--ink);border-color:rgba(255,255,255,0.3);}
+  .modal-header{margin-bottom:1.7rem;padding-right:2.5rem;}
+  .modal-title{font-family:var(--font-display);font-weight:800;font-size:clamp(1.7rem,4vw,2.3rem);margin:0.5rem 0 0.9rem;}
+  .modal-subhead{font-family:var(--font-mono);font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--mist-dim);margin-bottom:1rem;}
+  .modal-section{margin-bottom:1.8rem;}
+  .modal-section:last-child{margin-bottom:0;}
+
+  .timeline-item{position:relative;padding-left:1.3rem;padding-bottom:1.3rem;border-left:2px solid var(--line);margin-left:0.2rem;}
+  .timeline-item:last-child{padding-bottom:0;}
+  .timeline-item::before{content:"";position:absolute;left:-5px;top:2px;width:8px;height:8px;border-radius:50%;background:var(--blue);}
+  .t-season{font-family:var(--font-display);font-weight:700;font-size:1.02rem;}
+  .t-role{font-family:var(--font-mono);font-size:0.68rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--mist-dim);display:block;margin:0.3rem 0 0.45rem;}
+  .t-event{font-size:0.87rem;color:var(--mist);margin-bottom:0.55rem;}
+  .t-outcome{display:inline-block;font-family:var(--font-mono);font-size:0.68rem;letter-spacing:0.05em;text-transform:uppercase;padding:0.22rem 0.6rem;border-radius:99px;border:1px solid var(--line);color:var(--ink);}
+  .t-outcome.outcome-win{color:var(--blue);border-color:rgba(65,105,255,0.4);background:rgba(65,105,255,0.08);}
+  .t-outcome.outcome-loss{color:var(--red);border-color:rgba(255,59,78,0.4);background:rgba(255,59,78,0.08);}
+
+  .moment-item{display:flex;gap:0.8rem;align-items:flex-start;padding:0.65rem 0;border-bottom:1px solid var(--line-soft);}
+  .moment-item:last-child{border-bottom:none;}
+  .moment-tag{flex-shrink:0;font-family:var(--font-mono);font-size:0.64rem;letter-spacing:0.05em;text-transform:uppercase;padding:0.28rem 0.5rem;border-radius:4px;min-width:88px;text-align:center;}
+  .moment-tag.war{background:rgba(255,59,78,0.12);color:var(--red);}
+  .moment-tag.alliance{background:rgba(65,105,255,0.12);color:var(--blue);}
+  .moment-tag.betrayal{background:rgba(162,92,255,0.16);color:var(--violet);}
+  .moment-tag.achievement{background:rgba(255,255,255,0.07);color:var(--ink);}
+  .moment-text{font-size:0.87rem;color:var(--mist);padding-top:0.15rem;}
+
+  .modal-footer{
+    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;
+    margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--line-soft);
+  }
+  .modal-switch{display:flex;align-items:center;gap:0.7rem;flex-wrap:wrap;}
+  .switch-chips{display:flex;gap:0.5rem;flex-wrap:wrap;}
+  .switch-chip{font-family:var(--font-mono);font-size:0.72rem;padding:0.4rem 0.85rem;border-radius:99px;border:1px solid var(--line);color:var(--mist);background:transparent;}
+  .switch-chip:hover{color:var(--ink);border-color:rgba(255,255,255,0.3);}
+
+  /* ---------- FOOTER ---------- */
+  footer{border-top:1px solid var(--line-soft);padding-top:3.2rem;padding-bottom:2rem;}
+  .footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:2.5rem;padding-bottom:2.6rem;}
+  .footer-brand .brand{margin-bottom:0.9rem;}
+  .footer-brand p{color:var(--mist);font-size:0.88rem;max-width:280px;}
+  .footer-col h4{font-family:var(--font-mono);font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--mist-dim);margin-bottom:1rem;}
+  .footer-col a{display:block;color:var(--mist);font-size:0.9rem;padding-block:0.4rem;}
+  .footer-col a:hover{color:var(--ink);}
+  .footer-bottom{
+    display:flex;justify-content:space-between;align-items:center;
+    border-top:1px solid var(--line-soft);padding-top:1.6rem;
+    font-family:var(--font-mono);font-size:0.74rem;color:var(--mist-dim);flex-wrap:wrap;gap:0.8rem;
+  }
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width:1080px){
+    .nav-links{display:none;}
+    .nav-more{display:none;}
+    .nav-burger{display:flex;}
+  }
+  @media (max-width:900px){
+    .season-grid{grid-template-columns:repeat(2,1fr);}
+    .civ-grid{grid-template-columns:repeat(2,1fr);}
+    .footer-grid{grid-template-columns:1.2fr 1fr 1fr;}
+    .footer-grid .footer-col:last-child{grid-column:span 1;}
+  }
+  @media (max-width:640px){
+    .season-grid{grid-template-columns:1fr;}
+    .civ-grid{grid-template-columns:1fr;}
+    .footer-grid{grid-template-columns:1fr 1fr;gap:2rem 1.5rem;}
+    .footer-brand{grid-column:span 2;margin-bottom:0.6rem;}
+    .modal-panel{padding:1.6rem 1.4rem 1.5rem;}
+    .modal-footer{flex-direction:column;align-items:flex-start;}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    *{animation-duration:0.001s !important;animation-iteration-count:1 !important;transition-duration:0.1s !important;}
+    .seam::after{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a href="index.html" class="brand">
+      <svg class="brand-mark" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M16 2 L29 16 L16 30 L16 16 Z" fill="#4169ff"/>
+        <path d="M16 2 L3 16 L16 30 L16 16 Z" fill="#ff3b4e"/>
+      </svg>
+      UNIFIED EVENTS
+    </a>
+
+    <nav class="nav-links" aria-label="Primary">
+      <a href="index.html">Home</a>
+      <a href="event.html" class="active" aria-current="page">Events</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="apply.html">Enlist</a>
+      <a href="schedule.html">Timings</a>
+      <a href="shop.html">Shop</a>
+      <a href="youtube.html">Content</a>
+      <a href="faq.html">Chat Bot</a>
+    </nav>
+
+    <div class="nav-more" id="moreMenu">
+      <button id="moreBtn" aria-expanded="false" aria-controls="moreDropdown">More <span class="caret"></span></button>
+      <div class="dropdown" id="moreDropdown">
+        <a href="forms.html">Other Forms</a>
+        <a href="tickets.html">Claims</a>
+        <a href="notifications.html">Announcements</a>
+        <a href="perks.html">Advantages</a>
+        <a href="terms.html">Rules &amp; & Conditions</a>
+        <a href="staff.html">Staff</a>
+      </div>
+    </div>
+
+    <div class="nav-actions">
+      <div class="auth-chip" id="authChip">
+        <span class="avatar">GU</span>
+        guest_user
+      </div>
+      <button class="btn btn-primary btn-small" id="navAuthBtn" data-auth-btn>Login with Discord</button>
+      <button class="nav-burger" id="burgerBtn" aria-label="Open menu" aria-expanded="false">
+        <span></span>
+      </button>
+    </div>
+  </div>
+
+  <div class="mobile-panel" id="mobilePanel">
+    <div class="wrap">
+      <a href="index.html">Home</a>
+      <a href="event.html" class="active" aria-current="page">Events</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="apply.html">Enlist</a>
+      <a href="schedule.html">Timings</a>
+      <a href="shop.html">Shop</a>
+      <a href="youtube.html">Content</a>
+      <a href="faq.html">Chat Bot</a>
+      <div class="mobile-divider">More</div>
+      <a href="forms.html">Other Forms</a>
+      <a href="tickets.html">Claims</a>
+      <a href="notifications.html">Announcements</a>
+      <a href="perks.html">Advantages</a>
+      <a href="terms.html">Rules &amp; & Conditions</a>
+      <a href="staff.html">Staff</a>
+      <button class="btn btn-primary" data-auth-btn>Login with Discord</button>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+
+  <section class="hero">
+    <div class="hero-glow blue"></div>
+    <div class="hero-glow red"></div>
+    <div class="seam"></div>
+
+    <div class="wrap hero-content">
+      <span class="eyebrow">Season System</span>
+      <h1 class="wordmark page-wordmark">EVENTS</h1>
+      <p class="hero-sub">Every season Unified Events has run or has open right now, plus the network of civilizations behind them & official sites where they exist, archived history where they don't.</p>
+      <div class="hero-actions">
+        <a href="#network" class="btn btn-ghost">View participating civilizations ↓</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="season-system">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow is-blue">Season System</span>
+        <h2>Current and past seasons</h2>
+        <p>Each season runs through four fixed phases — building, diplomacy, conflict, and resolution — on a set timeline. Filter by status or open a card for phase-by-phase detail.</p>
+      </div>
+
+      <div class="filter-tabs" role="tablist" aria-label="Filter seasons by status">
+        <button class="tab active" data-filter="all">All</button>
+        <button class="tab" data-filter="live">Live</button>
+        <button class="tab" data-filter="upcoming">Upcoming</button>
+        <button class="tab" data-filter="completed">Completed</button>
+      </div>
+
+      <div class="season-grid">
+
+        <article class="season-card reveal" data-status="upcoming">
+          <div class="season-card-top">
+            <h3 class="season-name">Season 1 - N/A</h3>
+      </div>
+    </div>
+  </section>
+
+  <section id="network" class="civ-network">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow is-red">Civilization Network</span>
+        <h2>Participating Civilizations Network</h2>
+        <p>A directory of every civilization community connected to Unified Events. Active communities link out to their own sites; civilizations without one keep their history here, in an internal archive.</p>
+      </div>
+
+      <div class="civ-grid">
+
+        <div class="civ-card reveal">
+          <span class="slot-tag">Slot 01</span>
+          <h3 class="civ-name">Liquid's Civilization Experiments</h3>
+          <p class="civ-desc">The biggest server in the Civilization Union, hosting fun events with really good pvpers!</p>
+          <span class="status-badge status-connected"><span class="status-dot"></span>External Website Available</span>
+          <div class="civ-footer">
+            <a class="btn btn-ghost btn-small" href="https://event.liquidmc.net/#home" target="_blank" rel="noopener noreferrer">Visit Website <span class="ext-arrow" aria-hidden="true">↗</span></a>
+            <span class="civ-note">Opens in a new tab — leaves Unified Events</span>
+          </div>
+        </div>
+
+        <div class="civ-card reveal">
+          <span class="slot-tag">Slot 02</span>
+          <h3 class="civ-name">Prite's Events</h3>
+          <p class="civ-desc">A civilization server focused on making mini-events including Rising Lava and some more longer events including Medieval!</p>
+          <span class="status-badge status-connected"><span class="status-dot"></span>External Website Available</span>
+          <div class="civ-footer">
+            <a class="btn btn-ghost btn-small" href="https://prite-events.com/" target="_blank" rel="noopener noreferrer">Visit Website <span class="ext-arrow" aria-hidden="true">↗</span></a>
+            <span class="civ-note">Opens in a new tab — leaves Unified Events</span>
+          </div>
+        </div>
+
+        <div class="civ-card reveal">
+          <span class="slot-tag">Slot 03</span>
+          <h3 class="civ-name">Crabby's Civilization Experiments</h3>
+          <p class="civ-desc">The oldest, longest lasting civilization experiment in the union. Having already hosted 4 seasons!</p>
+          <span class="status-badge status-connected"><span class="status-dot"></span>External Website Available</span>
+          <div class="civ-footer">
+            <a class="btn btn-ghost btn-small" href="https://mintsandbananasyaya-sys.github.io/Crabby-Official-Page/index.html" target="_blank" rel="noopener noreferrer">Visit Website <span class="ext-arrow" aria-hidden="true">↗</span></a>
+            <span class="civ-note">Opens in a new tab — leaves Unified Events</span>
+          </div>
+        </div>
+
+        <div class="civ-card is-legacy reveal">
+          <span class="slot-tag">Slot 04</span>
+          <h3 class="civ-name">Oracles</h3>
+          <p class="civ-desc">One of the platform's biggest civilization servers!</p>
+          <span class="status-badge status-archived"><span class="status-dot"></span>Legacy Archive Only</span>
+          <div class="civ-footer">
+            <button class="btn btn-ghost btn-small" data-legacy="oracles">View Past Events</button>
+            <span class="civ-note">Opens the internal event archive</span>
+          </div>
+        </div>
+
+        <div class="civ-card is-legacy reveal">
+          <span class="slot-tag">Slot 05</span>
+          <h3 class="civ-name">JCrimzy's Civilization</h3>
+          <p class="civ-desc">Known for hosting one of the most chaotic events including Ants v Humans!</p>
+          <span class="status-badge status-archived"><span class="status-dot"></span>Legacy Archive Only</span>
+          <div class="civ-footer">
+            <button class="btn btn-ghost btn-small" data-legacy="jcrimzy">View Past Events</button>
+            <span class="civ-note">Opens the internal event archive</span>
+          </div>
+        </div>
+
+        <div class="civ-card is-legacy reveal">
+          <span class="slot-tag">Slot 06</span>
+          <h3 class="civ-name">Archie's Civilization</h3>
+          <p class="civ-desc">One of the small servers yet having one of the most members active on the server!</p>
+          <span class="status-badge status-archived"><span class="status-dot"></span>Legacy Archive Only</span>
+          <div class="civ-footer">
+            <button class="btn btn-ghost btn-small" data-legacy="archie">View Past Events</button>
+            <span class="civ-note">Opens the internal event archive</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html" class="brand">
+          <svg class="brand-mark" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M16 2 L29 16 L16 30 L16 16 Z" fill="#4169ff"/>
+            <path d="M16 2 L3 16 L16 30 L16 16 Z" fill="#ff3b4e"/>
+          </svg>
+          UNIFIED EVENTS
+        </a>
+        <p>A competitive Minecraft civilization event platform, run on Discord identity and structured seasons.</p>
+        <button class="btn btn-ghost btn-small" style="margin-top:1.1rem;" data-auth-btn>Login with Discord</button>
+      </div>
+
+      <div class="footer-col">
+        <h4>Platform</h4>
+        <a href="index.html">Home</a>
+        <a href="event.html">Events</a>
+        <a href="schedule.html">Timings</a>
+        <a href="shop.html">Shop</a>
+      </div>
+
+      <div class="footer-col">
+        <h4>Account</h4>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="apply.html">Enlist</a>
+        <a href="tickets.html">Claims</a>
+        <a href="notifications.html">Announcements</a>
+      </div>
+
+      <div class="footer-col">
+        <h4>Info</h4>
+        <a href="faq.html">Chat Bot</a>
+        <a href="terms.html">Rules &amp; & Conditions</a>
+        <a href="staff.html">Staff</a>
+        <a href="forms.html">Other Forms</a>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span>© 2026 Unified Events. Not affiliated with Mojang or Microsoft.</span>
+      <span>Built for structured competition.</span>
+    </div>
+  </div>
+</footer>
+
+<div class="modal-overlay" id="legacyModal" aria-hidden="true">
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="legacyModalTitle">
+    <button class="modal-close" id="modalClose" aria-label="Close archive">&times;</button>
+
+    <div class="modal-header">
+      <span class="eyebrow is-red">Legacy Civilization Profile</span>
+      <h2 class="modal-title" id="legacyModalTitle">—</h2>
+      <span class="status-badge status-archived" id="legacyModalStatus"><span class="status-dot"></span>Archived · Historical</span>
+    </div>
+
+    <div class="modal-body">
+      <div class="modal-section">
+        <h3 class="modal-subhead">Past Participation Timeline</h3>
+        <div class="timeline-list" id="legacyTimeline"></div>
+      </div>
+      <div class="modal-section">
+        <h3 class="modal-subhead">Key Moments</h3>
+        <div class="moments-list" id="legacyMoments"></div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-small" id="modalBack">← Back to Events</button>
+      <div class="modal-switch">
+        <span class="civ-note">View other civilizations:</span>
+        <div class="switch-chips" id="switchChips"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Mobile nav toggle
+  const burgerBtn = document.getElementById('burgerBtn');
+  const mobilePanel = document.getElementById('mobilePanel');
+  burgerBtn.addEventListener('click', () => {
+    const open = mobilePanel.classList.toggle('open');
+    burgerBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+
+  // "More" dropdown toggle
+  const moreMenu = document.getElementById('moreMenu');
+  const moreBtn = document.getElementById('moreBtn');
+  moreBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const open = moreMenu.classList.toggle('open');
+    moreBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  document.addEventListener('click', (e) => {
+    if (!moreMenu.contains(e.target)) {
+      moreMenu.classList.remove('open');
+      moreBtn.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  // Demo login-state toggle (simulates the login-aware UI — no real auth backend on this page)
+  let isAuthed = false;
+  const authButtons = document.querySelectorAll('[data-auth-btn]');
+  function renderAuthState() {
+    document.body.classList.toggle('is-authed', isAuthed);
+    authButtons.forEach(btn => { btn.textContent = isAuthed ? 'Go to Dashboard' : 'Login with Discord'; });
+  }
+  authButtons.forEach(btn => btn.addEventListener('click', () => { isAuthed = !isAuthed; renderAuthState(); }));
+
+  // Scroll-reveal for sections
+  const revealEls = document.querySelectorAll('.reveal');
+  if ('IntersectionObserver' in window) {
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) { entry.target.classList.add('in'); obs.unobserve(entry.target); }
+      });
+    }, { threshold: 0.12 });
+    revealEls.forEach(el => obs.observe(el));
+  } else {
+    revealEls.forEach(el => el.classList.add('in'));
+  }
+
+  // Filter tabs for season grid
+  const tabs = document.querySelectorAll('.tab');
+  const seasonCards = document.querySelectorAll('.season-card');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const filter = tab.dataset.filter;
+      seasonCards.forEach(card => {
+        card.style.display = (filter === 'all' || card.dataset.status === filter) ? '' : 'none';
+      });
+    });
+  });
+
+  // Expandable season detail panels
+  document.querySelectorAll('.season-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const body = btn.nextElementSibling;
+      const isOpen = body.classList.toggle('open');
+      btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      btn.querySelector('.toggle-label').textContent = isOpen ? 'Hide details' : 'Details';
+    });
+  });
+
+  // ---------- Legacy civilization archive data ----------
+  const legacyData = {
+    oracles: {
+      name: "Oracles",
+      timeline: [
+        { season: "Season 1", role: "Post-Apocolyptic", event: "First ever event ever hosted, one of the biggest events!", outcome: "200 players ACTIVE!", outcomeClass: "" },
+        { season: "Season 2", role: "Vacation Disaster", event: "2nd ever event hosted on Oracles, comout out shortly!", outcome: "WIP", outcomeClass: "" },
+      ],
+      moments: [
+        { type: "Photographer", text: "(Yes i'm glazing myself) a photographer who made a trailer for this event!" },
+        { type: "war", text: "A war between 2 rival nations, The Eye and Vespera, a victory for Vespera." },
+        { type: "achievement", text: "The Eye was the biggest nation" }
+      ]
+    },
+    jcrimzy: {
+      name: "JCrimzy's Civilization",
+      timeline: [
+        { season: "Season 1", role: "Ants v Humans", event: "The First Civ event hosted by JCrimzy, resulting in a chaos for Ants and a strong win for Humans.", outcome: "70 players ACTIVE!", outcomeClass: "" },
+        { season: "Season 2", role: "Fresh Start", event: "Everyone alone on one alone, who will win?", outcome: "60 players ACTIVE!", outcomeClass: "" },
+    ],
+      moments: [
+      ]
+    },
+    archie: {
+      name: "Archie's Civilization",
+      timeline: [
+        { season: "Season 1", role: "Archie's Archipelago", event: "Crabby shortly dying after election, resulting in DundeeYT being the president.", outcome: "150 players ACTIVE!", outcomeClass: "" },
+      ],
+      moments: [
+        { type: "election", text: "DundeeYT wins the election by a MASSIVE LANDSLIDE!" },
+        { type: "war", text: "Copperdale EASILY beats the warriors that work for Dundee!" },
+        { type: "major death", text: "Crabby is... killed?" }
+      ]
+    }
+  };
+
+  const legacyModal = document.getElementById('legacyModal');
+  const modalTitle = document.getElementById('legacyModalTitle');
+  const modalTimeline = document.getElementById('legacyTimeline');
+  const modalMoments = document.getElementById('legacyMoments');
+  const switchChips = document.getElementById('switchChips');
+  const modalClose = document.getElementById('modalClose');
+  const modalBack = document.getElementById('modalBack');
+  let lastFocused = null;
+
+  function renderLegacy(id) {
+    const data = legacyData[id];
+    if (!data) return;
+
+    modalTitle.textContent = data.name;
+
+    modalTimeline.innerHTML = data.timeline.map(item => `
+      <div class="timeline-item">
+        <span class="t-season">${item.season}</span>
+        <span class="t-role">${item.role}</span>
+        <p class="t-event">${item.event}</p>
+        <span class="t-outcome ${item.outcomeClass}">${item.outcome}</span>
+      </div>
+    `).join('');
+
+    modalMoments.innerHTML = data.moments.map(m => `
+      <div class="moment-item">
+        <span class="moment-tag ${m.type}">${m.type}</span>
+        <span class="moment-text">${m.text}</span>
+      </div>
+    `).join('');
+
+    switchChips.innerHTML = Object.keys(legacyData)
+      .filter(key => key !== id)
+      .map(key => `<button class="switch-chip" data-legacy-switch="${key}">${legacyData[key].name}</button>`)
+      .join('');
+
+    switchChips.querySelectorAll('[data-legacy-switch]').forEach(chip => {
+      chip.addEventListener('click', () => renderLegacy(chip.dataset.legacySwitch));
+    });
+  }
+
+  function openLegacyModal(id, trigger) {
+    lastFocused = trigger || document.activeElement;
+    renderLegacy(id);
+    legacyModal.classList.add('open');
+    legacyModal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    modalClose.focus();
+  }
+
+  function closeLegacyModal() {
+    legacyModal.classList.remove('open');
+    legacyModal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    if (lastFocused) lastFocused.focus();
+  }
+
+  document.querySelectorAll('[data-legacy]').forEach(btn => {
+    btn.addEventListener('click', () => openLegacyModal(btn.dataset.legacy, btn));
+  });
+  modalClose.addEventListener('click', closeLegacyModal);
+  modalBack.addEventListener('click', closeLegacyModal);
+  legacyModal.addEventListener('click', (e) => { if (e.target === legacyModal) closeLegacyModal(); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      moreMenu.classList.remove('open');
+      moreBtn.setAttribute('aria-expanded', 'false');
+      mobilePanel.classList.remove('open');
+      if (legacyModal.classList.contains('open')) closeLegacyModal();
+    }
+  });
+</script>
+
+</body>
+</html>
+>>>>>>> 7b1dd3377dde6f537af91736e3f98f62454d8fdc
