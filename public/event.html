@@ -517,6 +517,7 @@
 
 <main id="top">
 
+  <!-- HERO -->
   <section class="hero">
     <div class="hero-glow blue"></div>
     <div class="hero-glow red"></div>
@@ -525,22 +526,27 @@
     <div class="wrap hero-content">
       <span class="eyebrow">Season System</span>
       <h1 class="wordmark page-wordmark">EVENTS</h1>
-      <p class="hero-sub">Every season Unified Events has run or has open right now, plus the network of civilizations behind them & official sites where they exist, archived history where they don't.</p>
+      <p class="hero-sub">
+        Every season Unified Events has run or is running, plus the civilization network behind them.
+      </p>
+
       <div class="hero-actions">
         <a href="#network" class="btn btn-ghost">View participating civilizations ↓</a>
       </div>
     </div>
   </section>
 
+  <!-- SEASONS -->
   <section id="season-system">
     <div class="wrap">
+
       <div class="section-head reveal">
         <span class="eyebrow is-blue">Season System</span>
         <h2>Current and past seasons</h2>
-        <p>Each season runs through four fixed phases — building, diplomacy, conflict, and resolution — on a set timeline. Filter by status or open a card for phase-by-phase detail.</p>
+        <p>Each season runs through structured phases.</p>
       </div>
 
-      <div class="filter-tabs" role="tablist" aria-label="Filter seasons by status">
+      <div class="filter-tabs">
         <button class="tab active" data-filter="all">All</button>
         <button class="tab" data-filter="live">Live</button>
         <button class="tab" data-filter="upcoming">Upcoming</button>
@@ -549,86 +555,138 @@
 
       <div class="season-grid">
 
+        <!-- FIXED CARD (your broken div was here) -->
         <article class="season-card reveal" data-status="upcoming">
+
           <div class="season-card-top">
             <h3 class="season-name">Season 1 - N/A</h3>
+          </div>
+
+          <div class="season-meta">
+            Status: Upcoming
+          </div>
+
+        </article>
+
       </div>
     </div>
   </section>
 
+  <!-- CIV NETWORK -->
   <section id="network" class="civ-network">
     <div class="wrap">
+
       <div class="section-head reveal">
         <span class="eyebrow is-red">Civilization Network</span>
-        <h2>Participating Civilizations Network</h2>
-        <p>A directory of every civilization community connected to Unified Events. Active communities link out to their own sites; civilizations without one keep their history here, in an internal archive.</p>
+        <h2>Participating Civilizations</h2>
+        <p>All connected civilization communities.</p>
       </div>
 
       <div class="civ-grid">
 
+        <!-- CIV 1 -->
         <div class="civ-card reveal">
           <span class="slot-tag">Slot 01</span>
           <h3 class="civ-name">Liquid's Civilization Experiments</h3>
-          <p class="civ-desc">The biggest server in the Civilization Union, hosting fun events with really good pvpers!</p>
-          <span class="status-badge status-connected"><span class="status-dot"></span>External Website Available</span>
+          <p class="civ-desc">Big PvP civilization server.</p>
+
+          <span class="status-badge status-connected">
+            <span class="status-dot"></span>External Website Available
+          </span>
+
           <div class="civ-footer">
-            <a class="btn btn-ghost btn-small" href="https://event.liquidmc.net/#home" target="_blank" rel="noopener noreferrer">Visit Website <span class="ext-arrow" aria-hidden="true">↗</span></a>
-            <span class="civ-note">Opens in a new tab — leaves Unified Events</span>
+            <a class="btn btn-ghost btn-small"
+               href="https://event.liquidmc.net/#home"
+               target="_blank">
+              Visit Website ↗
+            </a>
           </div>
         </div>
 
+        <!-- CIV 2 -->
         <div class="civ-card reveal">
           <span class="slot-tag">Slot 02</span>
           <h3 class="civ-name">Prite's Events</h3>
-          <p class="civ-desc">A civilization server focused on making mini-events including Rising Lava and some more longer events including Medieval!</p>
-          <span class="status-badge status-connected"><span class="status-dot"></span>External Website Available</span>
+          <p class="civ-desc">Mini + large scale Minecraft events.</p>
+
+          <span class="status-badge status-connected">
+            <span class="status-dot"></span>External Website Available
+          </span>
+
           <div class="civ-footer">
-            <a class="btn btn-ghost btn-small" href="https://prite-events.com/" target="_blank" rel="noopener noreferrer">Visit Website <span class="ext-arrow" aria-hidden="true">↗</span></a>
-            <span class="civ-note">Opens in a new tab — leaves Unified Events</span>
+            <a class="btn btn-ghost btn-small"
+               href="https://prite-events.com/"
+               target="_blank">
+              Visit Website ↗
+            </a>
           </div>
         </div>
 
+        <!-- CIV 3 -->
         <div class="civ-card reveal">
           <span class="slot-tag">Slot 03</span>
           <h3 class="civ-name">Crabby's Civilization Experiments</h3>
-          <p class="civ-desc">The oldest, longest lasting civilization experiment in the union. Having already hosted 4 seasons!</p>
-          <span class="status-badge status-connected"><span class="status-dot"></span>External Website Available</span>
+          <p class="civ-desc">Long running civ server.</p>
+
+          <span class="status-badge status-connected">
+            <span class="status-dot"></span>External Website Available
+          </span>
+
           <div class="civ-footer">
-            <a class="btn btn-ghost btn-small" href="https://mintsandbananasyaya-sys.github.io/Crabby-Official-Page/index.html" target="_blank" rel="noopener noreferrer">Visit Website <span class="ext-arrow" aria-hidden="true">↗</span></a>
-            <span class="civ-note">Opens in a new tab — leaves Unified Events</span>
+            <a class="btn btn-ghost btn-small"
+               href="https://mintsandbananasyaya-sys.github.io/Crabby-Official-Page/index.html"
+               target="_blank">
+              Visit Website ↗
+            </a>
           </div>
         </div>
 
+        <!-- LEGACY 1 -->
         <div class="civ-card is-legacy reveal">
           <span class="slot-tag">Slot 04</span>
           <h3 class="civ-name">Oracles</h3>
-          <p class="civ-desc">One of the platform's biggest civilization servers!</p>
-          <span class="status-badge status-archived"><span class="status-dot"></span>Legacy Archive Only</span>
+          <p class="civ-desc">Legacy civilization server.</p>
+
+          <span class="status-badge status-archived">
+            <span class="status-dot"></span>Legacy Archive
+          </span>
+
           <div class="civ-footer">
-            <button class="btn btn-ghost btn-small" data-legacy="oracles">View Past Events</button>
-            <span class="civ-note">Opens the internal event archive</span>
+            <button class="btn btn-ghost btn-small" data-legacy="oracles">
+              View Past Events
+            </button>
           </div>
         </div>
 
+        <!-- LEGACY 2 -->
         <div class="civ-card is-legacy reveal">
           <span class="slot-tag">Slot 05</span>
           <h3 class="civ-name">JCrimzy's Civilization</h3>
-          <p class="civ-desc">Known for hosting one of the most chaotic events including Ants v Humans!</p>
-          <span class="status-badge status-archived"><span class="status-dot"></span>Legacy Archive Only</span>
+
+          <span class="status-badge status-archived">
+            <span class="status-dot"></span>Legacy Archive
+          </span>
+
           <div class="civ-footer">
-            <button class="btn btn-ghost btn-small" data-legacy="jcrimzy">View Past Events</button>
-            <span class="civ-note">Opens the internal event archive</span>
+            <button class="btn btn-ghost btn-small" data-legacy="jcrimzy">
+              View Past Events
+            </button>
           </div>
         </div>
 
+        <!-- LEGACY 3 -->
         <div class="civ-card is-legacy reveal">
           <span class="slot-tag">Slot 06</span>
           <h3 class="civ-name">Archie's Civilization</h3>
-          <p class="civ-desc">One of the small servers yet having one of the most members active on the server!</p>
-          <span class="status-badge status-archived"><span class="status-dot"></span>Legacy Archive Only</span>
+
+          <span class="status-badge status-archived">
+            <span class="status-dot"></span>Legacy Archive
+          </span>
+
           <div class="civ-footer">
-            <button class="btn btn-ghost btn-small" data-legacy="archie">View Past Events</button>
-            <span class="civ-note">Opens the internal event archive</span>
+            <button class="btn btn-ghost btn-small" data-legacy="archie">
+              View Past Events
+            </button>
           </div>
         </div>
 
@@ -717,182 +775,260 @@
 </div>
 
 <script>
-  // Mobile nav toggle
-  const burgerBtn = document.getElementById('burgerBtn');
-  const mobilePanel = document.getElementById('mobilePanel');
-  burgerBtn.addEventListener('click', () => {
-    const open = mobilePanel.classList.toggle('open');
-    burgerBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
-  });
+/* =========================
+   SIMPLE STATE (AUTH + UI)
+========================= */
 
-  // "More" dropdown toggle
-  const moreMenu = document.getElementById('moreMenu');
-  const moreBtn = document.getElementById('moreBtn');
-  moreBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const open = moreMenu.classList.toggle('open');
-    moreBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
-  });
-  document.addEventListener('click', (e) => {
-    if (!moreMenu.contains(e.target)) {
-      moreMenu.classList.remove('open');
-      moreBtn.setAttribute('aria-expanded', 'false');
-    }
-  });
+const state = {
+  user: null
+};
 
-  // Demo login-state toggle (simulates the login-aware UI — no real auth backend on this page)
-  let isAuthed = false;
-  const authButtons = document.querySelectorAll('[data-auth-btn]');
-  function renderAuthState() {
-    document.body.classList.toggle('is-authed', isAuthed);
-    authButtons.forEach(btn => { btn.textContent = isAuthed ? 'Go to Dashboard' : 'Login with Discord'; });
-  }
-  authButtons.forEach(btn => btn.addEventListener('click', () => { isAuthed = !isAuthed; renderAuthState(); }));
+// load saved user (fake auth persistence)
+function loadUser() {
+  const saved = localStorage.getItem("ue_user");
+  if (saved) state.user = JSON.parse(saved);
+}
 
-  // Scroll-reveal for sections
-  const revealEls = document.querySelectorAll('.reveal');
-  if ('IntersectionObserver' in window) {
-    const obs = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) { entry.target.classList.add('in'); obs.unobserve(entry.target); }
-      });
-    }, { threshold: 0.12 });
-    revealEls.forEach(el => obs.observe(el));
-  } else {
-    revealEls.forEach(el => el.classList.add('in'));
-  }
+function saveUser() {
+  localStorage.setItem("ue_user", JSON.stringify(state.user));
+}
 
-  // Filter tabs for season grid
-  const tabs = document.querySelectorAll('.tab');
-  const seasonCards = document.querySelectorAll('.season-card');
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      tabs.forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      const filter = tab.dataset.filter;
-      seasonCards.forEach(card => {
-        card.style.display = (filter === 'all' || card.dataset.status === filter) ? '' : 'none';
-      });
-    });
-  });
+function logout() {
+  state.user = null;
+  localStorage.removeItem("ue_user");
+  renderAuth();
+}
 
-  // Expandable season detail panels
-  document.querySelectorAll('.season-toggle').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const body = btn.nextElementSibling;
-      const isOpen = body.classList.toggle('open');
-      btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-      btn.querySelector('.toggle-label').textContent = isOpen ? 'Hide details' : 'Details';
-    });
-  });
-
-  // ---------- Legacy civilization archive data ----------
-  const legacyData = {
-    oracles: {
-      name: "Oracles",
-      timeline: [
-        { season: "Season 1", role: "Post-Apocolyptic", event: "First ever event ever hosted, one of the biggest events!", outcome: "200 players ACTIVE!", outcomeClass: "" },
-        { season: "Season 2", role: "Vacation Disaster", event: "2nd ever event hosted on Oracles, comout out shortly!", outcome: "WIP", outcomeClass: "" },
-      ],
-      moments: [
-        { type: "Photographer", text: "(Yes i'm glazing myself) a photographer who made a trailer for this event!" },
-        { type: "war", text: "A war between 2 rival nations, The Eye and Vespera, a victory for Vespera." },
-        { type: "achievement", text: "The Eye was the biggest nation" }
-      ]
-    },
-    jcrimzy: {
-      name: "JCrimzy's Civilization",
-      timeline: [
-        { season: "Season 1", role: "Ants v Humans", event: "The First Civ event hosted by JCrimzy, resulting in a chaos for Ants and a strong win for Humans.", outcome: "70 players ACTIVE!", outcomeClass: "" },
-        { season: "Season 2", role: "Fresh Start", event: "Everyone alone on one alone, who will win?", outcome: "60 players ACTIVE!", outcomeClass: "" },
-    ],
-      moments: [
-      ]
-    },
-    archie: {
-      name: "Archie's Civilization",
-      timeline: [
-        { season: "Season 1", role: "Archie's Archipelago", event: "Crabby shortly dying after election, resulting in DundeeYT being the president.", outcome: "150 players ACTIVE!", outcomeClass: "" },
-      ],
-      moments: [
-        { type: "election", text: "DundeeYT wins the election by a MASSIVE LANDSLIDE!" },
-        { type: "war", text: "Copperdale EASILY beats the warriors that work for Dundee!" },
-        { type: "major death", text: "Crabby is... killed?" }
-      ]
-    }
+/* fake login (replace later with real Discord OAuth) */
+function login() {
+  state.user = {
+    username: "RealUser_" + Math.floor(Math.random() * 999),
+    avatar: "RU"
   };
+  saveUser();
+  renderAuth();
+}
 
-  const legacyModal = document.getElementById('legacyModal');
-  const modalTitle = document.getElementById('legacyModalTitle');
-  const modalTimeline = document.getElementById('legacyTimeline');
-  const modalMoments = document.getElementById('legacyMoments');
-  const switchChips = document.getElementById('switchChips');
-  const modalClose = document.getElementById('modalClose');
-  const modalBack = document.getElementById('modalBack');
-  let lastFocused = null;
+/* =========================
+   AUTH RENDER
+========================= */
 
-  function renderLegacy(id) {
+function renderAuth() {
+  const chip = document.getElementById("authChip");
+  const avatar = chip.querySelector(".avatar");
+
+  const buttons = document.querySelectorAll("[data-auth-btn]");
+
+  if (state.user) {
+    document.body.classList.add("is-authed");
+
+    avatar.textContent = state.user.avatar;
+    chip.lastChild.textContent = " " + state.user.username;
+
+    buttons.forEach(b => {
+      b.textContent = "Go to Dashboard";
+    });
+  } else {
+    document.body.classList.remove("is-authed");
+
+    avatar.textContent = "GU";
+    chip.lastChild.textContent = " guest_user";
+
+    buttons.forEach(b => {
+      b.textContent = "Login with Discord";
+    });
+  }
+}
+
+/* =========================
+   NAV / MOBILE MENU
+========================= */
+
+function setupNav() {
+  const burger = document.getElementById("burgerBtn");
+  const mobile = document.getElementById("mobilePanel");
+
+  burger?.addEventListener("click", () => {
+    const open = mobile.classList.toggle("open");
+    burger.setAttribute("aria-expanded", open);
+  });
+
+  const moreMenu = document.getElementById("moreMenu");
+  const moreBtn = document.getElementById("moreBtn");
+
+  moreBtn?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    moreMenu.classList.toggle("open");
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!moreMenu.contains(e.target)) {
+      moreMenu.classList.remove("open");
+    }
+  });
+}
+
+/* =========================
+   FILTER TABS
+========================= */
+
+function setupFilters() {
+  const tabs = document.querySelectorAll(".tab");
+  const cards = document.querySelectorAll(".season-card");
+
+  tabs.forEach(tab => {
+    tab.addEventListener("click", () => {
+      tabs.forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+
+      const filter = tab.dataset.filter;
+
+      cards.forEach(card => {
+        const match =
+          filter === "all" || card.dataset.status === filter;
+
+        card.style.display = match ? "" : "none";
+      });
+    });
+  });
+}
+
+/* =========================
+   SCROLL REVEAL
+========================= */
+
+function setupReveal() {
+  const els = document.querySelectorAll(".reveal");
+
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add("in");
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12 });
+
+  els.forEach(el => obs.observe(el));
+}
+
+/* =========================
+   LEGACY MODAL
+========================= */
+
+const legacyData = {
+  oracles: {
+    name: "Oracles",
+    timeline: [
+      { season: "Season 1", role: "Post-Apocalyptic", event: "First major event hosted.", outcome: "200 players ACTIVE!" }
+    ],
+    moments: [
+      { type: "war", text: "Vespera vs The Eye conflict" },
+      { type: "achievement", text: "Largest nation: The Eye" }
+    ]
+  },
+  jcrimzy: {
+    name: "JCrimzy Civilization",
+    timeline: [
+      { season: "Season 1", role: "Ants vs Humans", event: "Chaos event", outcome: "70 players ACTIVE!" }
+    ],
+    moments: []
+  },
+  archie: {
+    name: "Archie's Civilization",
+    timeline: [
+      { season: "Season 1", role: "Archipelago", event: "Election era", outcome: "150 players ACTIVE!" }
+    ],
+    moments: [
+      { type: "election", text: "DundeeYT wins landslide" }
+    ]
+  }
+};
+
+function setupLegacyModal() {
+  const modal = document.getElementById("legacyModal");
+  const title = document.getElementById("legacyModalTitle");
+  const timeline = document.getElementById("legacyTimeline");
+  const moments = document.getElementById("legacyMoments");
+
+  function open(id) {
     const data = legacyData[id];
     if (!data) return;
 
-    modalTitle.textContent = data.name;
+    title.textContent = data.name;
 
-    modalTimeline.innerHTML = data.timeline.map(item => `
+    timeline.innerHTML = data.timeline.map(t => `
       <div class="timeline-item">
-        <span class="t-season">${item.season}</span>
-        <span class="t-role">${item.role}</span>
-        <p class="t-event">${item.event}</p>
-        <span class="t-outcome ${item.outcomeClass}">${item.outcome}</span>
+        <span class="t-season">${t.season}</span>
+        <span class="t-role">${t.role}</span>
+        <p class="t-event">${t.event}</p>
+        <span class="t-outcome">${t.outcome}</span>
       </div>
-    `).join('');
+    `).join("");
 
-    modalMoments.innerHTML = data.moments.map(m => `
+    moments.innerHTML = data.moments.map(m => `
       <div class="moment-item">
-        <span class="moment-tag ${m.type}">${m.type}</span>
+        <span class="moment-tag ${m.type || ""}">${m.type || "event"}</span>
         <span class="moment-text">${m.text}</span>
       </div>
-    `).join('');
+    `).join("");
 
-    switchChips.innerHTML = Object.keys(legacyData)
-      .filter(key => key !== id)
-      .map(key => `<button class="switch-chip" data-legacy-switch="${key}">${legacyData[key].name}</button>`)
-      .join('');
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden", "false");
+  }
 
-    switchChips.querySelectorAll('[data-legacy-switch]').forEach(chip => {
-      chip.addEventListener('click', () => renderLegacy(chip.dataset.legacySwitch));
+  function close() {
+    modal.classList.remove("open");
+    modal.setAttribute("aria-hidden", "true");
+  }
+
+  document.querySelectorAll("[data-legacy]").forEach(btn => {
+    btn.addEventListener("click", () => open(btn.dataset.legacy));
+  });
+
+  document.getElementById("modalClose").addEventListener("click", close);
+  document.getElementById("modalBack").addEventListener("click", close);
+
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) close();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") close();
+  });
+}
+
+/* =========================
+   AUTH BUTTONS
+========================= */
+
+function setupAuthButtons() {
+  document.querySelectorAll("[data-auth-btn]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (state.user) {
+        // already logged in → pretend dashboard redirect
+        window.location.href = "dashboard.html";
+      } else {
+        login();
+      }
     });
-  }
-
-  function openLegacyModal(id, trigger) {
-    lastFocused = trigger || document.activeElement;
-    renderLegacy(id);
-    legacyModal.classList.add('open');
-    legacyModal.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden';
-    modalClose.focus();
-  }
-
-  function closeLegacyModal() {
-    legacyModal.classList.remove('open');
-    legacyModal.setAttribute('aria-hidden', 'true');
-    document.body.style.overflow = '';
-    if (lastFocused) lastFocused.focus();
-  }
-
-  document.querySelectorAll('[data-legacy]').forEach(btn => {
-    btn.addEventListener('click', () => openLegacyModal(btn.dataset.legacy, btn));
   });
-  modalClose.addEventListener('click', closeLegacyModal);
-  modalBack.addEventListener('click', closeLegacyModal);
-  legacyModal.addEventListener('click', (e) => { if (e.target === legacyModal) closeLegacyModal(); });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      moreMenu.classList.remove('open');
-      moreBtn.setAttribute('aria-expanded', 'false');
-      mobilePanel.classList.remove('open');
-      if (legacyModal.classList.contains('open')) closeLegacyModal();
-    }
-  });
+}
+
+/* =========================
+   INIT
+========================= */
+
+document.addEventListener("DOMContentLoaded", () => {
+  loadUser();
+  renderAuth();
+
+  setupNav();
+  setupFilters();
+  setupReveal();
+  setupLegacyModal();
+  setupAuthButtons();
+});
 </script>
 
 </body>
