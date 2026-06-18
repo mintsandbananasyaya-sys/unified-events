@@ -1,55 +1,86 @@
-const express = require("express");
-const axios = require("axios");
-const session = require("express-session");
-const path = require("path");
+import express from "express";
+import axios from "axios";
+import session from "express-session";
+import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
+
+dotenv.config();
+
+// ---------------- SETUP ----------------
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// ⚠️ IMPORTANT: move these to .env later
-const CLIENT_ID = "1516940820106838106";
-const CLIENT_SECRET = "r7gPl_0HqiMqXgbB2nB3ie7csPuR6tw5";
+// trust proxy (REQUIRED for Render / HTTPS cookies)
+app.set("trust proxy", 1);
 
-// CHANGE THIS when deploying to Render
-const REDIRECT_URI =
-  process.env.REDIRECT_URI ||
-  "https://unified-events.onrender.com/auth/discord/callback";
-// ---------------- MIDDLEWARE ----------------
+// middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, "public")));
 
-app.use(express.static("public"));
-
+// ---------------- SESSION ----------------
 app.use(
   session({
-    secret: "unified-events-secret",
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
+    cookie: {
+      secure: true,        // HTTPS only (Render)
+      httpOnly: true,
+      sameSite: "lax",
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+    },
   })
 );
 
-// ---------------- HOME ----------------
+// ---------------- ENV ----------------
+const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
+const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
+const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
 
+// ---------------- HELPERS ----------------
+function requireAuth(req, res, next) {
+  if (!req.session.user) return res.redirect("/login");
+  next();
+}
+
+// ---------------- ROUTES ----------------
+
+// home redirect
 app.get("/", (req, res) => {
   if (req.session.user) return res.redirect("/dashboard");
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+  res.redirect("/login");
 });
 
-// ---------------- LOGIN START ----------------
+// ---------------- LOGIN PAGE ----------------
+app.get("/login", (req, res) => {
+  if (req.session.user) return res.redirect("/dashboard");
+  res.sendFile(path.join(__dirname, "public", "login.html"));
+});
 
+// ---------------- DISCORD LOGIN ----------------
 app.get("/auth/discord", (req, res) => {
-  const url = `https://discord.com/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(
-    REDIRECT_URI
-  )}&response_type=code&scope=identify`;
+  const params = new URLSearchParams({
+    client_id: CLIENT_ID,
+    redirect_uri: REDIRECT_URI,
+    response_type: "code",
+    scope: "identify",
+    prompt: "consent",
+  });
 
-  res.redirect(url);
+  res.redirect(`https://discord.com/oauth2/authorize?${params.toString()}`);
 });
 
 // ---------------- CALLBACK ----------------
-
 app.get("/auth/discord/callback", async (req, res) => {
   const code = req.query.code;
-
   if (!code) return res.redirect("/login");
 
   try {
+    // exchange code for token
     const tokenRes = await axios.post(
       "https://discord.com/api/oauth2/token",
       new URLSearchParams({
@@ -59,21 +90,35 @@ app.get("/auth/discord/callback", async (req, res) => {
         code,
         redirect_uri: REDIRECT_URI,
       }),
-      { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
-    );
-
-    const userRes = await axios.get(
-      "https://discord.com/api/users/@me",
       {
         headers: {
-          Authorization: `Bearer ${tokenRes.data.access_token}`,
+          "Content-Type": "application/x-www-form-urlencoded",
         },
       }
     );
 
-    req.session.user = userRes.data;
+    const accessToken = tokenRes.data.access_token;
 
-    res.redirect("/dashboard");
+    // fetch discord user
+    const userRes = await axios.get("https://discord.com/api/users/@me", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    const user = userRes.data;
+
+    // store clean session
+    req.session.user = {
+      id: user.id,
+      username: user.username,
+      globalName: user.global_name || null,
+      avatar: user.avatar,
+    };
+
+    req.session.save(() => {
+      res.redirect("/dashboard");
+    });
   } catch (err) {
     console.log("OAuth error:", err.response?.data || err.message);
     res.redirect("/login?error=oauth");
@@ -81,45 +126,47 @@ app.get("/auth/discord/callback", async (req, res) => {
 });
 
 // ---------------- DASHBOARD ----------------
-
-app.get("/dashboard", (req, res) => {
-  if (!req.session.user) return res.redirect("/login");
-
+app.get("/dashboard", requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "dashboard.html"));
 });
 
-// ---------------- API ----------------
-
+// ---------------- API: USER INFO ----------------
 app.get("/api/me", (req, res) => {
   if (!req.session.user) {
-    return res.status(401).json({ loggedIn: false });
+    return res.json({ loggedIn: false });
   }
+
+  const u = req.session.user;
 
   res.json({
     loggedIn: true,
-    id: req.session.user.id,
-    username: req.session.user.username,
-    avatar: req.session.user.avatar,
+    id: u.id,
+    username: u.username,
+    globalName: u.globalName,
+    avatar: u.avatar,
   });
 });
 
-// ---------------- LOGIN PAGE ----------------
-
-app.get("/login", (req, res) => {
-  if (req.session.user) return res.redirect("/dashboard");
-  res.sendFile(path.join(__dirname, "public", "login.html"));
-});
-
-// ---------------- LOGOUT ----------------
-
-app.get("/logout", (req, res) => {
+// ---------------- API: LOGOUT ----------------
+app.post("/api/logout", (req, res) => {
   req.session.destroy(() => {
-    res.redirect("/login");
+    res.json({ success: true });
   });
+});
+
+// ---------------- OPTIONAL: DISCORD AVATAR URL ----------------
+app.get("/api/avatar/:id/:avatar", (req, res) => {
+  const { id, avatar } = req.params;
+
+  const url = `https://cdn.discordapp.com/avatars/${id}/${avatar}.png?size=256`;
+
+  res.json({ url });
 });
 
 // ---------------- START SERVER ----------------
+const PORT = process.env.PORT || 3000;
 
-app.listen(process.env.PORT || 3000, () => {
-  console.log("Server running");
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
+
