@@ -207,8 +207,8 @@ app.get("/api/guild/:guildId/channels", async (req, res) => {
 
 app.get("/bot-dashboard", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "bot-dashboard.html"));
-<<<<<<< HEAD
+
 });
-=======
+
 });
->>>>>>> 9d3c923b9a64bb0393372fd5ef35f9939242526e
+
