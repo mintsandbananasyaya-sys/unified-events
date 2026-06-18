@@ -450,7 +450,6 @@
 
 <header class="nav">
   <div class="wrap nav-inner">
-
     <a href="index.html" class="brand">
       <svg class="brand-mark" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <path d="M16 2 L29 16 L16 30 L16 16 Z" fill="#4169ff"/>
@@ -459,7 +458,7 @@
       UNIFIED EVENTS
     </a>
 
-    <nav class="nav-links" aria-label="Primary Navigation">
+    <nav class="nav-links" aria-label="Primary">
       <a href="index.html">Home</a>
       <a href="event.html" class="active" aria-current="page">Events</a>
       <a href="dashboard.html">Dashboard</a>
@@ -471,42 +470,31 @@
     </nav>
 
     <div class="nav-more" id="moreMenu">
-      <button id="moreBtn" aria-expanded="false" aria-controls="moreDropdown">
-        More <span class="caret"></span>
-      </button>
-
+      <button id="moreBtn" aria-expanded="false" aria-controls="moreDropdown">More <span class="caret"></span></button>
       <div class="dropdown" id="moreDropdown">
         <a href="forms.html">Other Forms</a>
         <a href="tickets.html">Claims</a>
         <a href="notifications.html">Announcements</a>
         <a href="perks.html">Advantages</a>
-        <a href="terms.html">Rules & Conditions</a>
+        <a href="terms.html">Rules &amp; & Conditions</a>
         <a href="staff.html">Staff</a>
       </div>
     </div>
 
     <div class="nav-actions">
-
       <div class="auth-chip" id="authChip">
         <span class="avatar">GU</span>
-        <span class="username">guest_user</span>
+        guest_user
       </div>
-
-      <button class="btn btn-primary btn-small" id="navAuthBtn" data-auth-btn>
-        Login with Discord
-      </button>
-
+      <button class="btn btn-primary btn-small" id="navAuthBtn" data-auth-btn>Login with Discord</button>
       <button class="nav-burger" id="burgerBtn" aria-label="Open menu" aria-expanded="false">
         <span></span>
       </button>
-
     </div>
-
   </div>
 
   <div class="mobile-panel" id="mobilePanel">
     <div class="wrap">
-
       <a href="index.html">Home</a>
       <a href="event.html" class="active" aria-current="page">Events</a>
       <a href="dashboard.html">Dashboard</a>
@@ -515,20 +503,14 @@
       <a href="shop.html">Shop</a>
       <a href="youtube.html">Content</a>
       <a href="faq.html">Chat Bot</a>
-
       <div class="mobile-divider">More</div>
-
       <a href="forms.html">Other Forms</a>
       <a href="tickets.html">Claims</a>
       <a href="notifications.html">Announcements</a>
       <a href="perks.html">Advantages</a>
-      <a href="terms.html">Rules & Conditions</a>
+      <a href="terms.html">Rules &amp; & Conditions</a>
       <a href="staff.html">Staff</a>
-
-      <button class="btn btn-primary" data-auth-btn>
-        Login with Discord
-      </button>
-
+      <button class="btn btn-primary" data-auth-btn>Login with Discord</button>
     </div>
   </div>
 </header>
@@ -536,41 +518,29 @@
 <main id="top">
 
   <section class="hero">
-
     <div class="hero-glow blue"></div>
     <div class="hero-glow red"></div>
     <div class="seam"></div>
 
     <div class="wrap hero-content">
-
       <span class="eyebrow">Season System</span>
-
       <h1 class="wordmark page-wordmark">EVENTS</h1>
-
-      <p class="hero-sub">
-        Every season Unified Events has run or is running, plus the civilization network behind them.
-      </p>
-
+      <p class="hero-sub">Every season Unified Events has run or has open right now, plus the network of civilizations behind them & official sites where they exist, archived history where they don't.</p>
       <div class="hero-actions">
-        <a href="#network" class="btn btn-ghost">
-          View participating civilizations ↓
-        </a>
+        <a href="#network" class="btn btn-ghost">View participating civilizations ↓</a>
       </div>
-
     </div>
-
   </section>
 
   <section id="season-system">
     <div class="wrap">
-
       <div class="section-head reveal">
         <span class="eyebrow is-blue">Season System</span>
         <h2>Current and past seasons</h2>
-        <p>Each season runs through structured phases.</p>
+        <p>Each season runs through four fixed phases — building, diplomacy, conflict, and resolution — on a set timeline. Filter by status or open a card for phase-by-phase detail.</p>
       </div>
 
-      <div class="filter-tabs">
+      <div class="filter-tabs" role="tablist" aria-label="Filter seasons by status">
         <button class="tab active" data-filter="all">All</button>
         <button class="tab" data-filter="live">Live</button>
         <button class="tab" data-filter="upcoming">Upcoming</button>
@@ -580,29 +550,18 @@
       <div class="season-grid">
 
         <article class="season-card reveal" data-status="upcoming">
-
           <div class="season-card-top">
             <h3 class="season-name">Season 1 - N/A</h3>
-          </div>
-
-          <div class="season-meta">
-            Status: Upcoming
-          </div>
-
-        </article>
-
       </div>
-
     </div>
   </section>
 
   <section id="network" class="civ-network">
     <div class="wrap">
-
       <div class="section-head reveal">
         <span class="eyebrow is-red">Civilization Network</span>
-        <h2>Participating Civilizations</h2>
-        <p>All connected civilization communities.</p>
+        <h2>Participating Civilizations Network</h2>
+        <p>A directory of every civilization community connected to Unified Events. Active communities link out to their own sites; civilizations without one keep their history here, in an internal archive.</p>
       </div>
 
       <div class="civ-grid">
@@ -610,108 +569,152 @@
         <div class="civ-card reveal">
           <span class="slot-tag">Slot 01</span>
           <h3 class="civ-name">Liquid's Civilization Experiments</h3>
-          <p class="civ-desc">Big PvP civilization server.</p>
-
-          <span class="status-badge status-connected">
-            <span class="status-dot"></span>
-            External Website Available
-          </span>
-
+          <p class="civ-desc">The biggest server in the Civilization Union, hosting fun events with really good pvpers!</p>
+          <span class="status-badge status-connected"><span class="status-dot"></span>External Website Available</span>
           <div class="civ-footer">
-            <a class="btn btn-ghost btn-small" href="https://event.liquidmc.net/#home" target="_blank">
-              Visit Website ↗
-            </a>
+            <a class="btn btn-ghost btn-small" href="https://event.liquidmc.net/#home" target="_blank" rel="noopener noreferrer">Visit Website <span class="ext-arrow" aria-hidden="true">↗</span></a>
+            <span class="civ-note">Opens in a new tab — leaves Unified Events</span>
           </div>
         </div>
 
         <div class="civ-card reveal">
           <span class="slot-tag">Slot 02</span>
           <h3 class="civ-name">Prite's Events</h3>
-          <p class="civ-desc">Mini + large scale Minecraft events.</p>
-
-          <span class="status-badge status-connected">
-            <span class="status-dot"></span>
-            External Website Available
-          </span>
-
+          <p class="civ-desc">A civilization server focused on making mini-events including Rising Lava and some more longer events including Medieval!</p>
+          <span class="status-badge status-connected"><span class="status-dot"></span>External Website Available</span>
           <div class="civ-footer">
-            <a class="btn btn-ghost btn-small" href="https://prite-events.com/" target="_blank">
-              Visit Website ↗
-            </a>
+            <a class="btn btn-ghost btn-small" href="https://prite-events.com/" target="_blank" rel="noopener noreferrer">Visit Website <span class="ext-arrow" aria-hidden="true">↗</span></a>
+            <span class="civ-note">Opens in a new tab — leaves Unified Events</span>
           </div>
         </div>
 
         <div class="civ-card reveal">
           <span class="slot-tag">Slot 03</span>
           <h3 class="civ-name">Crabby's Civilization Experiments</h3>
-          <p class="civ-desc">Long running civ server.</p>
-
-          <span class="status-badge status-connected">
-            <span class="status-dot"></span>
-            External Website Available
-          </span>
-
+          <p class="civ-desc">The oldest, longest lasting civilization experiment in the union. Having already hosted 4 seasons!</p>
+          <span class="status-badge status-connected"><span class="status-dot"></span>External Website Available</span>
           <div class="civ-footer">
-            <a class="btn btn-ghost btn-small" href="https://mintsandbananasyaya-sys.github.io/Crabby-Official-Page/index.html" target="_blank">
-              Visit Website ↗
-            </a>
+            <a class="btn btn-ghost btn-small" href="https://mintsandbananasyaya-sys.github.io/Crabby-Official-Page/index.html" target="_blank" rel="noopener noreferrer">Visit Website <span class="ext-arrow" aria-hidden="true">↗</span></a>
+            <span class="civ-note">Opens in a new tab — leaves Unified Events</span>
           </div>
         </div>
 
         <div class="civ-card is-legacy reveal">
           <span class="slot-tag">Slot 04</span>
           <h3 class="civ-name">Oracles</h3>
-
-          <span class="status-badge status-archived">
-            <span class="status-dot"></span>
-            Legacy Archive
-          </span>
-
+          <p class="civ-desc">One of the platform's biggest civilization servers!</p>
+          <span class="status-badge status-archived"><span class="status-dot"></span>Legacy Archive Only</span>
           <div class="civ-footer">
-            <button class="btn btn-ghost btn-small" data-legacy="oracles">
-              View Past Events
-            </button>
+            <button class="btn btn-ghost btn-small" data-legacy="oracles">View Past Events</button>
+            <span class="civ-note">Opens the internal event archive</span>
           </div>
         </div>
 
         <div class="civ-card is-legacy reveal">
           <span class="slot-tag">Slot 05</span>
           <h3 class="civ-name">JCrimzy's Civilization</h3>
-
-          <span class="status-badge status-archived">
-            <span class="status-dot"></span>
-            Legacy Archive
-          </span>
-
+          <p class="civ-desc">Known for hosting one of the most chaotic events including Ants v Humans!</p>
+          <span class="status-badge status-archived"><span class="status-dot"></span>Legacy Archive Only</span>
           <div class="civ-footer">
-            <button class="btn btn-ghost btn-small" data-legacy="jcrimzy">
-              View Past Events
-            </button>
+            <button class="btn btn-ghost btn-small" data-legacy="jcrimzy">View Past Events</button>
+            <span class="civ-note">Opens the internal event archive</span>
           </div>
         </div>
 
         <div class="civ-card is-legacy reveal">
           <span class="slot-tag">Slot 06</span>
           <h3 class="civ-name">Archie's Civilization</h3>
-
-          <span class="status-badge status-archived">
-            <span class="status-dot"></span>
-            Legacy Archive
-          </span>
-
+          <p class="civ-desc">One of the small servers yet having one of the most members active on the server!</p>
+          <span class="status-badge status-archived"><span class="status-dot"></span>Legacy Archive Only</span>
           <div class="civ-footer">
-            <button class="btn btn-ghost btn-small" data-legacy="archie">
-              View Past Events
-            </button>
+            <button class="btn btn-ghost btn-small" data-legacy="archie">View Past Events</button>
+            <span class="civ-note">Opens the internal event archive</span>
           </div>
         </div>
 
       </div>
-
     </div>
   </section>
 
 </main>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html" class="brand">
+          <svg class="brand-mark" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M16 2 L29 16 L16 30 L16 16 Z" fill="#4169ff"/>
+            <path d="M16 2 L3 16 L16 30 L16 16 Z" fill="#ff3b4e"/>
+          </svg>
+          UNIFIED EVENTS
+        </a>
+        <p>A competitive Minecraft civilization event platform, run on Discord identity and structured seasons.</p>
+        <button class="btn btn-ghost btn-small" style="margin-top:1.1rem;" data-auth-btn>Login with Discord</button>
+      </div>
+
+      <div class="footer-col">
+        <h4>Platform</h4>
+        <a href="index.html">Home</a>
+        <a href="event.html">Events</a>
+        <a href="schedule.html">Timings</a>
+        <a href="shop.html">Shop</a>
+      </div>
+
+      <div class="footer-col">
+        <h4>Account</h4>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="apply.html">Enlist</a>
+        <a href="tickets.html">Claims</a>
+        <a href="notifications.html">Announcements</a>
+      </div>
+
+      <div class="footer-col">
+        <h4>Info</h4>
+        <a href="faq.html">Chat Bot</a>
+        <a href="terms.html">Rules &amp; & Conditions</a>
+        <a href="staff.html">Staff</a>
+        <a href="forms.html">Other Forms</a>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span>© 2026 Unified Events. Not affiliated with Mojang or Microsoft.</span>
+      <span>Built for structured competition.</span>
+    </div>
+  </div>
+</footer>
+
+<div class="modal-overlay" id="legacyModal" aria-hidden="true">
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="legacyModalTitle">
+    <button class="modal-close" id="modalClose" aria-label="Close archive">&times;</button>
+
+    <div class="modal-header">
+      <span class="eyebrow is-red">Legacy Civilization Profile</span>
+      <h2 class="modal-title" id="legacyModalTitle">—</h2>
+      <span class="status-badge status-archived" id="legacyModalStatus"><span class="status-dot"></span>Archived · Historical</span>
+    </div>
+
+    <div class="modal-body">
+      <div class="modal-section">
+        <h3 class="modal-subhead">Past Participation Timeline</h3>
+        <div class="timeline-list" id="legacyTimeline"></div>
+      </div>
+      <div class="modal-section">
+        <h3 class="modal-subhead">Key Moments</h3>
+        <div class="moments-list" id="legacyMoments"></div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-small" id="modalBack">← Back to Events</button>
+      <div class="modal-switch">
+        <span class="civ-note">View other civilizations:</span>
+        <div class="switch-chips" id="switchChips"></div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
 /* =========================
@@ -880,6 +883,124 @@ document.addEventListener("keydown", (e) => {
     moreBtn?.setAttribute("aria-expanded", "false");
   }
 });
+
+  // Expandable season detail panels
+  document.querySelectorAll('.season-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const body = btn.nextElementSibling;
+      const isOpen = body.classList.toggle('open');
+      btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      btn.querySelector('.toggle-label').textContent = isOpen ? 'Hide details' : 'Details';
+    });
+  });
+
+  // ---------- Legacy civilization archive data ----------
+  const legacyData = {
+    oracles: {
+      name: "Oracles",
+      timeline: [
+        { season: "Season 1", role: "Post-Apocolyptic", event: "First ever event ever hosted, one of the biggest events!", outcome: "200 players ACTIVE!", outcomeClass: "" },
+        { season: "Season 2", role: "Vacation Disaster", event: "2nd ever event hosted on Oracles, comout out shortly!", outcome: "WIP", outcomeClass: "" },
+      ],
+      moments: [
+        { type: "Photographer", text: "(Yes i'm glazing myself) a photographer who made a trailer for this event!" },
+        { type: "war", text: "A war between 2 rival nations, The Eye and Vespera, a victory for Vespera." },
+        { type: "achievement", text: "The Eye was the biggest nation" }
+      ]
+    },
+    jcrimzy: {
+      name: "JCrimzy's Civilization",
+      timeline: [
+        { season: "Season 1", role: "Ants v Humans", event: "The First Civ event hosted by JCrimzy, resulting in a chaos for Ants and a strong win for Humans.", outcome: "70 players ACTIVE!", outcomeClass: "" },
+        { season: "Season 2", role: "Fresh Start", event: "Everyone alone on one alone, who will win?", outcome: "60 players ACTIVE!", outcomeClass: "" },
+    ],
+      moments: [
+      ]
+    },
+    archie: {
+      name: "Archie's Civilization",
+      timeline: [
+        { season: "Season 1", role: "Archie's Archipelago", event: "Crabby shortly dying after election, resulting in DundeeYT being the president.", outcome: "150 players ACTIVE!", outcomeClass: "" },
+      ],
+      moments: [
+        { type: "election", text: "DundeeYT wins the election by a MASSIVE LANDSLIDE!" },
+        { type: "war", text: "Copperdale EASILY beats the warriors that work for Dundee!" },
+        { type: "major death", text: "Crabby is... killed?" }
+      ]
+    }
+  };
+
+  const legacyModal = document.getElementById('legacyModal');
+  const modalTitle = document.getElementById('legacyModalTitle');
+  const modalTimeline = document.getElementById('legacyTimeline');
+  const modalMoments = document.getElementById('legacyMoments');
+  const switchChips = document.getElementById('switchChips');
+  const modalClose = document.getElementById('modalClose');
+  const modalBack = document.getElementById('modalBack');
+  let lastFocused = null;
+
+  function renderLegacy(id) {
+    const data = legacyData[id];
+    if (!data) return;
+
+    modalTitle.textContent = data.name;
+
+    modalTimeline.innerHTML = data.timeline.map(item => `
+      <div class="timeline-item">
+        <span class="t-season">${item.season}</span>
+        <span class="t-role">${item.role}</span>
+        <p class="t-event">${item.event}</p>
+        <span class="t-outcome ${item.outcomeClass}">${item.outcome}</span>
+      </div>
+    `).join('');
+
+    modalMoments.innerHTML = data.moments.map(m => `
+      <div class="moment-item">
+        <span class="moment-tag ${m.type}">${m.type}</span>
+        <span class="moment-text">${m.text}</span>
+      </div>
+    `).join('');
+
+    switchChips.innerHTML = Object.keys(legacyData)
+      .filter(key => key !== id)
+      .map(key => `<button class="switch-chip" data-legacy-switch="${key}">${legacyData[key].name}</button>`)
+      .join('');
+
+    switchChips.querySelectorAll('[data-legacy-switch]').forEach(chip => {
+      chip.addEventListener('click', () => renderLegacy(chip.dataset.legacySwitch));
+    });
+  }
+
+  function openLegacyModal(id, trigger) {
+    lastFocused = trigger || document.activeElement;
+    renderLegacy(id);
+    legacyModal.classList.add('open');
+    legacyModal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    modalClose.focus();
+  }
+
+  function closeLegacyModal() {
+    legacyModal.classList.remove('open');
+    legacyModal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    if (lastFocused) lastFocused.focus();
+  }
+
+  document.querySelectorAll('[data-legacy]').forEach(btn => {
+    btn.addEventListener('click', () => openLegacyModal(btn.dataset.legacy, btn));
+  });
+  modalClose.addEventListener('click', closeLegacyModal);
+  modalBack.addEventListener('click', closeLegacyModal);
+  legacyModal.addEventListener('click', (e) => { if (e.target === legacyModal) closeLegacyModal(); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      moreMenu.classList.remove('open');
+      moreBtn.setAttribute('aria-expanded', 'false');
+      mobilePanel.classList.remove('open');
+      if (legacyModal.classList.contains('open')) closeLegacyModal();
+    }
+  });
 </script>
 
 </body>
