@@ -1,12 +1,7 @@
-
 require("dotenv").config();
-
 const { Client, GatewayIntentBits, Partials } = require("discord.js");
 const axios = require("axios");
 
-// =====================
-// CLIENT SETUP
-// =====================
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -18,31 +13,35 @@ const client = new Client({
 });
 
 // =====================
-// GLOBAL STATE
+// SETTINGS CACHE
 // =====================
 let settings = {};
-const tickets = new Map();
 
 // =====================
-// LOAD SETTINGS FROM SERVER
+// LOAD SETTINGS
 // =====================
 async function loadSettings() {
   try {
     const res = await axios.get(
-      "https://unified-events.onrender.com/api/settings/1517281649375707176"
+      `https://unified-events.onrender.com/api/settings/1517281649375707176`
     );
 
     settings = res.data || {};
+    console.log("Settings loaded:", settings);
   } catch (err) {
-    console.log("settings fetch failed:", err.message);
+    console.log("Settings fetch failed:", err.message);
   }
 }
 
-// refresh settings safely
 setInterval(loadSettings, 5000);
 
 // =====================
-// READY EVENT
+// TICKETS MEMORY
+// =====================
+const tickets = new Map();
+
+// =====================
+// READY
 // =====================
 client.once("ready", () => {
   console.log(`Logged in as ${client.user.tag}`);
@@ -55,65 +54,72 @@ client.once("ready", () => {
 client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
 
-  const staffChannelId = settings.staffChannelId;
+  const userId = message.author.id;
 
   // =====================
-  // DM HANDLING (NEW TICKET)
+  // DM → STAFF FORWARD
   // =====================
-  if (!message.guild) {
-    const userId = message.author.id;
+  if (message.channel.isDMBased()) {
+    try {
+      if (!tickets.has(userId)) {
+        tickets.set(userId, true);
 
-    if (!tickets.has(userId)) {
-      tickets.set(userId, true);
-
-      try {
         await message.reply(
-          "👮 Staff got your message. Hang tight."
+          "👮 Staff received your message, hang tight..."
         );
-      } catch {}
-
-      if (staffChannelId) {
-        try {
-          const channel = await client.channels.fetch(staffChannelId);
-
-          channel.send(
-            `📩 New DM from <@${userId}>\n\n${message.content}`
-          );
-        } catch (err) {
-          console.log("failed forwarding DM:", err.message);
-        }
       }
-    }
 
-    return;
+      if (!settings.staffChannelId) {
+        console.log("No staffChannelId set");
+        return;
+      }
+
+      const channel = await client.channels.fetch(settings.staffChannelId);
+
+      if (!channel) {
+        console.log("Staff channel not found");
+        return;
+      }
+
+      await channel.send(
+        `📩 **New DM from <@${userId}>**\n\n${message.content}`
+      );
+    } catch (err) {
+      console.log("DM forward error:", err);
+    }
   }
 
   // =====================
   // STAFF REPLY SYSTEM
   // =====================
-  if (!staffChannelId) return;
-  if (message.channel.id !== staffChannelId) return;
+  if (message.guild) {
+    if (!settings.staffChannelId) return;
+    if (message.channel.id !== settings.staffChannelId) return;
 
-  if (!message.content.startsWith("/reply")) return;
+    if (message.content.startsWith("/reply")) {
+      const args = message.content.split(" ");
+      const targetId = args[1];
+      const text = args.slice(2).join(" ");
 
-  const args = message.content.split(" ");
-  const userId = args[1];
-  const text = args.slice(2).join(" ");
+      if (!targetId || !text) {
+        return message.reply("Usage: /reply userId message");
+      }
 
-  if (!userId || !text) {
-    return message.reply("usage: /reply <userId> <message>");
-  }
+      try {
+        const user = await client.users.fetch(targetId);
 
-  try {
-    const user = await client.users.fetch(userId);
-    await user.send(`👮 Staff: ${text}`);
-    message.reply("sent ✔");
-  } catch (err) {
-    message.reply("failed to send 💀");
+        await user.send(`👮 Staff: ${text}`);
+
+        message.reply("sent ✔");
+      } catch (err) {
+        console.log(err);
+        message.reply("failed to send 💀");
+      }
+    }
   }
 });
 
 // =====================
-// LOGIN BOT
+// LOGIN
 // =====================
 client.login(process.env.BOT_TOKEN);
