@@ -17,7 +17,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.set("trust proxy", 1);
 
 // =====================
-// SAFE SESSION (PRODUCTION FRIENDLY)
+// SESSION (SAFE)
 // =====================
 app.use(
   session({
@@ -28,13 +28,13 @@ app.use(
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 1000 * 60 * 60 * 24, // 1 day
+      maxAge: 1000 * 60 * 60 * 24,
     },
   })
 );
 
 // =====================
-// SAFE BOT LOAD (won’t crash server)
+// BOT LOAD (SAFE)
 // =====================
 try {
   require("./bot.js");
@@ -44,18 +44,14 @@ try {
 }
 
 // =====================
-// ENV VARS CHECK
+// ENV CHECK
 // =====================
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
 const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
 
-if (!CLIENT_ID || !CLIENT_SECRET || !REDIRECT_URI) {
-  console.log("Missing Discord OAuth env vars!");
-}
-
 // =====================
-// MEMORY SETTINGS (simple runtime store)
+// IN-MEMORY STORE
 // =====================
 let settings = {};
 
@@ -91,8 +87,6 @@ app.get("/bot-dashboard", (req, res) => {
 // DISCORD LOGIN
 // =====================
 app.get("/auth/discord", (req, res) => {
-  if (!CLIENT_ID || !REDIRECT_URI) return res.send("OAuth not configured");
-
   const url =
     "https://discord.com/oauth2/authorize" +
     `?client_id=${CLIENT_ID}` +
@@ -133,7 +127,6 @@ app.get("/auth/discord/callback", async (req, res) => {
       },
     });
 
-    // SAFE SESSION DATA ONLY
     req.session.user = {
       id: userRes.data.id,
       username: userRes.data.username,
@@ -165,21 +158,32 @@ app.get("/api/me", (req, res) => {
 });
 
 // =====================
-// API - SETTINGS (SAFE MEMORY STORE)
+// SETTINGS GET
 // =====================
 app.get("/api/settings/:guildId", (req, res) => {
   const { guildId } = req.params;
+
+  console.log("GET SETTINGS:", guildId);
+
   res.json(settings[guildId] || {});
 });
 
+// =====================
+// SETTINGS SAVE (FIXED — ONLY ONE ROUTE)
+// =====================
 app.post("/api/settings", (req, res) => {
+  console.log("🔥 SAVE HIT:", req.body);
+
   const { guildId, ...data } = req.body;
 
   if (!guildId) {
+    console.log("❌ Missing guildId");
     return res.status(400).json({ error: "Missing guildId" });
   }
 
   settings[guildId] = data;
+
+  console.log("✅ SAVED:", guildId, settings[guildId]);
 
   res.json({
     ok: true,
@@ -195,7 +199,7 @@ app.get("/logout", (req, res) => {
 });
 
 // =====================
-// GUILD CHANNELS (BOT API)
+// GUILD CHANNELS
 // =====================
 app.get("/api/guild/:guildId/channels", async (req, res) => {
   try {
@@ -226,4 +230,4 @@ const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  });
+});
