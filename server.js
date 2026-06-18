@@ -19,6 +19,8 @@ app.use(express.static(path.join(__dirname, "public")));
 // =====================
 // SESSION
 // =====================
+app.set("trust proxy", 1);
+
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
@@ -26,8 +28,8 @@ app.use(
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      secure: true,
+      sameSite: "none",
     },
   })
 );
