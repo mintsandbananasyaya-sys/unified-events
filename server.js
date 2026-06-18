@@ -86,21 +86,22 @@ app.get("/auth/discord/callback", async (req, res) => {
   if (!code) return res.redirect("/login");
 
   try {
-    const token = await axios.post(
-      "https://discord.com/api/oauth2/token",
-      new URLSearchParams({
-        client_id: CLIENT_ID,
-        client_secret: CLIENT_SECRET,
-        grant_type: "authorization_code",
-        code,
-        redirect_uri: REDIRECT_URI,
-      }),
-      {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-      }
-    );
+   const params = new URLSearchParams();
+    params.append("client_id", CLIENT_ID);
+    params.append("client_secret", CLIENT_SECRET);
+    params.append("grant_type", "authorization_code");
+    params.append("code", code);
+    params.append("redirect_uri", REDIRECT_URI);
+
+const token = await axios.post(
+  "https://discord.com/api/oauth2/token",
+  params,
+  {
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+  }
+);
 
     const user = await axios.get("https://discord.com/api/users/@me", {
       headers: {
