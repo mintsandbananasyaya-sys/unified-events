@@ -775,13 +775,7 @@ function renderAuth() {
    replace this with Discord OAuth redirect later
 ========================= */
 function login() {
-  state.user = {
-    username: "real_user",
-    avatar: "RU"
-  };
-
-  saveAuth();
-  renderAuth();
+  window.location.href = "/auth/discord";
 }
 
 /* logout */
