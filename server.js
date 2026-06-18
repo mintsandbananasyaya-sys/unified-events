@@ -15,10 +15,13 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
 
 // =====================
-// SESSION
+// TRUST PROXY (RENDER FIX)
 // =====================
 app.set("trust proxy", 1);
 
+// =====================
+// SESSION
+// =====================
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
@@ -26,7 +29,7 @@ app.use(
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: true, // Render HTTPS
+      secure: true,
       sameSite: "none",
     },
   })
@@ -69,7 +72,7 @@ app.get("/dashboard", requireAuth, (req, res) => {
 // =====================
 app.get("/auth/discord", (req, res) => {
   const url =
-    `https://discord.com/oauth2/authorize` +
+    "https://discord.com/oauth2/authorize" +
     `?client_id=${CLIENT_ID}` +
     `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
     `&response_type=code` +
@@ -86,38 +89,44 @@ app.get("/auth/discord/callback", async (req, res) => {
   if (!code) return res.redirect("/login");
 
   try {
-   const params = new URLSearchParams();
+    const params = new URLSearchParams();
     params.append("client_id", CLIENT_ID);
     params.append("client_secret", CLIENT_SECRET);
     params.append("grant_type", "authorization_code");
     params.append("code", code);
     params.append("redirect_uri", REDIRECT_URI);
 
-const token = await axios.post(
-  "https://discord.com/api/oauth2/token",
-  params,
-  {
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-  }
-);
+    const tokenRes = await axios.post(
+      "https://discord.com/api/oauth2/token",
+      params,
+      {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      }
+    );
 
-    const user = await axios.get("https://discord.com/api/users/@me", {
-      headers: {
-        Authorization: `Bearer ${token.data.access_token}`,
-      },
-    });
+    const userRes = await axios.get(
+      "https://discord.com/api/users/@me",
+      {
+        headers: {
+          Authorization: `Bearer ${tokenRes.data.access_token}`,
+        },
+      }
+    );
 
     req.session.user = {
-      id: user.data.id,
-      username: user.data.username,
-      avatar: user.data.avatar,
+      id: userRes.data.id,
+      username: userRes.data.username,
+      avatar: userRes.data.avatar,
     };
 
     res.redirect("/dashboard");
   } catch (err) {
-    console.error("OAuth failed:", err.response?.data || err.message);
+    console.error(
+      "OAuth ERROR:",
+      err.response?.data || err.message
+    );
     res.redirect("/login");
   }
 });
