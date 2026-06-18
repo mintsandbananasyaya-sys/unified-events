@@ -1,86 +1,68 @@
-import express from "express";
-import axios from "axios";
-import session from "express-session";
-import dotenv from "dotenv";
-import path from "path";
-import { fileURLToPath } from "url";
+require("dotenv").config();
 
-dotenv.config();
-
-// ---------------- SETUP ----------------
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const express = require("express");
+const session = require("express-session");
+const axios = require("axios");
+const path = require("path");
 
 const app = express();
 
-// trust proxy (REQUIRED for Render / HTTPS cookies)
-app.set("trust proxy", 1);
-
-// middleware
+// =====================
+// BASIC SETUP
+// =====================
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
 
-// ---------------- SESSION ----------------
+// =====================
+// SESSION CONFIG
+// =====================
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: true,        // HTTPS only (Render)
+      secure: process.env.NODE_ENV === "production",
       httpOnly: true,
       sameSite: "lax",
-      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
     },
   })
 );
 
-// ---------------- ENV ----------------
+// =====================
+// DISCORD CONFIG (.env)
+// =====================
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
 const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
 
-// ---------------- HELPERS ----------------
-function requireAuth(req, res, next) {
-  if (!req.session.user) return res.redirect("/login");
-  next();
-}
-
-// ---------------- ROUTES ----------------
-
-// home redirect
+// =====================
+// HOME ROUTE
+// =====================
 app.get("/", (req, res) => {
   if (req.session.user) return res.redirect("/dashboard");
-  res.redirect("/login");
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// ---------------- LOGIN PAGE ----------------
-app.get("/login", (req, res) => {
-  if (req.session.user) return res.redirect("/dashboard");
-  res.sendFile(path.join(__dirname, "public", "login.html"));
-});
-
-// ---------------- DISCORD LOGIN ----------------
+// =====================
+// LOGIN REDIRECT
+// =====================
 app.get("/auth/discord", (req, res) => {
-  const params = new URLSearchParams({
-    client_id: CLIENT_ID,
-    redirect_uri: REDIRECT_URI,
-    response_type: "code",
-    scope: "identify",
-    prompt: "consent",
-  });
+  const url = `https://discord.com/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(
+    REDIRECT_URI
+  )}&response_type=code&scope=identify`;
 
-  res.redirect(`https://discord.com/oauth2/authorize?${params.toString()}`);
+  res.redirect(url);
 });
 
-// ---------------- CALLBACK ----------------
+// =====================
+// DISCORD CALLBACK
+// =====================
 app.get("/auth/discord/callback", async (req, res) => {
   const code = req.query.code;
   if (!code) return res.redirect("/login");
 
   try {
-    // exchange code for token
     const tokenRes = await axios.post(
       "https://discord.com/api/oauth2/token",
       new URLSearchParams({
@@ -90,83 +72,73 @@ app.get("/auth/discord/callback", async (req, res) => {
         code,
         redirect_uri: REDIRECT_URI,
       }),
-      {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-      }
+      { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
     );
 
-    const accessToken = tokenRes.data.access_token;
-
-    // fetch discord user
     const userRes = await axios.get("https://discord.com/api/users/@me", {
       headers: {
-        Authorization: `Bearer ${accessToken}`,
+        Authorization: `Bearer ${tokenRes.data.access_token}`,
       },
     });
 
-    const user = userRes.data;
-
-    // store clean session
+    // SAVE USER IN SESSION 👇
     req.session.user = {
-      id: user.id,
-      username: user.username,
-      globalName: user.global_name || null,
-      avatar: user.avatar,
+      id: userRes.data.id,
+      username: userRes.data.username,
+      global_name: userRes.data.global_name,
+      avatar: userRes.data.avatar,
     };
 
-    req.session.save(() => {
-      res.redirect("/dashboard");
-    });
+    return res.redirect("/dashboard");
   } catch (err) {
     console.log("OAuth error:", err.response?.data || err.message);
-    res.redirect("/login?error=oauth");
+    return res.redirect("/login?error=oauth");
   }
 });
 
-// ---------------- DASHBOARD ----------------
-app.get("/dashboard", requireAuth, (req, res) => {
+// =====================
+// LOGIN PAGE
+// =====================
+app.get("/login", (req, res) => {
+  if (req.session.user) return res.redirect("/dashboard");
+  res.sendFile(path.join(__dirname, "public", "login.html"));
+});
+
+// =====================
+// DASHBOARD PAGE (PROTECTED)
+// =====================
+app.get("/dashboard", (req, res) => {
+  if (!req.session.user) return res.redirect("/login");
   res.sendFile(path.join(__dirname, "public", "dashboard.html"));
 });
 
-// ---------------- API: USER INFO ----------------
+// =====================
+// API: CURRENT USER
+// =====================
 app.get("/api/me", (req, res) => {
   if (!req.session.user) {
     return res.json({ loggedIn: false });
   }
 
-  const u = req.session.user;
-
   res.json({
     loggedIn: true,
-    id: u.id,
-    username: u.username,
-    globalName: u.globalName,
-    avatar: u.avatar,
+    id: req.session.user.id,
+    username: req.session.user.global_name || req.session.user.username,
+    avatar: req.session.user.avatar,
   });
 });
 
-// ---------------- API: LOGOUT ----------------
-app.post("/api/logout", (req, res) => {
+// =====================
+// LOGOUT
+// =====================
+app.get("/logout", (req, res) => {
   req.session.destroy(() => {
-    res.json({ success: true });
+    res.redirect("/login");
   });
 });
 
-// ---------------- OPTIONAL: DISCORD AVATAR URL ----------------
-app.get("/api/avatar/:id/:avatar", (req, res) => {
-  const { id, avatar } = req.params;
-
-  const url = `https://cdn.discordapp.com/avatars/${id}/${avatar}.png?size=256`;
-
-  res.json({ url });
-});
-
-// ---------------- START SERVER ----------------
+// =====================
+// START SERVER
+// =====================
 const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
-
+app.listen(PORT, () => console.log(`Server running on ${PORT}`));
