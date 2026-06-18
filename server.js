@@ -8,7 +8,7 @@ const path = require("path");
 const app = express();
 
 /* =====================
-   CORE MIDDLEWARE
+   MIDDLEWARE
 ===================== */
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -34,7 +34,7 @@ app.use(
 );
 
 /* =====================
-   BOT (SAFE LOAD)
+   BOT LOAD (SAFE)
 ===================== */
 try {
   require("./bot.js");
@@ -44,17 +44,18 @@ try {
 }
 
 /* =====================
-   ENV CHECK
+   ENV
 ===================== */
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
 const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
+const BOT_TOKEN = process.env.BOT_TOKEN;
 
 /* =====================
-   SIMPLE MEMORY STORE
+   MEMORY STORE
 ===================== */
 // guildId -> settings
-const settings = {};
+const settingsStore = {};
 
 /* =====================
    AUTH CHECK
@@ -119,14 +120,11 @@ app.get("/auth/discord/callback", async (req, res) => {
       }
     );
 
-    const userRes = await axios.get(
-      "https://discord.com/api/users/@me",
-      {
-        headers: {
-          Authorization: `Bearer ${tokenRes.data.access_token}`,
-        },
-      }
-    );
+    const userRes = await axios.get("https://discord.com/api/users/@me", {
+      headers: {
+        Authorization: `Bearer ${tokenRes.data.access_token}`,
+      },
+    });
 
     req.session.user = {
       id: userRes.data.id,
@@ -159,53 +157,68 @@ app.get("/api/me", (req, res) => {
 });
 
 /* =====================
-   SETTINGS API (FIXED — THIS WAS YOUR ISSUE)
+   SETTINGS API (FIXED — THIS WAS YOUR MAIN BUG)
 ===================== */
 
 // GET SETTINGS
 app.get("/api/settings/:guildId", (req, res) => {
   const { guildId } = req.params;
-  res.json(settings[guildId] || {});
+
+  res.json(settingsStore[guildId] || {});
 });
 
 // SAVE SETTINGS
 app.post("/api/settings", (req, res) => {
-  const { guildId, staffChannelId, staffRoleId, formsEnabled, ticketsEnabled } =
-    req.body;
+  console.log("🔥 SAVE REQUEST:", req.body);
+
+  const {
+    guildId,
+    staffChannelId,
+    staffRoleId,
+    formsEnabled,
+    ticketsEnabled,
+  } = req.body;
 
   if (!guildId) {
     return res.status(400).json({ error: "Missing guildId" });
   }
 
-  settings[guildId] = {
+  settingsStore[guildId] = {
     staffChannelId,
     staffRoleId,
     formsEnabled,
     ticketsEnabled,
   };
 
+  console.log("✅ SAVED:", guildId, settingsStore[guildId]);
+
   res.json({
     ok: true,
-    settings: settings[guildId],
+    settings: settingsStore[guildId],
   });
 });
 
 /* =====================
-   GUILD CHANNELS
+   GUILD CHANNELS (BOT TOKEN)
 ===================== */
 app.get("/api/guild/:guildId/channels", async (req, res) => {
   try {
-    const channels = await axios.get(
+    if (!BOT_TOKEN) {
+      return res.status(500).json({ error: "Missing BOT_TOKEN" });
+    }
+
+    const result = await axios.get(
       `https://discord.com/api/guilds/${req.params.guildId}/channels`,
       {
         headers: {
-          Authorization: `Bot ${process.env.BOT_TOKEN}`,
+          Authorization: `Bot ${BOT_TOKEN}`,
         },
       }
     );
 
-    res.json(channels.data);
+    res.json(result.data);
   } catch (err) {
+    console.log(err.message);
     res.status(500).json({ error: "failed to fetch channels" });
   }
 });
