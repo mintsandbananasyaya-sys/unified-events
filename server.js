@@ -85,6 +85,12 @@ app.get("/auth/discord", (req, res) => {
 // CALLBACK
 // =====================
 app.get("/auth/discord/callback", async (req, res) => {
+
+    console.log("🔥 CALLBACK HIT");
+    console.log("code:", req.query.code);
+    console.log("CLIENT_ID:", CLIENT_ID);
+    console.log("CLIENT_SECRET exists:", !!CLIENT_SECRET);
+    console.log("REDIRECT_URI:", JSON.stringify(REDIRECT_URI));
   const code = req.query.code;
   if (!code) return res.redirect("/login");
 
