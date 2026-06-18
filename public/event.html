@@ -761,19 +761,18 @@ function renderAuth() {
 
     if (isLoggedIn) {
       if (avatar) avatar.textContent = state.user.avatar;
-<<<<<<< HEAD
+
       const usernameEl = authChip.querySelector(".username");
     if (usernameEl) usernameEl.textContent = state.user.username;
     } else {
         if (avatar) avatar.textContent = "GU";
         const usernameEl = authChip.querySelector(".username");
     if (usernameEl) usernameEl.textContent = "guest_user";
-=======
       authChip.querySelector(".username").textContent = state.user.username;
     } else {
         if (avatar) avatar.textContent = "GU";
         authChip.querySelector(".username").textContent = "guest_user";
->>>>>>> 9d3c923b9a64bb0393372fd5ef35f9939242526e
+
       }
   }
 
