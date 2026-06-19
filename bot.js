@@ -1,4 +1,4 @@
-require("dotenv").config();
+javascriptrequire("dotenv").config();
 
 const {
   Client,
@@ -7,8 +7,6 @@ const {
 } = require("discord.js");
 
 const { getResponse } = require("./brain");
-
-const STAFF_CHANNEL_ID = process.env.STAFF_CHANNEL_ID; // optional lock
 
 const client = new Client({
   intents: [
@@ -35,13 +33,11 @@ client.on("messageCreate", async (message) => {
     if (!message) return;
     if (message.author.bot) return;
 
+    // Only respond in DMs — ignore anything sent in a server/guild channel
+    if (message.guild) return;
+
     const content = message.content?.trim();
     if (!content) return;
-
-    // OPTIONAL: lock bot to staff channel ONLY (remove if you want global)
-    if (STAFF_CHANNEL_ID) {
-      if (message.guild && message.channelId !== STAFF_CHANNEL_ID) return;
-    }
 
     const reply = getResponse(content);
     if (!reply) return;
