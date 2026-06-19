@@ -1,124 +1,94 @@
 require("dotenv").config();
 
-const { Client, GatewayIntentBits, Partials } = require("discord.js");
-const axios = require("axios");
+const {
+  Client,
+  GatewayIntentBits,
+  REST,
+  Routes,
+  SlashCommandBuilder,
+} = require("discord.js");
 
-// =====================
-// CLIENT SETUP
-// =====================
+const { getResponse } = require("./brain");
+
+// ---------------- CLIENT ----------------
 const client = new Client({
   intents: [
+    GatewayIntentBits.DirectMessages,
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.DirectMessages,
     GatewayIntentBits.MessageContent,
+    GatewayIntentBits.DirectMessages,
   ],
-  partials: [Partials.Channel],
 });
 
-// =====================
-// SETTINGS CACHE
-// =====================
-let settings = {
-  staffChannelId: null,
-  staffRoleId: null,
-};
+// ---------------- PREFIX / CHAT RESPONSES ----------------
+client.on("messageCreate", (message) => {
+  if (message.author.bot) return;
 
-// =====================
-// LOAD SETTINGS (SAFE)
-// =====================
-async function loadSettings() {
+  const reply = getResponse(message.content);
+  if (!reply) return;
+
+  message.reply(reply);
+});
+
+// ---------------- SLASH COMMANDS ----------------
+const commands = [
+  new SlashCommandBuilder()
+    .setName("forms")
+    .setDescription("Get the application forms website"),
+
+  new SlashCommandBuilder()
+    .setName("ask")
+    .setDescription("Ask the Unified Events AI")
+    .addStringOption((option) =>
+      option
+        .setName("question")
+        .setDescription("What would you like to ask?")
+        .setRequired(true)
+    ),
+
+  new SlashCommandBuilder()
+    .setName("profile")
+    .setDescription("View your profile"),
+
+  new SlashCommandBuilder()
+    .setName("ticket")
+    .setDescription("Create a support ticket"),
+
+  new SlashCommandBuilder()
+    .setName("season")
+    .setDescription("View current season information"),
+
+  new SlashCommandBuilder()
+    .setName("rules")
+    .setDescription("View server rules"),
+].map((cmd) => cmd.toJSON());
+
+// ---------------- REGISTER COMMANDS ----------------
+const rest = new REST({ version: "10" }).setToken(process.env.BOT_TOKEN);
+
+async function registerCommands() {
   try {
-    const res = await axios.get(
-      "https://unified-events.onrender.com/api/settings/1517281649375707176"
-    );
+    console.log("⏳ Registering slash commands...");
 
-    if (res.data && typeof res.data === "object") {
-      settings = res.data;
-    }
+    await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), {
+      body: commands,
+    });
 
-    console.log("✅ Settings loaded");
+    console.log("✅ Slash commands registered successfully!");
   } catch (err) {
-    console.log("❌ Settings fetch failed:", err.message);
+    console.error("❌ Slash command registration failed:");
+    console.error(err);
   }
 }
 
-// initial load + interval refresh
-loadSettings();
-setInterval(loadSettings, 5000);
-
-// =====================
-// READY EVENT
-// =====================
+// ---------------- READY EVENT ----------------
 client.once("ready", () => {
   console.log(`🤖 Logged in as ${client.user.tag}`);
 });
 
-// =====================
-// MESSAGE HANDLER
-// =====================
-client.on("messageCreate", async (message) => {
-  try {
-    if (!message || message.author.bot) return;
-
-    const staffChannelId = settings.staffChannelId;
-
-    // =====================
-    // DM HANDLING (FIXED + RELIABLE)
-    // =====================
-    if (!message.guild) {
-      console.log("📩 DM RECEIVED:", message.content);
-
-      if (!staffChannelId) return;
-
-      await message.reply("👮 Staff received your message, hang tight...");
-
-      const channel = await client.channels
-        .fetch(staffChannelId)
-        .catch(() => null);
-
-      if (!channel) {
-        console.log("❌ Staff channel not found");
-        return;
-      }
-
-      await channel.send(
-        `📩 **New DM from <@${message.author.id}>**\n\n${message.content || "*no message content*"}`
-      );
-
-      return;
-    }
-
-    // =====================
-    // STAFF REPLY SYSTEM
-    // =====================
-    if (!staffChannelId) return;
-    if (message.channel.id !== staffChannelId) return;
-
-    if (!message.content.startsWith("/reply")) return;
-
-    const args = message.content.split(" ");
-    const userId = args[1];
-    const replyText = args.slice(2).join(" ");
-
-    if (!userId || !replyText) {
-      return message.reply("Usage: /reply <userId> <message>");
-    }
-
-    const user = await client.users.fetch(userId).catch(() => null);
-
-    if (!user) {
-      return message.reply("❌ User not found");
-    }
-
-    await user.send(`👮 Staff: ${replyText}`);
-    await message.reply("✅ Sent");
-  } catch (err) {
-    console.log("❌ Handler error:", err.message);
-  }
-});
-
-// =====================
-// LOGIN
-// =====================
-client.login(process.env.BOT_TOKEN);
+// ---------------- START BOT ----------------
+(async () => {
+  await registerCommands();
+  client.login(process.env.BOT_TOKEN);
+})();
