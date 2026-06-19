@@ -3,6 +3,7 @@ require("dotenv").config();
 const {
   Client,
   GatewayIntentBits,
+  Partials,
   REST,
   Routes,
   SlashCommandBuilder,
@@ -18,24 +19,22 @@ const client = new Client({
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.DirectMessages,
   ],
-  partials: ["CHANNEL"], // required for DMs
+  partials: [Partials.Channel, Partials.Message],
 });
 
-// ---------------- MESSAGE (TEXT CHAT) ----------------
+// ---------------- TEXT MESSAGES (SERVERS + DMS) ----------------
 client.on("messageCreate", async (message) => {
-  if (!message || !message.content) return;
-  if (message.author.bot) return;
-
   try {
-    const reply = getResponse(message.content);
+    if (!message || !message.content) return;
+    if (message.author.bot) return;
 
+    const reply = getResponse(message.content);
     if (!reply) return;
 
     await message.reply({
       content: reply,
       allowedMentions: { repliedUser: false },
     });
-
   } catch (err) {
     console.error("messageCreate error:", err);
   }
@@ -74,7 +73,7 @@ const commands = [
     .setDescription("View server rules"),
 ].map((cmd) => cmd.toJSON());
 
-// ---------------- REGISTER COMMANDS ----------------
+// ---------------- REGISTER SLASH COMMANDS ----------------
 const rest = new REST({ version: "10" }).setToken(process.env.BOT_TOKEN);
 
 async function registerCommands() {
@@ -86,45 +85,47 @@ async function registerCommands() {
       { body: commands }
     );
 
-    console.log("✅ Slash commands registered successfully!");
+    console.log("✅ Slash commands registered!");
   } catch (err) {
-    console.error("❌ Failed to register slash commands:", err);
+    console.error("❌ Slash command error:", err);
   }
 }
 
 // ---------------- SLASH COMMAND HANDLER ----------------
 client.on("interactionCreate", async (interaction) => {
-  if (!interaction.isChatInputCommand()) return;
+  try {
+    if (!interaction.isChatInputCommand()) return;
 
-  const { commandName } = interaction;
+    const { commandName } = interaction;
 
-  if (commandName === "ask") {
-    const question = interaction.options.getString("question");
-    const reply = getResponse(question);
+    if (commandName === "ask") {
+      const question = interaction.options.getString("question");
+      const reply = getResponse(question);
 
-    return interaction.reply(reply);
-  }
+      return interaction.reply(reply);
+    }
 
-  if (commandName === "forms") {
-    return interaction.reply(
-      "📄 Application forms: https://your-link-here.com"
-    );
-  }
+    if (commandName === "forms") {
+      return interaction.reply("📄 Forms: https://example.com");
+    }
 
-  if (commandName === "profile") {
-    return interaction.reply("👤 Profile system coming soon.");
-  }
+    if (commandName === "profile") {
+      return interaction.reply("👤 Profile system coming soon.");
+    }
 
-  if (commandName === "ticket") {
-    return interaction.reply("🎫 Ticket system coming soon.");
-  }
+    if (commandName === "ticket") {
+      return interaction.reply("🎫 Ticket system coming soon.");
+    }
 
-  if (commandName === "season") {
-    return interaction.reply("🌍 Current season info loading...");
-  }
+    if (commandName === "season") {
+      return interaction.reply("🌍 Season info loading...");
+    }
 
-  if (commandName === "rules") {
-    return interaction.reply("📜 Server rules: Be respectful, no cheating.");
+    if (commandName === "rules") {
+      return interaction.reply("📜 Be respectful, no cheating.");
+    }
+  } catch (err) {
+    console.error("interaction error:", err);
   }
 });
 
@@ -136,5 +137,5 @@ client.once("ready", () => {
 // ---------------- START BOT ----------------
 (async () => {
   await registerCommands();
-  client.login(process.env.BOT_TOKEN);
+  await client.login(process.env.BOT_TOKEN);
 })();
