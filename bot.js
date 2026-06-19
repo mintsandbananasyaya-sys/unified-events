@@ -22,13 +22,23 @@ const client = new Client({
 });
 
 // ---------------- MESSAGE (TEXT CHAT) ----------------
-client.on("messageCreate", (message) => {
+client.on("messageCreate", async (message) => {
+  if (!message || !message.content) return;
   if (message.author.bot) return;
 
-  const reply = getResponse(message.content);
-  if (!reply) return;
+  try {
+    const reply = getResponse(message.content);
 
-  message.reply(reply);
+    if (!reply) return;
+
+    await message.reply({
+      content: reply,
+      allowedMentions: { repliedUser: false },
+    });
+
+  } catch (err) {
+    console.error("messageCreate error:", err);
+  }
 });
 
 // ---------------- SLASH COMMANDS ----------------
