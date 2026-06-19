@@ -13,15 +13,15 @@ const { getResponse } = require("./brain");
 // ---------------- CLIENT ----------------
 const client = new Client({
   intents: [
-    GatewayIntentBits.DirectMessages,
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.DirectMessages,
   ],
+  partials: ["CHANNEL"], // required for DMs
 });
 
-// ---------------- PREFIX / CHAT RESPONSES ----------------
+// ---------------- MESSAGE (TEXT CHAT) ----------------
 client.on("messageCreate", (message) => {
   if (message.author.bot) return;
 
@@ -71,18 +71,54 @@ async function registerCommands() {
   try {
     console.log("⏳ Registering slash commands...");
 
-    await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), {
-      body: commands,
-    });
+    await rest.put(
+      Routes.applicationCommands(process.env.CLIENT_ID),
+      { body: commands }
+    );
 
     console.log("✅ Slash commands registered successfully!");
   } catch (err) {
-    console.error("❌ Slash command registration failed:");
-    console.error(err);
+    console.error("❌ Failed to register slash commands:", err);
   }
 }
 
-// ---------------- READY EVENT ----------------
+// ---------------- SLASH COMMAND HANDLER ----------------
+client.on("interactionCreate", async (interaction) => {
+  if (!interaction.isChatInputCommand()) return;
+
+  const { commandName } = interaction;
+
+  if (commandName === "ask") {
+    const question = interaction.options.getString("question");
+    const reply = getResponse(question);
+
+    return interaction.reply(reply);
+  }
+
+  if (commandName === "forms") {
+    return interaction.reply(
+      "📄 Application forms: https://your-link-here.com"
+    );
+  }
+
+  if (commandName === "profile") {
+    return interaction.reply("👤 Profile system coming soon.");
+  }
+
+  if (commandName === "ticket") {
+    return interaction.reply("🎫 Ticket system coming soon.");
+  }
+
+  if (commandName === "season") {
+    return interaction.reply("🌍 Current season info loading...");
+  }
+
+  if (commandName === "rules") {
+    return interaction.reply("📜 Server rules: Be respectful, no cheating.");
+  }
+});
+
+// ---------------- READY ----------------
 client.once("ready", () => {
   console.log(`🤖 Logged in as ${client.user.tag}`);
 });
