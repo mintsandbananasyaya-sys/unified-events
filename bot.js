@@ -17,10 +17,14 @@ const REQUIRED_ENV = ["BOT_TOKEN", "STAFF_CHANNEL_ID"];
 const missing = REQUIRED_ENV.filter((key) => !process.env[key]);
  
 if (missing.length) {
-  console.error(
-    `❌ Missing required environment variable(s): ${missing.join(", ")}`
+  // Note: this file is loaded via require("./bot.js") inside server.js,
+  // wrapped in a try/catch so a bot misconfiguration doesn't take the
+  // whole website down. process.exit() would bypass that try/catch
+  // entirely (it kills the process immediately, uncatchable) — so we
+  // throw instead, letting the caller decide what to do.
+  throw new Error(
+    `Missing required environment variable(s): ${missing.join(", ")}`
   );
-  process.exit(1);
 }
  
 const APPLY_URL =
@@ -312,4 +316,3 @@ client.on("messageCreate", async (message) => {
 });
  
 client.login(process.env.BOT_TOKEN);
- 
