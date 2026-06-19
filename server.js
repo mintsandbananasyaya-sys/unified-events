@@ -1,24 +1,26 @@
 require("dotenv").config();
-
+ 
 const db = require("./database");
 const express = require("express");
 const session = require("express-session");
 const axios = require("axios");
 const path = require("path");
-
+ 
+const { getResponse } = require("./brain");
+ 
 const app = express();
-
+ 
 /* =====================
    MIDDLEWARE
 ===================== */
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
-
+ 
 app.set("trust proxy", 1);
-
+ 
 /* =====================
-   SESSION (SAFE)
+   SESSION
 ===================== */
 app.use(
   session({
@@ -33,9 +35,11 @@ app.use(
     },
   })
 );
-
+ 
 /* =====================
    BOT LOAD (SAFE)
+   bot.js runs in this same process so it can
+   require("./brain") directly — same logic as /api/chat below.
 ===================== */
 try {
   require("./bot.js");
@@ -43,7 +47,7 @@ try {
 } catch (err) {
   console.log("Bot failed:", err.message);
 }
-
+ 
 /* =====================
    ENV
 ===================== */
@@ -51,21 +55,21 @@ const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
 const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
 const BOT_TOKEN = process.env.BOT_TOKEN;
-
+ 
 /* =====================
-   MEMORY STORE
+   IN-MEMORY STORE
+   guildId -> settings (kept simple, not persisted to db)
 ===================== */
-// guildId -> settings
 const settingsStore = {};
-
+ 
 /* =====================
-   AUTH CHECK
+   AUTH HELPER
 ===================== */
 function requireAuth(req, res, next) {
   if (!req.session.user) return res.redirect("/login");
   next();
 }
-
+ 
 /* =====================
    PAGES
 ===================== */
@@ -73,19 +77,19 @@ app.get("/", (req, res) => {
   if (req.session.user) return res.redirect("/dashboard");
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
-
+ 
 app.get("/login", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "login.html"));
 });
-
+ 
 app.get("/dashboard", requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "dashboard.html"));
 });
-
+ 
 app.get("/bot-dashboard", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "bot-dashboard.html"));
 });
-
+ 
 /* =====================
    DISCORD OAUTH
 ===================== */
@@ -96,14 +100,14 @@ app.get("/auth/discord", (req, res) => {
     `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
     `&response_type=code` +
     `&scope=identify guilds`;
-
+ 
   res.redirect(url);
 });
-
+ 
 app.get("/auth/discord/callback", async (req, res) => {
   const code = req.query.code;
   if (!code) return res.redirect("/login");
-
+ 
   try {
     const tokenRes = await axios.post(
       "https://discord.com/api/oauth2/token",
@@ -120,67 +124,80 @@ app.get("/auth/discord/callback", async (req, res) => {
         },
       }
     );
-
+ 
     const userRes = await axios.get("https://discord.com/api/users/@me", {
       headers: {
         Authorization: `Bearer ${tokenRes.data.access_token}`,
       },
     });
-
+ 
     req.session.user = {
       id: userRes.data.id,
       username: userRes.data.username,
       avatar: userRes.data.avatar,
     };
-      db.prepare(`
+ 
+    db.prepare(`
       INSERT OR REPLACE INTO users
       (discord_id, username, avatar)
       VALUES (?, ?, ?)
-      `).run(
-        userRes.data.id,
-        userRes.data.username,
-        userRes.data.avatar
-      );
-
+    `).run(
+      userRes.data.id,
+      userRes.data.username,
+      userRes.data.avatar
+    );
+ 
     res.redirect("/dashboard");
   } catch (err) {
     console.log("OAuth error:", err.message);
     res.redirect("/login");
   }
 });
-
+ 
 /* =====================
    USER INFO
 ===================== */
 app.get("/api/me", (req, res) => {
   if (!req.session.user) return res.json({ loggedIn: false });
-
+ 
   const avatar = req.session.user.avatar
     ? `https://cdn.discordapp.com/avatars/${req.session.user.id}/${req.session.user.avatar}.png`
     : null;
-
+ 
   res.json({
     loggedIn: true,
     ...req.session.user,
     avatar,
   });
 });
-
+ 
 /* =====================
-   SETTINGS API (FIXED — THIS WAS YOUR MAIN BUG)
+   CHATBOT API
+   Shared brain with the Discord DM bot — both call getResponse()
+   from brain.js, so website chat and DMs always answer identically.
 ===================== */
-
-// GET SETTINGS
+app.post("/api/chat", (req, res) => {
+  const { message } = req.body;
+ 
+  if (!message || typeof message !== "string" || !message.trim()) {
+    return res.status(400).json({ error: "Missing message" });
+  }
+ 
+  const reply = getResponse(message.trim());
+  res.json({ reply });
+});
+ 
+/* =====================
+   SETTINGS API
+===================== */
 app.get("/api/settings/:guildId", (req, res) => {
   const { guildId } = req.params;
-
   res.json(settingsStore[guildId] || {});
 });
-
-// SAVE SETTINGS
+ 
 app.post("/api/settings", (req, res) => {
   console.log("🔥 SAVE REQUEST:", req.body);
-
+ 
   const {
     guildId,
     staffChannelId,
@@ -188,26 +205,26 @@ app.post("/api/settings", (req, res) => {
     formsEnabled,
     ticketsEnabled,
   } = req.body;
-
+ 
   if (!guildId) {
     return res.status(400).json({ error: "Missing guildId" });
   }
-
+ 
   settingsStore[guildId] = {
     staffChannelId,
     staffRoleId,
     formsEnabled,
     ticketsEnabled,
   };
-
+ 
   console.log("✅ SAVED:", guildId, settingsStore[guildId]);
-
+ 
   res.json({
     ok: true,
     settings: settingsStore[guildId],
   });
 });
-
+ 
 /* =====================
    GUILD CHANNELS (BOT TOKEN)
 ===================== */
@@ -216,7 +233,7 @@ app.get("/api/guild/:guildId/channels", async (req, res) => {
     if (!BOT_TOKEN) {
       return res.status(500).json({ error: "Missing BOT_TOKEN" });
     }
-
+ 
     const result = await axios.get(
       `https://discord.com/api/guilds/${req.params.guildId}/channels`,
       {
@@ -225,26 +242,26 @@ app.get("/api/guild/:guildId/channels", async (req, res) => {
         },
       }
     );
-
+ 
     res.json(result.data);
   } catch (err) {
     console.log(err.message);
     res.status(500).json({ error: "failed to fetch channels" });
   }
 });
-
+ 
 /* =====================
    LOGOUT
 ===================== */
 app.get("/logout", (req, res) => {
   req.session.destroy(() => res.redirect("/login"));
 });
-
+ 
 /* =====================
    START SERVER
 ===================== */
 const PORT = process.env.PORT || 3000;
-
+ 
 app.listen(PORT, () => {
   console.log(`Server running on ${PORT}`);
 });
