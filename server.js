@@ -1,5 +1,6 @@
 require("dotenv").config();
 
+const db = require("./database");
 const express = require("express");
 const session = require("express-session");
 const axios = require("axios");
@@ -131,6 +132,15 @@ app.get("/auth/discord/callback", async (req, res) => {
       username: userRes.data.username,
       avatar: userRes.data.avatar,
     };
+      db.prepare(`
+      INSERT OR REPLACE INTO users
+      (discord_id, username, avatar)
+      VALUES (?, ?, ?)
+      `).run(
+        userRes.data.id,
+        userRes.data.username,
+        userRes.data.avatar
+      );
 
     res.redirect("/dashboard");
   } catch (err) {
