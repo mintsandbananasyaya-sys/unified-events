@@ -304,6 +304,39 @@ function mentionsFormsKeyword(text) {
   return FORMS_KEYWORDS.some((keyword) => lower.includes(keyword));
 }
 
+// Parses a duration string like "10m", "2h", "30s", "1d" into milliseconds.
+// Returns null if the format doesn't match — caller is responsible for
+// rejecting with a clear error rather than guessing a default unit.
+const DURATION_UNIT_MS = {
+  s: 1000,
+  m: 60 * 1000,
+  h: 60 * 60 * 1000,
+  d: 24 * 60 * 60 * 1000,
+};
+
+function parseDuration(input) {
+  const match = /^(\d+)\s*([smhd])$/i.exec(input.trim());
+  if (!match) return null;
+
+  const amount = Number(match[1]);
+  const unit = match[2].toLowerCase();
+
+  if (!Number.isInteger(amount) || amount <= 0) return null;
+
+  return amount * DURATION_UNIT_MS[unit];
+}
+
+function formatDuration(ms) {
+  const seconds = Math.round(ms / 1000);
+  if (seconds < 60) return `${seconds}s`;
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours}h`;
+  const days = Math.round(hours / 24);
+  return `${days}d`;
+}
+
 /* ================= READY ================= */
 
 // "ready" is the stable, documented event for discord.js v14.
@@ -579,6 +612,117 @@ client.on("interactionCreate", async (interaction) => {
 
     return interaction.editReply(
       `Broadcast sent. ${sent} delivered, ${failed} failed (DMs off or left server).`
+    );
+  }
+
+  if (interaction.commandName === "purge") {
+    // Guild-only command (see deploy-commands.js definition), so
+    // interaction.member and interaction.channel are always populated.
+    if (!memberCanNotify(interaction.member)) {
+      return safeReply(interaction, {
+        content: "You don't have permission to use this command.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
+
+    const amount = interaction.options.getInteger("amount");
+    const lockdownInput = interaction.options.getString("lockdown");
+
+    if (amount < 1 || amount > 100) {
+      return safeReply(interaction, {
+        content: "⚠️ Amount must be between 1 and 100 — Discord only allows bulk-deleting up to 100 messages at a time.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
+
+    let lockdownMs = null;
+    if (lockdownInput) {
+      lockdownMs = parseDuration(lockdownInput);
+      if (lockdownMs === null) {
+        return safeReply(interaction, {
+          content: "⚠️ Couldn't parse that lockdown duration. Use a number plus a unit, e.g. `10m`, `2h`, `30s`, or `1d`.",
+          flags: MessageFlags.Ephemeral,
+        });
+      }
+    }
+
+    const channel = interaction.channel;
+
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+    // ---- delete messages ----
+    let deletedCount = 0;
+    try {
+      const deleted = await channel.bulkDelete(amount, true); // true = skip messages older than 14 days rather than erroring
+      deletedCount = deleted.size;
+    } catch (err) {
+      console.error("purge bulkDelete failed:", err);
+      return interaction.editReply(
+        "⚠️ Failed to delete messages. Make sure the bot has 'Manage Messages' permission in this channel."
+      );
+    }
+
+    // ---- lockdown (optional) ----
+    let lockdownNote = "";
+    if (lockdownMs !== null) {
+      const everyoneRole = interaction.guild.roles.everyone;
+
+      // Snapshot the exact prior SendMessages override for @everyone in
+      // this channel before changing anything — could be true, false, or
+      // null (inherited/no explicit override). We restore this exact
+      // value afterward, rather than assuming "unlocked" means `true`.
+      const existingOverwrite = channel.permissionOverwrites.cache.get(everyoneRole.id);
+      const priorSendMessages = existingOverwrite
+        ? existingOverwrite.deny.has("SendMessages")
+          ? false
+          : existingOverwrite.allow.has("SendMessages")
+            ? true
+            : null
+        : null;
+
+      try {
+        await channel.permissionOverwrites.edit(everyoneRole, {
+          SendMessages: false,
+        });
+      } catch (err) {
+        console.error("purge lockdown permission edit failed:", err);
+        lockdownNote = "\n⚠️ Deleted messages, but failed to lock the channel (check bot permissions).";
+      }
+
+      if (!lockdownNote) {
+        lockdownNote = `\n🔒 Channel locked for ${formatDuration(lockdownMs)}.`;
+
+        setTimeout(async () => {
+          try {
+            await channel.permissionOverwrites.edit(everyoneRole, {
+              SendMessages: priorSendMessages,
+            });
+            await channel
+              .send("🔓 Lockdown lifted — this channel is open again.")
+              .catch(() => {});
+          } catch (err) {
+            console.error("purge lockdown auto-restore failed:", err);
+          }
+        }, lockdownMs);
+      }
+    }
+
+    if (STAFF_CHANNEL_ID) {
+      await client.channels
+        .fetch(STAFF_CHANNEL_ID)
+        .then((ch) =>
+          ch?.send({
+            content:
+              `🧹 ${interaction.user.tag} purged ${deletedCount} message(s) in <#${channel.id}>` +
+              (lockdownMs !== null ? ` and locked it for ${formatDuration(lockdownMs)}.` : "."),
+            allowedMentions: { parse: [] },
+          })
+        )
+        .catch(() => {});
+    }
+
+    return interaction.editReply(
+      `Deleted ${deletedCount} message(s).${lockdownNote}`
     );
   }
 });
