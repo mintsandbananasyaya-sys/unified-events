@@ -75,6 +75,44 @@ const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
 const BOT_TOKEN = process.env.BOT_TOKEN;
 
 /* =====================
+   TEMPORARY DIAGNOSTIC — checking why /notify isn't showing up.
+   Asks Discord's API directly what commands are registered for this
+   application, right now — bypasses the Discord client entirely, so
+   this tells us the real state instead of relying on client caching.
+   REMOVE THIS BLOCK once we've seen the output.
+===================== */
+(async () => {
+  try {
+    if (!CLIENT_ID || !BOT_TOKEN) {
+      console.log("🔎 DIAGNOSTIC — skipped, missing CLIENT_ID or BOT_TOKEN");
+      return;
+    }
+
+    const res = await axios.get(
+      `https://discord.com/api/v10/applications/${CLIENT_ID}/commands`,
+      { headers: { Authorization: `Bot ${BOT_TOKEN}` } }
+    );
+
+    console.log(`🔎 DIAGNOSTIC — ${res.data.length} command(s) registered globally for this app:`);
+    if (res.data.length === 0) {
+      console.log("  (none — registration did not actually land)");
+    } else {
+      res.data.forEach((c) => {
+        console.log(
+          `  - /${c.name} (id: ${c.id}, dm_permission: ${c.dm_permission}, version: ${c.version})`
+        );
+      });
+    }
+  } catch (err) {
+    console.log(
+      "🔎 DIAGNOSTIC — failed to fetch registered commands:",
+      err.response?.status,
+      err.response?.data || err.message
+    );
+  }
+})();
+
+/* =====================
    IN-MEMORY STORE
    guildId -> settings (kept simple, not persisted to db)
 ===================== */
