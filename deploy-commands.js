@@ -40,6 +40,40 @@ const commands = [
     .toJSON(),
 
   new SlashCommandBuilder()
+    .setName("bot-message")
+    .setDescription("Post a styled announcement embed to a channel, with the site logo and a brand color")
+    .setDMPermission(false) // guild-only, needs a real channel to target
+    .addChannelOption((opt) =>
+      opt
+        .setName("channel")
+        .setDescription("Which channel to post the message in")
+        .setRequired(true)
+    )
+    .addStringOption((opt) =>
+      opt
+        .setName("title")
+        .setDescription("The embed's header/title")
+        .setRequired(true)
+    )
+    .addStringOption((opt) =>
+      opt
+        .setName("message")
+        .setDescription("The embed's body text")
+        .setRequired(true)
+    )
+    .addStringOption((opt) =>
+      opt
+        .setName("color")
+        .setDescription("Accent color for the embed's side bar")
+        .setRequired(true)
+        .addChoices(
+          { name: "Blue", value: "blue" },
+          { name: "Red", value: "red" }
+        )
+    )
+    .toJSON(),
+
+  new SlashCommandBuilder()
     .setName("notify")
     .setDescription("Send a notification DM + dashboard entry to one user or everyone in the server")
     .setDMPermission(false) // guild-only — interaction.member must exist for the role check
@@ -177,6 +211,7 @@ const rest = new REST({ version: "10" }).setToken(BOT_TOKEN);
     console.log("ℹ️  Global commands can take up to ~1 hour to fully propagate to all clients.");
     console.log("ℹ️  /forms is DM-enabled — try it by DMing the bot directly, not just in a server.");
     console.log("ℹ️  /schedule is open to everyone, DM-enabled, and currently always replies with a placeholder until real schedule data exists.");
+    console.log("ℹ️  /bot-message is guild-only and requires a role listed in STAFF_ROLE_IDS. The logo image must exist at SITE_URL + '/' + BOT_MESSAGE_LOGO_PATH (defaults to /logo.png) for the thumbnail to actually load.");
     console.log("ℹ️  /notify is guild-only (run it inside your server, not in DMs) and requires a role listed in STAFF_ROLE_IDS.");
     console.log("ℹ️  /purge is guild-only and requires a role listed in STAFF_ROLE_IDS, plus the bot needs 'Manage Messages' and 'Manage Channels' permissions.");
     console.log("ℹ️  /mute is guild-only and requires a role listed in STAFF_ROLE_IDS, plus the bot needs 'Manage Roles' and MUTED_ROLE_ID configured.");
