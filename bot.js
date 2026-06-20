@@ -80,6 +80,10 @@ const FAQ_CHANNEL_ID = process.env.FAQ_CHANNEL_ID || null;
 // to run rather than silently doing nothing.
 const MUTED_ROLE_ID = process.env.MUTED_ROLE_ID || null;
 
+// Channel where new members get an automatic welcome embed. Optional —
+// if unset, the guildMemberAdd handler below simply does nothing.
+const WELCOME_CHANNEL_ID = process.env.WELCOME_CHANNEL_ID || null;
+
 // If a DM (with no active session) contains any of these words anywhere
 // in the message, nudge the user toward /forms instead of falling through
 // to the generic AI/lore reply. Substring match, case-insensitive — e.g.
@@ -493,6 +497,34 @@ client.on("messageDelete", async (message) => {
     );
   } catch (err) {
     console.error("messageDelete logging error:", err);
+  }
+});
+
+/* ================= WELCOME MESSAGE =================
+   Posts a styled embed to WELCOME_CHANNEL_ID whenever someone joins,
+   pinging them directly. Mirrors /bot-message's visual style (brand
+   color side bar + site logo thumbnail) for consistency.
+*/
+
+client.on("guildMemberAdd", async (member) => {
+  if (!WELCOME_CHANNEL_ID) return;
+
+  try {
+    const channel = await client.channels.fetch(WELCOME_CHANNEL_ID);
+    if (!channel?.isTextBased()) return;
+
+    const embed = new EmbedBuilder()
+      .setColor(EMBED_COLOR_PRESETS.blue)
+      .setTitle("Welcome!")
+      .setDescription(`Welcome to the server, <@${member.id}>! We're glad you're here.`)
+      .setThumbnail(`${SITE_URL}/${BOT_MESSAGE_LOGO_PATH}`);
+
+    await channel.send({
+      content: `<@${member.id}>`,
+      embeds: [embed],
+    });
+  } catch (err) {
+    console.error("Welcome message failed:", err);
   }
 });
 
