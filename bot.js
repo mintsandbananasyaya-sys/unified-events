@@ -6,6 +6,7 @@ const {
   Partials,
   ChannelType,
   MessageFlags,
+  EmbedBuilder,
 } = require("discord.js");
 
 const { getResponse } = require("./brain");
@@ -30,6 +31,23 @@ if (missing.length) {
 const APPLY_URL =
   process.env.APPLY_URL ||
   "https://unified-events.onrender.com/apply.html";
+
+// Base site URL used to build the full logo image link for /bot-message.
+// Override via env if the domain ever changes.
+const SITE_URL =
+  process.env.SITE_URL || "https://unified-events.onrender.com";
+
+// Filename of the logo image inside the public/ folder, served statically
+// by server.js (express.static). Update this if the file is renamed or
+// moved into a subfolder (e.g. "images/logo.png").
+const BOT_MESSAGE_LOGO_PATH = process.env.BOT_MESSAGE_LOGO_PATH || "logo.png";
+
+// Color presets for /bot-message, matching the site's brand tokens
+// (--blue: #4169ff, --red: #ff3b4e) so embeds visually match the website.
+const EMBED_COLOR_PRESETS = {
+  blue: 0x4169ff,
+  red: 0xff3b4e,
+};
 
 const STAFF_CHANNEL_ID = process.env.STAFF_CHANNEL_ID;
 
@@ -515,6 +533,68 @@ client.on("interactionCreate", async (interaction) => {
     return safeReply(interaction, {
       content: "No schedule has been confirmed yet.",
       // Not ephemeral — visible to everyone in the channel, per spec.
+    });
+  }
+
+  if (interaction.commandName === "bot-message") {
+    if (!memberCanNotify(interaction.member)) {
+      return safeReply(interaction, {
+        content: "You don't have permission to use this command.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
+
+    const targetChannel = interaction.options.getChannel("channel");
+    const title = interaction.options.getString("title");
+    const messageText = interaction.options.getString("message");
+    const colorKey = interaction.options.getString("color");
+
+    const color = EMBED_COLOR_PRESETS[colorKey];
+    if (!color) {
+      return safeReply(interaction, {
+        content: `⚠️ Unknown color "${colorKey}". Pick one from the list Discord shows you.`,
+        flags: MessageFlags.Ephemeral,
+      });
+    }
+
+    if (!targetChannel.isTextBased()) {
+      return safeReply(interaction, {
+        content: "⚠️ Pick a text channel — that one can't receive messages.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
+
+    const embed = new EmbedBuilder()
+      .setColor(color)
+      .setTitle(title)
+      .setDescription(messageText)
+      .setThumbnail(`${SITE_URL}/${BOT_MESSAGE_LOGO_PATH}`);
+
+    try {
+      await targetChannel.send({ embeds: [embed] });
+    } catch (err) {
+      console.error("bot-message send failed:", err);
+      return safeReply(interaction, {
+        content: "⚠️ Failed to send. Make sure the bot can see and post in that channel.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
+
+    if (STAFF_CHANNEL_ID) {
+      await client.channels
+        .fetch(STAFF_CHANNEL_ID)
+        .then((ch) =>
+          ch?.send({
+            content: `📨 ${interaction.user.tag} posted a ${colorKey} bot-message to <#${targetChannel.id}>: **${title}**`,
+            allowedMentions: { parse: [] },
+          })
+        )
+        .catch(() => {});
+    }
+
+    return safeReply(interaction, {
+      content: `Sent to <#${targetChannel.id}>.`,
+      flags: MessageFlags.Ephemeral,
     });
   }
 
