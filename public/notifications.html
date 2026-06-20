@@ -230,6 +230,7 @@
   .viewer-meta .name{font-weight:600;font-size:0.98rem;}
   .viewer-meta .sub{font-family:var(--font-mono);font-size:0.74rem;color:var(--mist-dim);margin-top:0.15rem;}
   .viewer-strip .btn{flex-shrink:0;}
+  .viewer-strip-actions{display:flex;align-items:center;gap:0.6rem;}
 
   /* ---------- NOTIFICATIONS LIST ---------- */
   .notif-section{padding-block:clamp(40px,7vw,72px);}
@@ -243,6 +244,7 @@
     font-family:var(--font-mono);font-size:0.78rem;color:var(--mist-dim);
     letter-spacing:0.05em;text-transform:uppercase;
   }
+  .notif-toolbar .count strong{color:var(--ink);font-weight:600;}
 
   .notif-list{
     display:flex;flex-direction:column;
@@ -257,13 +259,17 @@
     background:var(--void-soft);
     border-bottom:1px solid var(--line-soft);
     position:relative;
+    cursor:pointer;
+    transition:background 0.15s ease, opacity 0.15s ease;
   }
   .notif-item:last-child{border-bottom:none;}
+  .notif-item:hover{background:var(--panel);}
   .notif-item.is-unread{background:var(--panel);}
   .notif-item.is-unread::before{
     content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
     background:linear-gradient(180deg,var(--blue),var(--red));
   }
+  .notif-item.is-marking{opacity:0.55;cursor:default;}
 
   .notif-icon{
     width:36px;height:36px;border-radius:50%;flex-shrink:0;
@@ -273,11 +279,23 @@
   }
 
   .notif-body{flex:1;min-width:0;}
+  .notif-body .title-row{display:flex;align-items:center;gap:0.55rem;flex-wrap:wrap;}
   .notif-body .title{font-weight:600;font-size:0.95rem;}
+  .notif-body .scope-tag{
+    font-family:var(--font-mono);font-size:0.64rem;letter-spacing:0.08em;text-transform:uppercase;
+    color:var(--mist-dim);border:1px solid var(--line);border-radius:99px;
+    padding:0.15rem 0.55rem;
+  }
+  .notif-body .scope-tag.is-broadcast{color:var(--violet);border-color:rgba(162,92,255,0.35);}
   .notif-body .desc{margin-top:0.3rem;color:var(--mist);font-size:0.88rem;}
   .notif-body .time{
     margin-top:0.55rem;font-family:var(--font-mono);font-size:0.7rem;
     color:var(--mist-dim);letter-spacing:0.06em;text-transform:uppercase;
+  }
+
+  .unread-dot{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--blue);flex-shrink:0;margin-top:0.4rem;
   }
 
   /* ---------- EMPTY STATE ---------- */
@@ -317,6 +335,26 @@
   .locked-state h3{font-family:var(--font-display);font-weight:700;font-size:1.4rem;}
   .locked-state p{margin-top:0.6rem;color:var(--mist);font-size:0.92rem;max-width:380px;margin-inline:auto;}
   .locked-state .btn{margin-top:1.6rem;}
+
+  /* ---------- ERROR STATE ---------- */
+  .error-state{
+    border:1px solid var(--red-dim);
+    border-radius:var(--radius-lg);
+    padding:clamp(40px,7vw,64px) 2rem;
+    text-align:center;
+    background:var(--void-soft);
+  }
+  .error-state .glyph{
+    width:54px;height:54px;margin:0 auto 1.3rem;
+    border-radius:50%;
+    background:var(--red-dim);
+    border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .error-state .glyph svg{width:22px;height:22px;}
+  .error-state h3{font-family:var(--font-display);font-weight:700;font-size:1.3rem;}
+  .error-state p{margin-top:0.6rem;color:var(--mist);font-size:0.92rem;max-width:380px;margin-inline:auto;}
+  .error-state .btn{margin-top:1.4rem;}
 
   /* ---------- LOADING STATE ---------- */
   .loading-state{
@@ -365,6 +403,7 @@
     .footer-brand{grid-column:span 2;margin-bottom:0.6rem;}
     .viewer-strip{flex-direction:column;align-items:stretch;}
     .viewer-strip .btn{width:100%;justify-content:center;}
+    .viewer-strip-actions{flex-direction:column;}
   }
 </style>
 </head>
@@ -462,7 +501,9 @@
             <div class="sub" id="stripId">—</div>
           </div>
         </div>
-        <button class="btn btn-ghost btn-small" id="refreshBtn">Refresh</button>
+        <div class="viewer-strip-actions">
+          <button class="btn btn-ghost btn-small" id="refreshBtn">Refresh</button>
+        </div>
       </div>
     </div>
   </section>
@@ -493,6 +534,16 @@
         </div>
         <h3>You're all caught up</h3>
         <p>Nothing here yet. Announcements about your applications, seasons, and staff rulings will show up in this list.</p>
+      </div>
+
+      <!-- Logged in, request failed -->
+      <div class="error-state" id="errorState" style="display:none;">
+        <div class="glyph">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#ff3b4e" stroke-width="1.6"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/></svg>
+        </div>
+        <h3>Couldn't load announcements</h3>
+        <p>Something went wrong reaching the server. Try refreshing — if it keeps happening, let staff know.</p>
+        <button class="btn btn-ghost" id="retryBtn">Try again</button>
       </div>
 
       <!-- Logged in, has notifications -->
@@ -659,47 +710,96 @@ async function loadUser() {
 }
 
 /* ---------------- NOTIFICATIONS STATES ---------------- */
-function showLoading() {
-  document.getElementById("loadingState").style.display = "flex";
+function hideAllStates() {
+  document.getElementById("loadingState").style.display = "none";
   document.getElementById("loggedOutState").style.display = "none";
   document.getElementById("emptyState").style.display = "none";
+  document.getElementById("errorState").style.display = "none";
   document.getElementById("notifWrap").style.display = "none";
+}
+
+function showLoading() {
+  hideAllStates();
+  document.getElementById("loadingState").style.display = "flex";
 }
 
 function showLoggedOut() {
-  document.getElementById("loadingState").style.display = "none";
+  hideAllStates();
   document.getElementById("loggedOutState").style.display = "block";
-  document.getElementById("emptyState").style.display = "none";
-  document.getElementById("notifWrap").style.display = "none";
 }
 
 function showEmpty() {
-  document.getElementById("loadingState").style.display = "none";
-  document.getElementById("loggedOutState").style.display = "none";
+  hideAllStates();
   document.getElementById("emptyState").style.display = "block";
-  document.getElementById("notifWrap").style.display = "none";
+}
+
+function showError() {
+  hideAllStates();
+  document.getElementById("errorState").style.display = "block";
 }
 
 function showNotifications(items) {
-  document.getElementById("loadingState").style.display = "none";
-  document.getElementById("loggedOutState").style.display = "none";
-  document.getElementById("emptyState").style.display = "none";
+  hideAllStates();
   document.getElementById("notifWrap").style.display = "block";
 
   const list = document.getElementById("notifList");
   const count = document.getElementById("notifCount");
-  count.textContent = `${items.length} notification${items.length === 1 ? "" : "s"}`;
+  const unreadCount = items.filter(n => !n.read).length;
+
+  count.innerHTML = unreadCount > 0
+    ? `<strong>${unreadCount} unread</strong> &nbsp;·&nbsp; ${items.length} total`
+    : `${items.length} notification${items.length === 1 ? "" : "s"}`;
 
   list.innerHTML = items.map(n => `
-    <div class="notif-item ${n.read ? "" : "is-unread"}">
-      <div class="notif-icon">${(n.icon || "•")}</div>
+    <div class="notif-item ${n.read ? "" : "is-unread"}" data-id="${n.id}" data-read="${n.read}">
+      <div class="notif-icon">${escapeHtml(n.icon || "•")}</div>
       <div class="notif-body">
-        <div class="title">${escapeHtml(n.title || "")}</div>
+        <div class="title-row">
+          <div class="title">${escapeHtml(n.title || "")}</div>
+          ${n.scope === "broadcast" ? `<span class="scope-tag is-broadcast">Server-wide</span>` : ""}
+        </div>
         ${n.description ? `<div class="desc">${escapeHtml(n.description)}</div>` : ""}
         <div class="time">${escapeHtml(n.timestamp || "")}</div>
       </div>
+      ${n.read ? "" : `<div class="unread-dot" aria-hidden="true"></div>`}
     </div>
   `).join("");
+
+  // Mark personal (non-broadcast) unread notifications as read on click.
+  // Broadcasts always arrive with read:true from the API, so clicking
+  // one is a no-op here (data-read is "true", short-circuits below).
+  list.querySelectorAll(".notif-item").forEach(el => {
+    el.addEventListener("click", () => markNotificationRead(el));
+  });
+}
+
+async function markNotificationRead(el) {
+  if (el.dataset.read === "true" || el.classList.contains("is-marking")) return;
+
+  const id = el.dataset.id;
+  el.classList.add("is-marking");
+
+  try {
+    const res = await fetch(`/api/notifications/${id}/read`, { method: "POST" });
+    if (!res.ok) throw new Error(`Request failed (${res.status})`);
+
+    el.classList.remove("is-unread", "is-marking");
+    el.dataset.read = "true";
+    el.querySelector(".unread-dot")?.remove();
+    refreshUnreadCount();
+  } catch (err) {
+    console.log("Failed to mark notification read:", err);
+    el.classList.remove("is-marking");
+  }
+}
+
+function refreshUnreadCount() {
+  const remaining = document.querySelectorAll('#notifList .notif-item[data-read="false"]').length;
+  const total = document.querySelectorAll('#notifList .notif-item').length;
+  const count = document.getElementById("notifCount");
+  count.innerHTML = remaining > 0
+    ? `<strong>${remaining} unread</strong> &nbsp;·&nbsp; ${total} total`
+    : `${total} notification${total === 1 ? "" : "s"}`;
 }
 
 function escapeHtml(str) {
@@ -712,6 +812,8 @@ async function loadNotifications() {
   showLoading();
   try {
     const res = await fetch("/api/notifications");
+    if (!res.ok) throw new Error(`Request failed (${res.status})`);
+
     const data = await res.json();
     const items = Array.isArray(data) ? data : (data.notifications || []);
 
@@ -722,11 +824,12 @@ async function loadNotifications() {
     }
   } catch (err) {
     console.log("Failed to load notifications:", err);
-    showEmpty();
+    showError();
   }
 }
 
 document.getElementById("refreshBtn")?.addEventListener("click", loadNotifications);
+document.getElementById("retryBtn")?.addEventListener("click", loadNotifications);
 
 loadUser();
 </script>
