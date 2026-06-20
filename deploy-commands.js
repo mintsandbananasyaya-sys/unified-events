@@ -8,14 +8,19 @@ const { REST, Routes, SlashCommandBuilder } = require("discord.js");
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 
+// Throw instead of process.exit() — this file can now be loaded two ways:
+//   1. `node deploy-commands.js` directly (process.exit is fine there, but
+//      throwing still works — Node prints the error and exits non-zero)
+//   2. `require("./deploy-commands.js")` from inside server.js (see
+//      DEPLOY_COMMANDS workaround). process.exit() there would kill the
+//      entire website process, not just this script — throwing instead
+//      lets the caller's try/catch contain the damage.
 if (!BOT_TOKEN) {
-  console.error("❌ Missing BOT_TOKEN in .env");
-  process.exit(1);
+  throw new Error("Missing BOT_TOKEN in .env");
 }
 
 if (!CLIENT_ID) {
-  console.error("❌ Missing DISCORD_CLIENT_ID in .env");
-  process.exit(1);
+  throw new Error("Missing DISCORD_CLIENT_ID in .env");
 }
 
 /* =====================
