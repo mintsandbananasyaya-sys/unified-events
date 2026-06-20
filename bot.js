@@ -9,7 +9,7 @@ const {
 } = require("discord.js");
 
 const { getResponse } = require("./brain");
-const db = require("./database");
+const db = require("./database"); // now a pg Pool, not better-sqlite3
 
 /* ================= ENV VALIDATION ================= */
 
@@ -65,140 +65,182 @@ const client = new Client({
   partials: [Partials.Channel],
 });
 
-/* ================= STATE (SQLite) ================= */
+/* ================= STATE (Postgres) =================
+   All table creation + all helpers below are now async, since every
+   pg query returns a Promise. Every call site elsewhere in this file
+   has been updated to `await` these — there is no synchronous DB
+   access anymore, unlike with better-sqlite3.
+*/
 
-db.prepare(`
-CREATE TABLE IF NOT EXISTS pending_menu (
-  user_id TEXT PRIMARY KEY,
-  expires_at INTEGER NOT NULL
-)
-`).run();
+async function setupTables() {
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS pending_menu (
+      user_id TEXT PRIMARY KEY,
+      expires_at BIGINT NOT NULL
+    )
+  `);
 
-db.prepare(`
-CREATE TABLE IF NOT EXISTS sessions (
-  user_id TEXT PRIMARY KEY,
-  thread_id TEXT NOT NULL UNIQUE,
-  kind TEXT NOT NULL,
-  ticket_id INTEGER
-)
-`).run();
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS sessions (
+      user_id TEXT PRIMARY KEY,
+      thread_id TEXT NOT NULL UNIQUE,
+      kind TEXT NOT NULL,
+      ticket_id INTEGER
+    )
+  `);
 
-// Permanent ticket log — survives even after the session/thread closes.
-// One row per ticket ever opened.
-db.prepare(`
-CREATE TABLE IF NOT EXISTS tickets (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id TEXT NOT NULL,
-  thread_id TEXT NOT NULL,
-  kind TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'open',
-  created_at INTEGER NOT NULL,
-  closed_at INTEGER
-)
-`).run();
+  // Permanent ticket log — survives even after the session/thread closes.
+  // One row per ticket ever opened.
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS tickets (
+      id SERIAL PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      thread_id TEXT NOT NULL,
+      kind TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'open',
+      created_at BIGINT NOT NULL,
+      closed_at BIGINT
+    )
+  `);
 
-// One row per message exchanged within a ticket, in order.
-db.prepare(`
-CREATE TABLE IF NOT EXISTS ticket_messages (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  ticket_id INTEGER NOT NULL,
-  sender TEXT NOT NULL,
-  content TEXT NOT NULL,
-  created_at INTEGER NOT NULL,
-  FOREIGN KEY (ticket_id) REFERENCES tickets(id)
-)
-`).run();
+  // One row per message exchanged within a ticket, in order.
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS ticket_messages (
+      id SERIAL PRIMARY KEY,
+      ticket_id INTEGER NOT NULL REFERENCES tickets(id),
+      sender TEXT NOT NULL,
+      content TEXT NOT NULL,
+      created_at BIGINT NOT NULL
+    )
+  `);
 
-db.prepare(`CREATE INDEX IF NOT EXISTS idx_tickets_user ON tickets(user_id)`).run();
-db.prepare(`CREATE INDEX IF NOT EXISTS idx_ticket_messages_ticket ON ticket_messages(ticket_id)`).run();
+  // NOTE: this table wasn't found being created anywhere in the files
+  // pasted so far (server.js/bot.js both query it, but neither's
+  // visible CREATE TABLE covers it) — adding it here alongside the
+  // other bot-owned tables. If it was actually created elsewhere
+  // (a file not yet shared), let me know and we can remove this.
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS notifications (
+      id SERIAL PRIMARY KEY,
+      scope TEXT NOT NULL,
+      user_id TEXT,
+      title TEXT NOT NULL,
+      description TEXT,
+      sent_by TEXT,
+      created_at BIGINT NOT NULL,
+      read_at BIGINT
+    )
+  `);
+
+  await db.query(`CREATE INDEX IF NOT EXISTS idx_tickets_user ON tickets(user_id)`);
+  await db.query(`CREATE INDEX IF NOT EXISTS idx_ticket_messages_ticket ON ticket_messages(ticket_id)`);
+}
+
+// Table setup must finish before the bot starts handling events — queue
+// it immediately, and other code awaits `tablesReady` before its first
+// query. (See `client.login` at the very bottom, which now waits on this.)
+const tablesReady = setupTables().catch((err) => {
+  console.error("Failed to set up bot.js tables:", err.message);
+  throw err;
+});
 
 const MENU_TIMEOUT_MS = 5 * 60 * 1000;
 
 // -- pending menu helpers --
-function setPendingMenu(userId) {
-  db.prepare(
-    `INSERT INTO pending_menu (user_id, expires_at) VALUES (?, ?)
-     ON CONFLICT(user_id) DO UPDATE SET expires_at = excluded.expires_at`
-  ).run(userId, Date.now() + MENU_TIMEOUT_MS);
-}
-
-function getPendingMenu(userId) {
-  return db.prepare(`SELECT * FROM pending_menu WHERE user_id = ?`).get(userId);
-}
-
-function deletePendingMenu(userId) {
-  db.prepare(`DELETE FROM pending_menu WHERE user_id = ?`).run(userId);
-}
-
-function cleanupMenus() {
-  db.prepare(`DELETE FROM pending_menu WHERE expires_at < ?`).run(Date.now());
-}
-
-// -- session helpers --
-function createSession(userId, threadId, kind, ticketId) {
-  db.prepare(
-    `INSERT INTO sessions (user_id, thread_id, kind, ticket_id) VALUES (?, ?, ?, ?)`
-  ).run(userId, threadId, kind, ticketId);
-}
-
-function getSessionByUser(userId) {
-  return db.prepare(`SELECT * FROM sessions WHERE user_id = ?`).get(userId);
-}
-
-function getSessionByThread(threadId) {
-  return db.prepare(`SELECT * FROM sessions WHERE thread_id = ?`).get(threadId);
-}
-
-function deleteSessionByUser(userId) {
-  db.prepare(`DELETE FROM sessions WHERE user_id = ?`).run(userId);
-}
-
-function deleteSessionByThread(threadId) {
-  db.prepare(`DELETE FROM sessions WHERE thread_id = ?`).run(threadId);
-}
-
-// -- ticket log helpers (permanent record, independent of session lifecycle) --
-function createTicket(userId, threadId, kind) {
-  const result = db
-    .prepare(
-      `INSERT INTO tickets (user_id, thread_id, kind, status, created_at) VALUES (?, ?, ?, 'open', ?)`
-    )
-    .run(userId, threadId, kind, Date.now());
-  return result.lastInsertRowid;
-}
-
-function closeTicket(ticketId) {
-  db.prepare(`UPDATE tickets SET status = 'closed', closed_at = ? WHERE id = ?`).run(
-    Date.now(),
-    ticketId
+async function setPendingMenu(userId) {
+  await db.query(
+    `INSERT INTO pending_menu (user_id, expires_at) VALUES ($1, $2)
+     ON CONFLICT (user_id) DO UPDATE SET expires_at = EXCLUDED.expires_at`,
+    [userId, Date.now() + MENU_TIMEOUT_MS]
   );
 }
 
-function logTicketMessage(ticketId, sender, content) {
-  db.prepare(
-    `INSERT INTO ticket_messages (ticket_id, sender, content, created_at) VALUES (?, ?, ?, ?)`
-  ).run(ticketId, sender, content, Date.now());
+async function getPendingMenu(userId) {
+  const { rows } = await db.query(
+    `SELECT * FROM pending_menu WHERE user_id = $1`,
+    [userId]
+  );
+  return rows[0];
+}
+
+async function deletePendingMenu(userId) {
+  await db.query(`DELETE FROM pending_menu WHERE user_id = $1`, [userId]);
+}
+
+async function cleanupMenus() {
+  await db.query(`DELETE FROM pending_menu WHERE expires_at < $1`, [Date.now()]);
+}
+
+// -- session helpers --
+async function createSession(userId, threadId, kind, ticketId) {
+  await db.query(
+    `INSERT INTO sessions (user_id, thread_id, kind, ticket_id) VALUES ($1, $2, $3, $4)`,
+    [userId, threadId, kind, ticketId]
+  );
+}
+
+async function getSessionByUser(userId) {
+  const { rows } = await db.query(`SELECT * FROM sessions WHERE user_id = $1`, [userId]);
+  return rows[0];
+}
+
+async function getSessionByThread(threadId) {
+  const { rows } = await db.query(`SELECT * FROM sessions WHERE thread_id = $1`, [threadId]);
+  return rows[0];
+}
+
+async function deleteSessionByUser(userId) {
+  await db.query(`DELETE FROM sessions WHERE user_id = $1`, [userId]);
+}
+
+async function deleteSessionByThread(threadId) {
+  await db.query(`DELETE FROM sessions WHERE thread_id = $1`, [threadId]);
+}
+
+// -- ticket log helpers (permanent record, independent of session lifecycle) --
+async function createTicket(userId, threadId, kind) {
+  const { rows } = await db.query(
+    `INSERT INTO tickets (user_id, thread_id, kind, status, created_at)
+     VALUES ($1, $2, $3, 'open', $4)
+     RETURNING id`,
+    [userId, threadId, kind, Date.now()]
+  );
+  return rows[0].id;
+}
+
+async function closeTicket(ticketId) {
+  await db.query(
+    `UPDATE tickets SET status = 'closed', closed_at = $1 WHERE id = $2`,
+    [Date.now(), ticketId]
+  );
+}
+
+async function logTicketMessage(ticketId, sender, content) {
+  await db.query(
+    `INSERT INTO ticket_messages (ticket_id, sender, content, created_at) VALUES ($1, $2, $3, $4)`,
+    [ticketId, sender, content, Date.now()]
+  );
 }
 
 // -- notification helpers --
-function createUserNotification(userId, title, description, sentBy) {
-  const result = db
-    .prepare(
-      `INSERT INTO notifications (scope, user_id, title, description, sent_by, created_at)
-       VALUES ('user', ?, ?, ?, ?, ?)`
-    )
-    .run(userId, title, description, sentBy, Date.now());
-  return result.lastInsertRowid;
+async function createUserNotification(userId, title, description, sentBy) {
+  const { rows } = await db.query(
+    `INSERT INTO notifications (scope, user_id, title, description, sent_by, created_at)
+     VALUES ('user', $1, $2, $3, $4, $5)
+     RETURNING id`,
+    [userId, title, description, sentBy, Date.now()]
+  );
+  return rows[0].id;
 }
 
-function createBroadcastNotification(title, description, sentBy) {
-  const result = db
-    .prepare(
-      `INSERT INTO notifications (scope, user_id, title, description, sent_by, created_at)
-       VALUES ('broadcast', NULL, ?, ?, ?, ?)`
-    )
-    .run(title, description, sentBy, Date.now());
-  return result.lastInsertRowid;
+async function createBroadcastNotification(title, description, sentBy) {
+  const { rows } = await db.query(
+    `INSERT INTO notifications (scope, user_id, title, description, sent_by, created_at)
+     VALUES ('broadcast', NULL, $1, $2, $3, $4)
+     RETURNING id`,
+    [title, description, sentBy, Date.now()]
+  );
+  return rows[0].id;
 }
 
 const MENU_TEXT =
@@ -258,7 +300,7 @@ client.on("interactionCreate", async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
   if (interaction.commandName === "forms") {
-    if (getSessionByUser(interaction.user.id)) {
+    if (await getSessionByUser(interaction.user.id)) {
       return safeReply(interaction, {
         content: "You already have an open session. DM me `close` to end it first.",
         flags: MessageFlags.Ephemeral,
@@ -269,7 +311,7 @@ client.on("interactionCreate", async (interaction) => {
       const dm = await interaction.user.createDM();
       await dm.send(MENU_TEXT);
 
-      setPendingMenu(interaction.user.id);
+      await setPendingMenu(interaction.user.id);
 
       return safeReply(interaction, {
         content: "Check your DMs 📩",
@@ -325,7 +367,7 @@ client.on("interactionCreate", async (interaction) => {
         dmFailed = true;
       }
 
-      createUserNotification(target.id, title, message, interaction.user.id);
+      await createUserNotification(target.id, title, message, interaction.user.id);
 
       if (STAFF_CHANNEL_ID) {
         await client.channels
@@ -393,7 +435,7 @@ client.on("interactionCreate", async (interaction) => {
       await sleep(300);
     }
 
-    createBroadcastNotification(title, message, interaction.user.id);
+    await createBroadcastNotification(title, message, interaction.user.id);
 
     if (STAFF_CHANNEL_ID) {
       await client.channels
@@ -426,15 +468,15 @@ client.on("messageCreate", async (message) => {
 
     /* ========== STAFF THREAD SIDE ========== */
     if (message.guild) {
-      const session = getSessionByThread(message.channelId);
+      const session = await getSessionByThread(message.channelId);
       if (!session) return;
 
       const isStaff = await memberHasStaffRole(message.guild, message.author.id);
       if (!isStaff) return; // silently ignore non-staff posting in a staff thread
 
       if (content === "close") {
-        if (session.ticket_id) closeTicket(session.ticket_id);
-        deleteSessionByThread(message.channelId);
+        if (session.ticket_id) await closeTicket(session.ticket_id);
+        await deleteSessionByThread(message.channelId);
         return message.reply("closed 🔒");
       }
 
@@ -444,7 +486,7 @@ client.on("messageCreate", async (message) => {
       }
 
       if (session.ticket_id) {
-        logTicketMessage(session.ticket_id, "staff", content);
+        await logTicketMessage(session.ticket_id, "staff", content);
       }
 
       await user.send({ content: `Staff: ${truncate(content)}`, ...NO_PING }).catch(() => {
@@ -457,13 +499,13 @@ client.on("messageCreate", async (message) => {
     /* ========== DM SIDE ========== */
 
     // active session
-    const activeSession = getSessionByUser(message.author.id);
+    const activeSession = await getSessionByUser(message.author.id);
     if (activeSession) {
       const threadId = activeSession.thread_id;
 
       if (content === "close") {
-        if (activeSession.ticket_id) closeTicket(activeSession.ticket_id);
-        deleteSessionByUser(message.author.id);
+        if (activeSession.ticket_id) await closeTicket(activeSession.ticket_id);
+        await deleteSessionByUser(message.author.id);
         return message.reply("closed 🔒");
       }
 
@@ -472,12 +514,12 @@ client.on("messageCreate", async (message) => {
       const thread = await client.channels.fetch(threadId).catch(() => null);
       if (!thread) {
         // Thread is gone (deleted/archived past recovery) — clean up state.
-        deleteSessionByUser(message.author.id);
+        await deleteSessionByUser(message.author.id);
         return message.reply("⚠️ That session no longer exists. Run `/forms` to start a new one.");
       }
 
       if (activeSession.ticket_id) {
-        logTicketMessage(activeSession.ticket_id, "user", content);
+        await logTicketMessage(activeSession.ticket_id, "user", content);
       }
 
       await thread
@@ -488,10 +530,10 @@ client.on("messageCreate", async (message) => {
     }
 
     // menu selection
-    cleanupMenus();
+    await cleanupMenus();
 
-    if (getPendingMenu(message.author.id)) {
-      deletePendingMenu(message.author.id);
+    if (await getPendingMenu(message.author.id)) {
+      await deletePendingMenu(message.author.id);
 
       if (["1", "2", "4"].includes(content)) {
         const kind = content === "2" ? "report" : "support";
@@ -513,8 +555,8 @@ client.on("messageCreate", async (message) => {
           type: ChannelType.PrivateThread,
         });
 
-        const ticketId = createTicket(message.author.id, thread.id, kind);
-        createSession(message.author.id, thread.id, kind, ticketId);
+        const ticketId = await createTicket(message.author.id, thread.id, kind);
+        await createSession(message.author.id, thread.id, kind, ticketId);
 
         // Private threads don't show up for anyone automatically — post a
         // visible notice in the parent channel so staff actually notice a
@@ -557,4 +599,10 @@ client.on("messageCreate", async (message) => {
   }
 });
 
-client.login(process.env.BOT_TOKEN);
+// Wait for tables to exist before logging in / handling any events —
+// otherwise an interaction could race ahead of CREATE TABLE finishing.
+tablesReady
+  .then(() => client.login(process.env.BOT_TOKEN))
+  .catch((err) => {
+    console.error("bot.js failed to start (table setup error):", err.message);
+  });
