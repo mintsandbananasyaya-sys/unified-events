@@ -50,6 +50,11 @@ const STAFF_ROLE_IDS = (process.env.STAFF_ROLE_IDS || "")
 // The single guild /notify all targets.
 const GUILD_ID = process.env.GUILD_ID || null;
 
+// Channel where every message gets an automatic getResponse() reply,
+// same brain as the DM fallback. Optional — if unset, this feature is
+// simply inactive (no channel matches, so the check below never fires).
+const FAQ_CHANNEL_ID = process.env.FAQ_CHANNEL_ID || null;
+
 // If a DM (with no active session) contains any of these words anywhere
 // in the message, nudge the user toward /forms instead of falling through
 // to the generic AI/lore reply. Substring match, case-insensitive — e.g.
@@ -479,6 +484,18 @@ client.on("messageCreate", async (message) => {
 
     const content = message.content?.trim();
     if (!content) return;
+
+    /* ========== FAQ CHANNEL SIDE ==========
+       Every message in this specific channel gets a getResponse() reply,
+       same brain as the DM fallback further down. This check must come
+       BEFORE the staff-thread session check below — otherwise a message
+       posted here would hit `if (!session) return;` and be silently
+       dropped, since this channel is never registered as a ticket thread.
+    */
+    if (message.guild && FAQ_CHANNEL_ID && message.channelId === FAQ_CHANNEL_ID) {
+      const reply = getResponse(content);
+      return message.reply(reply);
+    }
 
     /* ========== STAFF THREAD SIDE ========== */
     if (message.guild) {
