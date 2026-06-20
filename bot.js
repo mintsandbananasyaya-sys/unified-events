@@ -75,7 +75,7 @@ const client = new Client({
     GatewayIntentBits.DirectMessages,
     GatewayIntentBits.MessageContent,
   ],
-  partials: [Partials.Channel],
+  partials: [Partials.Channel, Partials.Message],
 });
 
 /* ================= STATE (Postgres) =================
@@ -311,6 +311,113 @@ function mentionsFormsKeyword(text) {
 // listening on "ready" works across all v14 versions, so it's the safer bet.)
 client.once("ready", () => {
   console.log(`🤖 Logged in as ${client.user.tag}`);
+});
+
+/* ================= EDIT / DELETE LOGGING =================
+   Posts a record to STAFF_CHANNEL_ID whenever a message is edited or
+   deleted, anywhere the bot can see — DMs included, since these events
+   fire regardless of guild/DM context. Logs everyone, staff and bots
+   included, per product decision (no exclusions).
+
+   Important limitation: Discord only notifies the bot that *something*
+   changed — it does not resend old content unless the bot already had
+   that message cached from earlier in its current session. Messages
+   sent before the bot started, or aged out of discord.js's message
+   cache, will log as "content unavailable" rather than showing the
+   actual before/after text. This is a Discord/discord.js limitation,
+   not a bug in this code.
+*/
+
+const MAX_LOG_FIELD_LENGTH = 800; // keep log embeds well under Discord's limits
+
+function truncateForLog(text) {
+  if (!text) return "*(empty)*";
+  if (text.length <= MAX_LOG_FIELD_LENGTH) return text;
+  return text.slice(0, MAX_LOG_FIELD_LENGTH) + "…(truncated)";
+}
+
+async function postToLogsChannel(content) {
+  if (!STAFF_CHANNEL_ID) return;
+  try {
+    const channel = await client.channels.fetch(STAFF_CHANNEL_ID);
+    await channel?.send({ content, allowedMentions: { parse: [] } });
+  } catch (err) {
+    console.error("Failed to post to logs channel:", err.message);
+  }
+}
+
+function locationLabel(message) {
+  if (message.guild) {
+    return `${message.guild.name} → <#${message.channelId}>`;
+  }
+  return "Direct Message";
+}
+
+client.on("messageUpdate", async (oldMessage, newMessage) => {
+  try {
+    // Author can be missing on partial/uncached messages.
+    const author =
+      newMessage.author?.tag || oldMessage.author?.tag || "Unknown user";
+
+    const oldContent = oldMessage.partial
+      ? null
+      : oldMessage.content;
+    const newContent = newMessage.partial
+      ? null
+      : newMessage.content;
+
+    // Some "updates" are embed-only loads (link unfurls) with no real
+    // text change — skip logging those to avoid noise.
+    if (
+      oldContent !== null &&
+      newContent !== null &&
+      oldContent === newContent
+    ) {
+      return;
+    }
+
+    const location = locationLabel(newMessage);
+
+    const beforeText =
+      oldContent !== null
+        ? truncateForLog(oldContent)
+        : "*(content unavailable — message wasn't cached)*";
+    const afterText =
+      newContent !== null
+        ? truncateForLog(newContent)
+        : "*(content unavailable — message wasn't cached)*";
+
+    await postToLogsChannel(
+      `✏️ **Message edited** — ${author} in ${location}\n` +
+        `**Before:** ${beforeText}\n` +
+        `**After:** ${afterText}`
+    );
+  } catch (err) {
+    console.error("messageUpdate logging error:", err);
+  }
+});
+
+client.on("messageDelete", async (message) => {
+  try {
+    const author = message.author?.tag || "Unknown user";
+    const location = locationLabel(message);
+
+    const content = message.partial
+      ? null
+      : message.content;
+
+    const contentText =
+      content !== null && content !== ""
+        ? truncateForLog(content)
+        : "*(content unavailable — message wasn't cached, or had no text)*";
+
+    await postToLogsChannel(
+      `🗑️ **Message deleted** — ${author} in ${location}\n` +
+        `**Content:** ${contentText}`
+    );
+  } catch (err) {
+    console.error("messageDelete logging error:", err);
+  }
 });
 
 /* ================= SLASH COMMANDS ================= */
