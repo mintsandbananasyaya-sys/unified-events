@@ -55,6 +55,13 @@ const GUILD_ID = process.env.GUILD_ID || null;
 // simply inactive (no channel matches, so the check below never fires).
 const FAQ_CHANNEL_ID = process.env.FAQ_CHANNEL_ID || null;
 
+// Role applied by /mute. Must already exist in the server with
+// 'Send Messages' explicitly denied in every channel that matters —
+// this bot only assigns/removes the role, it does not configure
+// channel permission overwrites for it. If unset, /mute will refuse
+// to run rather than silently doing nothing.
+const MUTED_ROLE_ID = process.env.MUTED_ROLE_ID || null;
+
 // If a DM (with no active session) contains any of these words anywhere
 // in the message, nudge the user toward /forms instead of falling through
 // to the generic AI/lore reply. Substring match, case-insensitive — e.g.
@@ -723,6 +730,94 @@ client.on("interactionCreate", async (interaction) => {
 
     return interaction.editReply(
       `Deleted ${deletedCount} message(s).${lockdownNote}`
+    );
+  }
+
+  if (interaction.commandName === "mute") {
+    // Guild-only command (see deploy-commands.js definition), so
+    // interaction.member is always populated here.
+    if (!memberCanNotify(interaction.member)) {
+      return safeReply(interaction, {
+        content: "You don't have permission to use this command.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
+
+    if (!MUTED_ROLE_ID) {
+      return safeReply(interaction, {
+        content: "⚠️ MUTED_ROLE_ID isn't configured — can't apply a mute.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
+
+    const target = interaction.options.getUser("user");
+    const reason = interaction.options.getString("reason");
+    const timeInput = interaction.options.getString("time");
+
+    const muteMs = parseDuration(timeInput);
+    if (muteMs === null) {
+      return safeReply(interaction, {
+        content: "⚠️ Couldn't parse that duration. Use a number plus a unit, e.g. `10m`, `2h`, `30s`, or `1d`.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
+
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+    // ---- apply the role ----
+    let member;
+    try {
+      member = await interaction.guild.members.fetch(target.id);
+      await member.roles.add(MUTED_ROLE_ID);
+    } catch (err) {
+      console.error("mute role assignment failed:", err);
+      return interaction.editReply(
+        "⚠️ Failed to apply the muted role. Make sure the bot has 'Manage Roles' permission and its role sits above the muted role in the role list."
+      );
+    }
+
+    const durationLabel = formatDuration(muteMs);
+
+    // ---- DM the muted user (best-effort — role is already applied
+    // regardless of whether the DM succeeds) ----
+    let dmFailed = false;
+    try {
+      const dm = await target.createDM();
+      await dm.send({
+        content: `You've been muted for ${durationLabel} for: ${reason}`,
+        ...NO_PING,
+      });
+    } catch {
+      dmFailed = true;
+    }
+
+    // ---- website notification (same helper /notify uses, so this
+    // shows up identically on notifications.html) ----
+    await createUserNotification(
+      target.id,
+      "You've been muted",
+      `Muted for ${durationLabel} for: ${reason}`,
+      interaction.user.id
+    );
+
+    if (STAFF_CHANNEL_ID) {
+      await client.channels
+        .fetch(STAFF_CHANNEL_ID)
+        .then((ch) =>
+          ch?.send({
+            content:
+              `🔇 ${interaction.user.tag} muted <@${target.id}> for ${durationLabel}: ${reason}` +
+              (dmFailed ? "\n⚠️ DM failed (closed DMs or left server)." : ""),
+            allowedMentions: { parse: [] },
+          })
+        )
+        .catch(() => {});
+    }
+
+    return interaction.editReply(
+      dmFailed
+        ? `Muted <@${target.id}> for ${durationLabel}. Saved to their dashboard, but the DM failed (they may have DMs off).`
+        : `Muted <@${target.id}> for ${durationLabel}.`
     );
   }
 });
