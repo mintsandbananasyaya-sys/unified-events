@@ -1,55 +1,5 @@
 require("dotenv").config();
 
-/* =====================
-   TEMPORARY SECURITY DIAGNOSTIC -- remove once we've confirmed what's
-   producing the "auth for agents [www.vestauth.com]" startup line.
-   This reads the dotenv package.json that's ACTUALLY installed in
-   node_modules (not just what package.json declares), the resolved
-   file path it's loading from, and a hash of dotenv's main lib file --
-   if any of these look wrong, the package itself has been tampered
-   with or swapped.
-===================== */
-try {
-  const crypto = require("crypto");
-  const fs = require("fs");
-
-  const dotenvPkgPath = require.resolve("dotenv/package.json");
-  const dotenvPkg = JSON.parse(fs.readFileSync(dotenvPkgPath, "utf8"));
-
-  const dotenvMainPath = require.resolve("dotenv");
-  const dotenvMainSrc = fs.readFileSync(dotenvMainPath, "utf8");
-  const dotenvMainHash = crypto.createHash("sha256").update(dotenvMainSrc).digest("hex");
-
-  console.log("🔎 DIAGNOSTIC dotenv package.json path:", dotenvPkgPath);
-  console.log("🔎 DIAGNOSTIC dotenv name/version:", dotenvPkg.name, dotenvPkg.version);
-  console.log("🔎 DIAGNOSTIC dotenv resolved entry file:", dotenvMainPath);
-  console.log("🔎 DIAGNOSTIC dotenv entry file sha256:", dotenvMainHash);
-  console.log("🔎 DIAGNOSTIC dotenv entry file size (bytes):", dotenvMainSrc.length);
-
-  // Flag if the suspicious string is literally present in the installed
-  // package's own source -- vs. coming from somewhere else entirely.
-  console.log(
-    "🔎 DIAGNOSTIC does dotenv's own source contain 'vestauth'?",
-    dotenvMainSrc.includes("vestauth")
-  );
-
-  // Also check ALL installed packages for the string, in case it's a
-  // different/transitive dependency rather than dotenv itself.
-  const { execSync } = require("child_process");
-  try {
-    const grepResult = execSync(
-      "grep -rl 'vestauth' /opt/render/project/src/node_modules --include='*.js' 2>/dev/null | head -20",
-      { encoding: "utf8", timeout: 15000 }
-    );
-    console.log("🔎 DIAGNOSTIC files containing 'vestauth':\n", grepResult || "(none found)");
-  } catch (grepErr) {
-    console.log("🔎 DIAGNOSTIC grep scan failed or found nothing:", grepErr.message);
-  }
-} catch (diagErr) {
-  console.log("🔎 DIAGNOSTIC failed to run:", diagErr.message);
-}
-/* ===================== END TEMPORARY DIAGNOSTIC ===================== */
-
 const db = require("./database");
 const express = require("express");
 const session = require("express-session");
