@@ -273,7 +273,7 @@
       <div class="section-head">
         <span class="eyebrow is-blue">Slash commands</span>
         <h2>What you can run</h2>
-        <p>Type either of these directly into any channel the bot can see, or in a DM with the bot.</p>
+        <p>Type any of these directly into any channel the bot can see, or in a DM with the bot where noted.</p>
       </div>
 
       <div class="cmd-list">
@@ -284,6 +284,14 @@
             <span class="cmd-where">Opens a DM menu</span>
           </div>
           <p class="cmd-desc">Sends you a private menu with four options. Reply with a number from 1–4 to choose.</p>
+        </div>
+
+        <div class="cmd-card">
+          <div class="cmd-head">
+            <span class="cmd-name">/schedule</span>
+            <span class="cmd-where">Everyone · DMs &amp; server channels</span>
+          </div>
+          <p class="cmd-desc">Shows the schedule for the upcoming event. No schedule has been confirmed yet, so this currently replies with a placeholder until one is set.</p>
         </div>
 
         <div class="cmd-card is-red">
@@ -310,6 +318,110 @@
 
           <div class="keyword-note">
             Leave <code>user</code> blank to DM every member in the server instead of one person.
+          </div>
+        </div>
+
+        <div class="cmd-card is-red">
+          <div class="cmd-head">
+            <span class="cmd-name">/purge</span>
+            <span class="cmd-where">Staff only · Server channels</span>
+          </div>
+          <p class="cmd-desc">Deletes a batch of recent messages in the current channel, and can optionally lock it so no one can send messages for a set amount of time.</p>
+
+          <div class="cmd-options">
+            <div class="cmd-option">
+              <span class="num">1</span>
+              <span><span class="opt-name">amount</span> — <span class="opt-desc">How many recent messages to delete (1–100)</span></span>
+            </div>
+            <div class="cmd-option">
+              <span class="num">2</span>
+              <span><span class="opt-name">lockdown</span> — <span class="opt-desc">Optional. Lock the channel, e.g. 10m, 2h, 1d</span></span>
+            </div>
+          </div>
+
+          <div class="keyword-note">
+            Discord only allows deleting up to 100 messages at a time, and won't bulk-delete anything older than 14 days.
+          </div>
+        </div>
+
+        <div class="cmd-card is-red">
+          <div class="cmd-head">
+            <span class="cmd-name">/mute</span>
+            <span class="cmd-where">Staff only · Server channels</span>
+          </div>
+          <p class="cmd-desc">Mutes a member and DMs them the reason and duration before applying the mute. The same notice is saved to their dashboard's notifications page.</p>
+
+          <div class="cmd-options">
+            <div class="cmd-option">
+              <span class="num">1</span>
+              <span><span class="opt-name">user</span> — <span class="opt-desc">The member to mute</span></span>
+            </div>
+            <div class="cmd-option">
+              <span class="num">2</span>
+              <span><span class="opt-name">reason</span> — <span class="opt-desc">Why they're being muted</span></span>
+            </div>
+            <div class="cmd-option">
+              <span class="num">3</span>
+              <span><span class="opt-name">time</span> — <span class="opt-desc">How long, e.g. 10m, 2h, 1d</span></span>
+            </div>
+          </div>
+
+          <div class="keyword-note">
+            Mutes don't auto-expire — a staff member removes the muted role manually once the time is up.
+          </div>
+        </div>
+
+        <div class="cmd-card is-red">
+          <div class="cmd-head">
+            <span class="cmd-name">/kick</span>
+            <span class="cmd-where">Staff only · Server channels</span>
+          </div>
+          <p class="cmd-desc">DMs the member the reason before removing them from the server. The same notice is saved to their dashboard's notifications page.</p>
+
+          <div class="cmd-options">
+            <div class="cmd-option">
+              <span class="num">1</span>
+              <span><span class="opt-name">user</span> — <span class="opt-desc">The member to kick</span></span>
+            </div>
+            <div class="cmd-option">
+              <span class="num">2</span>
+              <span><span class="opt-name">reason</span> — <span class="opt-desc">Why they're being kicked</span></span>
+            </div>
+            <div class="cmd-option">
+              <span class="num">3</span>
+              <span><span class="opt-name">time</span> — <span class="opt-desc">Informational only, e.g. 10m, 2h, 1d</span></span>
+            </div>
+          </div>
+
+          <div class="keyword-note">
+            <code>time</code> is shown in the DM for context only — a kick is immediate and a person can rejoin right away with an invite.
+          </div>
+        </div>
+
+        <div class="cmd-card is-red">
+          <div class="cmd-head">
+            <span class="cmd-name">/ban</span>
+            <span class="cmd-where">Staff only · Server channels</span>
+          </div>
+          <p class="cmd-desc">DMs the member the reason before banning them from the server. The same notice is saved to their dashboard's notifications page.</p>
+
+          <div class="cmd-options">
+            <div class="cmd-option">
+              <span class="num">1</span>
+              <span><span class="opt-name">user</span> — <span class="opt-desc">The member to ban</span></span>
+            </div>
+            <div class="cmd-option">
+              <span class="num">2</span>
+              <span><span class="opt-name">reason</span> — <span class="opt-desc">Why they're being banned</span></span>
+            </div>
+            <div class="cmd-option">
+              <span class="num">3</span>
+              <span><span class="opt-name">time</span> — <span class="opt-desc">Informational only, e.g. 10m, 2h, 1d</span></span>
+            </div>
+          </div>
+
+          <div class="keyword-note">
+            <code>time</code> is shown in the DM for context only — this is not a temporary ban, and a staff member must manually unban.
           </div>
         </div>
 
