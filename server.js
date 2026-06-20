@@ -1,6 +1,6 @@
 require("dotenv").config();
 
-const db = require("./database");
+const db = require("./database"); // now a pg Pool, not better-sqlite3
 const express = require("express");
 const session = require("express-session");
 const axios = require("axios");
@@ -73,44 +73,6 @@ const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
 const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
 const BOT_TOKEN = process.env.BOT_TOKEN;
-
-/* =====================
-   TEMPORARY DIAGNOSTIC — checking why /notify isn't showing up.
-   Asks Discord's API directly what commands are registered for this
-   application, right now — bypasses the Discord client entirely, so
-   this tells us the real state instead of relying on client caching.
-   REMOVE THIS BLOCK once we've seen the output.
-===================== */
-(async () => {
-  try {
-    if (!CLIENT_ID || !BOT_TOKEN) {
-      console.log("🔎 DIAGNOSTIC — skipped, missing CLIENT_ID or BOT_TOKEN");
-      return;
-    }
-
-    const res = await axios.get(
-      `https://discord.com/api/v10/applications/${CLIENT_ID}/commands`,
-      { headers: { Authorization: `Bot ${BOT_TOKEN}` } }
-    );
-
-    console.log(`🔎 DIAGNOSTIC — ${res.data.length} command(s) registered globally for this app:`);
-    if (res.data.length === 0) {
-      console.log("  (none — registration did not actually land)");
-    } else {
-      res.data.forEach((c) => {
-        console.log(
-          `  - /${c.name} (id: ${c.id}, dm_permission: ${c.dm_permission}, version: ${c.version})`
-        );
-      });
-    }
-  } catch (err) {
-    console.log(
-      "🔎 DIAGNOSTIC — failed to fetch registered commands:",
-      err.response?.status,
-      err.response?.data || err.message
-    );
-  }
-})();
 
 /* =====================
    IN-MEMORY STORE
@@ -193,14 +155,13 @@ app.get("/auth/discord/callback", async (req, res) => {
       avatar: userRes.data.avatar,
     };
 
-    db.prepare(`
-      INSERT OR REPLACE INTO users
-      (discord_id, username, avatar)
-      VALUES (?, ?, ?)
-    `).run(
-      userRes.data.id,
-      userRes.data.username,
-      userRes.data.avatar
+    await db.query(
+      `INSERT INTO users (discord_id, username, avatar)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (discord_id) DO UPDATE SET
+         username = EXCLUDED.username,
+         avatar = EXCLUDED.avatar`,
+      [userRes.data.id, userRes.data.username, userRes.data.avatar]
     );
 
     res.redirect("/dashboard");
@@ -254,59 +215,67 @@ app.post("/api/chat", (req, res) => {
 ===================== */
 
 // List all tickets for the logged-in user, newest first.
-app.get("/api/tickets", requireAuth, (req, res) => {
-  const tickets = db
-    .prepare(
+app.get("/api/tickets", requireAuth, async (req, res) => {
+  try {
+    const { rows: tickets } = await db.query(
       `SELECT id, kind, status, created_at, closed_at
        FROM tickets
-       WHERE user_id = ?
-       ORDER BY created_at DESC`
-    )
-    .all(req.session.user.id);
+       WHERE user_id = $1
+       ORDER BY created_at DESC`,
+      [req.session.user.id]
+    );
 
-  res.json({ tickets });
+    res.json({ tickets });
+  } catch (err) {
+    console.log("Failed to load tickets:", err.message);
+    res.status(500).json({ error: "Failed to load tickets" });
+  }
 });
 
 // Full transcript of a single ticket — only if it belongs to this user.
-app.get("/api/tickets/:id", requireAuth, (req, res) => {
-  const ticketId = Number(req.params.id);
+app.get("/api/tickets/:id", requireAuth, async (req, res) => {
+  try {
+    const ticketId = Number(req.params.id);
 
-  if (!Number.isInteger(ticketId)) {
-    return res.status(400).json({ error: "Invalid ticket id" });
-  }
+    if (!Number.isInteger(ticketId)) {
+      return res.status(400).json({ error: "Invalid ticket id" });
+    }
 
-  const ticket = db
-    .prepare(
-      `SELECT id, kind, status, created_at, closed_at, user_id FROM tickets WHERE id = ?`
-    )
-    .get(ticketId);
+    const { rows } = await db.query(
+      `SELECT id, kind, status, created_at, closed_at, user_id FROM tickets WHERE id = $1`,
+      [ticketId]
+    );
+    const ticket = rows[0];
 
-  if (!ticket) {
-    return res.status(404).json({ error: "Ticket not found" });
-  }
+    if (!ticket) {
+      return res.status(404).json({ error: "Ticket not found" });
+    }
 
-  // Ownership check — this is the line that actually protects privacy.
-  if (ticket.user_id !== req.session.user.id) {
-    return res.status(403).json({ error: "Not your ticket" });
-  }
+    // Ownership check — this is the line that actually protects privacy.
+    if (ticket.user_id !== req.session.user.id) {
+      return res.status(403).json({ error: "Not your ticket" });
+    }
 
-  const messages = db
-    .prepare(
+    const { rows: messages } = await db.query(
       `SELECT sender, content, created_at
        FROM ticket_messages
-       WHERE ticket_id = ?
-       ORDER BY created_at ASC`
-    )
-    .all(ticketId);
+       WHERE ticket_id = $1
+       ORDER BY created_at ASC`,
+      [ticketId]
+    );
 
-  res.json({
-    id: ticket.id,
-    kind: ticket.kind,
-    status: ticket.status,
-    created_at: ticket.created_at,
-    closed_at: ticket.closed_at,
-    messages,
-  });
+    res.json({
+      id: ticket.id,
+      kind: ticket.kind,
+      status: ticket.status,
+      created_at: ticket.created_at,
+      closed_at: ticket.closed_at,
+      messages,
+    });
+  } catch (err) {
+    console.log("Failed to load ticket:", err.message);
+    res.status(500).json({ error: "Failed to load ticket" });
+  }
 });
 
 /* =====================
@@ -315,16 +284,21 @@ app.get("/api/tickets/:id", requireAuth, (req, res) => {
    user_id currently stored in the tickets table, so we can see directly
    whether they match instead of guessing from logs.
 ===================== */
-app.get("/api/debug/tickets", requireAuth, (req, res) => {
-  const allTickets = db
-    .prepare(`SELECT id, user_id, kind, status, created_at FROM tickets ORDER BY created_at DESC`)
-    .all();
+app.get("/api/debug/tickets", requireAuth, async (req, res) => {
+  try {
+    const { rows: allTickets } = await db.query(
+      `SELECT id, user_id, kind, status, created_at FROM tickets ORDER BY created_at DESC`
+    );
 
-  res.json({
-    yourSessionUserId: req.session.user.id,
-    yourSessionUsername: req.session.user.username,
-    allTicketsInDatabase: allTickets,
-  });
+    res.json({
+      yourSessionUserId: req.session.user.id,
+      yourSessionUsername: req.session.user.username,
+      allTicketsInDatabase: allTickets,
+    });
+  } catch (err) {
+    console.log("Debug route failed:", err.message);
+    res.status(500).json({ error: "Failed to load debug data" });
+  }
 });
 
 /* =====================
@@ -336,64 +310,75 @@ app.get("/api/debug/tickets", requireAuth, (req, res) => {
    Broadcasts are always rendered as read (per product decision); only
    personal notifications carry real unread state via read_at.
 ===================== */
-app.get("/api/notifications", requireAuth, (req, res) => {
-  const rows = db
-    .prepare(
+app.get("/api/notifications", requireAuth, async (req, res) => {
+  try {
+    const { rows } = await db.query(
       `SELECT id, scope, title, description, created_at, read_at
        FROM notifications
-       WHERE scope = 'broadcast' OR user_id = ?
-       ORDER BY created_at DESC`
-    )
-    .all(req.session.user.id);
+       WHERE scope = 'broadcast' OR user_id = $1
+       ORDER BY created_at DESC`,
+      [req.session.user.id]
+    );
 
-  const notifications = rows.map((row) => ({
-    id: row.id,
-    icon: row.scope === "broadcast" ? "📢" : "🔔",
-    title: row.title,
-    description: row.description || "",
-    timestamp: new Date(row.created_at).toLocaleString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }),
-    // Broadcasts are always shown as read; personal notifications reflect
-    // real read_at state (null = unread).
-    read: row.scope === "broadcast" ? true : Boolean(row.read_at),
-  }));
+    const notifications = rows.map((row) => ({
+      id: row.id,
+      icon: row.scope === "broadcast" ? "📢" : "🔔",
+      title: row.title,
+      description: row.description || "",
+      timestamp: new Date(Number(row.created_at)).toLocaleString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      // Broadcasts are always shown as read; personal notifications reflect
+      // real read_at state (null = unread).
+      read: row.scope === "broadcast" ? true : Boolean(row.read_at),
+    }));
 
-  res.json({ notifications });
+    res.json({ notifications });
+  } catch (err) {
+    console.log("Failed to load notifications:", err.message);
+    res.status(500).json({ error: "Failed to load notifications" });
+  }
 });
 
 // Mark a single personal notification as read. Broadcasts aren't
 // markable (they're always shown as read), and a user can only mark
 // their own — same ownership-check pattern as /api/tickets/:id.
-app.post("/api/notifications/:id/read", requireAuth, (req, res) => {
-  const notifId = Number(req.params.id);
+app.post("/api/notifications/:id/read", requireAuth, async (req, res) => {
+  try {
+    const notifId = Number(req.params.id);
 
-  if (!Number.isInteger(notifId)) {
-    return res.status(400).json({ error: "Invalid notification id" });
+    if (!Number.isInteger(notifId)) {
+      return res.status(400).json({ error: "Invalid notification id" });
+    }
+
+    const { rows } = await db.query(
+      `SELECT id, scope, user_id FROM notifications WHERE id = $1`,
+      [notifId]
+    );
+    const notif = rows[0];
+
+    if (!notif) {
+      return res.status(404).json({ error: "Notification not found" });
+    }
+
+    if (notif.scope !== "user" || notif.user_id !== req.session.user.id) {
+      return res.status(403).json({ error: "Not your notification" });
+    }
+
+    await db.query(`UPDATE notifications SET read_at = $1 WHERE id = $2`, [
+      Date.now(),
+      notifId,
+    ]);
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.log("Failed to mark notification read:", err.message);
+    res.status(500).json({ error: "Failed to mark notification read" });
   }
-
-  const notif = db
-    .prepare(`SELECT id, scope, user_id FROM notifications WHERE id = ?`)
-    .get(notifId);
-
-  if (!notif) {
-    return res.status(404).json({ error: "Notification not found" });
-  }
-
-  if (notif.scope !== "user" || notif.user_id !== req.session.user.id) {
-    return res.status(403).json({ error: "Not your notification" });
-  }
-
-  db.prepare(`UPDATE notifications SET read_at = ? WHERE id = ?`).run(
-    Date.now(),
-    notifId
-  );
-
-  res.json({ ok: true });
 });
 
 /* =====================
