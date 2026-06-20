@@ -514,6 +514,10 @@ const responses = [
     reply: `Oracles Events currently has approximately 1,200 members in their Discord server, making them the second largest civilization community in the Unified Events ecosystem.`
   },
   {
+    keys: ['prestonmc', 'preston', 'prestonmc civ', 'prestonmc community'],
+    reply: `PrestonMC Community is a Discord server where Minecraft events are hosted for PrestonMC's YouTube channel. It contains nearly 300 members and hosts events every few months.`
+  },
+  {
     keys: ['jcrimzy', 'jcrimzy identity', 'jcrimzy culture', 'jcrimzy personality'],
     reply: `Jcrimzy's Events is a smaller civilization Discord server with around 200 members. Despite their size, they are a recognised competitor in Unified Events, known for personality-driven leadership and adaptable, flexible strategic approaches across seasons.`
   },
