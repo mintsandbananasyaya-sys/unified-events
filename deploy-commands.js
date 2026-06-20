@@ -76,6 +76,30 @@ const commands = [
         .setRequired(false)
     )
     .toJSON(),
+
+  new SlashCommandBuilder()
+    .setName("mute")
+    .setDescription("Mute a member and DM them the reason and duration")
+    .setDMPermission(false) // guild-only — needs interaction.guild for the role check
+    .addUserOption((opt) =>
+      opt
+        .setName("user")
+        .setDescription("The member to mute")
+        .setRequired(true)
+    )
+    .addStringOption((opt) =>
+      opt
+        .setName("reason")
+        .setDescription("Why this member is being muted")
+        .setRequired(true)
+    )
+    .addStringOption((opt) =>
+      opt
+        .setName("time")
+        .setDescription("How long, e.g. 10m, 2h, 1d")
+        .setRequired(true)
+    )
+    .toJSON(),
 ];
 
 /* =====================
@@ -100,6 +124,7 @@ const rest = new REST({ version: "10" }).setToken(BOT_TOKEN);
     console.log("ℹ️  /forms is DM-enabled — try it by DMing the bot directly, not just in a server.");
     console.log("ℹ️  /notify is guild-only (run it inside your server, not in DMs) and requires a role listed in STAFF_ROLE_IDS.");
     console.log("ℹ️  /purge is guild-only and requires a role listed in STAFF_ROLE_IDS, plus the bot needs 'Manage Messages' and 'Manage Channels' permissions.");
+    console.log("ℹ️  /mute is guild-only and requires a role listed in STAFF_ROLE_IDS, plus the bot needs 'Manage Roles' and MUTED_ROLE_ID configured.");
   } catch (error) {
     console.error("❌ Failed to deploy commands:", error);
   }
