@@ -344,6 +344,24 @@ function formatDuration(ms) {
   return `${days}d`;
 }
 
+// Shared by /mute, /kick, and /ban: DM the target with a message,
+// then record a personal website notification with the same text.
+// Returns true if the DM succeeded, false if it failed (target has DMs
+// off, blocked the bot, etc.) — caller decides what to do with that.
+async function notifyTargetBeforeAction(target, dmText, notifTitle, notifBody, sentBy) {
+  let dmSucceeded = true;
+  try {
+    const dm = await target.createDM();
+    await dm.send({ content: dmText, ...NO_PING });
+  } catch {
+    dmSucceeded = false;
+  }
+
+  await createUserNotification(target.id, notifTitle, notifBody, sentBy);
+
+  return dmSucceeded;
+}
+
 /* ================= READY ================= */
 
 // "ready" is the stable, documented event for discord.js v14.
@@ -818,6 +836,116 @@ client.on("interactionCreate", async (interaction) => {
       dmFailed
         ? `Muted <@${target.id}> for ${durationLabel}. Saved to their dashboard, but the DM failed (they may have DMs off).`
         : `Muted <@${target.id}> for ${durationLabel}.`
+    );
+  }
+
+  if (interaction.commandName === "kick") {
+    if (!memberCanNotify(interaction.member)) {
+      return safeReply(interaction, {
+        content: "You don't have permission to use this command.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
+
+    const target = interaction.options.getUser("user");
+    const reason = interaction.options.getString("reason");
+    const timeInput = interaction.options.getString("time");
+
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+    // DM + notification happen BEFORE the kick — once removed, the bot
+    // and target may no longer share a server, which can block DMs
+    // depending on the target's privacy settings.
+    const dmSucceeded = await notifyTargetBeforeAction(
+      target,
+      `You've been kicked from the server for ${timeInput}: ${reason}`,
+      "You've been kicked",
+      `Kicked (${timeInput}) for: ${reason}`,
+      interaction.user.id
+    );
+
+    let member;
+    try {
+      member = await interaction.guild.members.fetch(target.id);
+      await member.kick(reason);
+    } catch (err) {
+      console.error("kick failed:", err);
+      return interaction.editReply(
+        "⚠️ Failed to kick this member. Make sure the bot has 'Kick Members' permission and its role sits above theirs."
+      );
+    }
+
+    if (STAFF_CHANNEL_ID) {
+      await client.channels
+        .fetch(STAFF_CHANNEL_ID)
+        .then((ch) =>
+          ch?.send({
+            content:
+              `👋 ${interaction.user.tag} kicked <@${target.id}> (${timeInput}): ${reason}` +
+              (!dmSucceeded ? "\n⚠️ DM failed before kick (closed DMs or already gone)." : ""),
+            allowedMentions: { parse: [] },
+          })
+        )
+        .catch(() => {});
+    }
+
+    return interaction.editReply(
+      !dmSucceeded
+        ? `Kicked <@${target.id}>. Saved to their dashboard, but the DM failed before removal.`
+        : `Kicked <@${target.id}>.`
+    );
+  }
+
+  if (interaction.commandName === "ban") {
+    if (!memberCanNotify(interaction.member)) {
+      return safeReply(interaction, {
+        content: "You don't have permission to use this command.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
+
+    const target = interaction.options.getUser("user");
+    const reason = interaction.options.getString("reason");
+    const timeInput = interaction.options.getString("time");
+
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+    // Same ordering as /kick — DM + notification before removal.
+    const dmSucceeded = await notifyTargetBeforeAction(
+      target,
+      `You've been banned from the server for ${timeInput}: ${reason}`,
+      "You've been banned",
+      `Banned (${timeInput}) for: ${reason}`,
+      interaction.user.id
+    );
+
+    try {
+      await interaction.guild.members.ban(target.id, { reason });
+    } catch (err) {
+      console.error("ban failed:", err);
+      return interaction.editReply(
+        "⚠️ Failed to ban this member. Make sure the bot has 'Ban Members' permission and its role sits above theirs."
+      );
+    }
+
+    if (STAFF_CHANNEL_ID) {
+      await client.channels
+        .fetch(STAFF_CHANNEL_ID)
+        .then((ch) =>
+          ch?.send({
+            content:
+              `🔨 ${interaction.user.tag} banned <@${target.id}> (${timeInput}): ${reason}` +
+              (!dmSucceeded ? "\n⚠️ DM failed before ban (closed DMs or already gone)." : ""),
+            allowedMentions: { parse: [] },
+          })
+        )
+        .catch(() => {});
+    }
+
+    return interaction.editReply(
+      !dmSucceeded
+        ? `Banned <@${target.id}>. Saved to their dashboard, but the DM failed before removal.`
+        : `Banned <@${target.id}>.`
     );
   }
 });
