@@ -49,6 +49,24 @@ try {
 }
 
 /* =====================
+   ONE-TIME SLASH COMMAND DEPLOY (RENDER WORKAROUND)
+   Render's free tier has no persistent shell, so there's no way to run
+   `node deploy-commands.js` directly. Instead: set DEPLOY_COMMANDS=true
+   in Render's env vars, push/redeploy, watch the logs for confirmation,
+   then DELETE that env var (or set it to anything else) so this doesn't
+   re-register commands on every restart. Registering repeatedly is
+   harmless to Discord but adds needless startup work and log noise.
+===================== */
+if (process.env.DEPLOY_COMMANDS === "true") {
+  console.log("⏳ DEPLOY_COMMANDS=true detected — registering slash commands...");
+  try {
+    require("./deploy-commands.js");
+  } catch (err) {
+    console.log("❌ Slash command deploy failed:", err.message);
+  }
+}
+
+/* =====================
    ENV
 ===================== */
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
