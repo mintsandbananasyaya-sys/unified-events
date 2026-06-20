@@ -34,6 +34,12 @@ const commands = [
     .toJSON(),
 
   new SlashCommandBuilder()
+    .setName("schedule")
+    .setDescription("See the schedule for the upcoming event")
+    .setDMPermission(true) // works in DMs and server channels both
+    .toJSON(),
+
+  new SlashCommandBuilder()
     .setName("notify")
     .setDescription("Send a notification DM + dashboard entry to one user or everyone in the server")
     .setDMPermission(false) // guild-only — interaction.member must exist for the role check
@@ -170,6 +176,7 @@ const rest = new REST({ version: "10" }).setToken(BOT_TOKEN);
     console.log(`✅ Slash commands loaded (${data.length} registered)`);
     console.log("ℹ️  Global commands can take up to ~1 hour to fully propagate to all clients.");
     console.log("ℹ️  /forms is DM-enabled — try it by DMing the bot directly, not just in a server.");
+    console.log("ℹ️  /schedule is open to everyone, DM-enabled, and currently always replies with a placeholder until real schedule data exists.");
     console.log("ℹ️  /notify is guild-only (run it inside your server, not in DMs) and requires a role listed in STAFF_ROLE_IDS.");
     console.log("ℹ️  /purge is guild-only and requires a role listed in STAFF_ROLE_IDS, plus the bot needs 'Manage Messages' and 'Manage Channels' permissions.");
     console.log("ℹ️  /mute is guild-only and requires a role listed in STAFF_ROLE_IDS, plus the bot needs 'Manage Roles' and MUTED_ROLE_ID configured.");
