@@ -509,6 +509,15 @@ client.on("interactionCreate", async (interaction) => {
     }
   }
 
+  if (interaction.commandName === "schedule") {
+    // Open to everyone, no permission gate. Static placeholder for now —
+    // swap this out once an actual schedule source/table exists.
+    return safeReply(interaction, {
+      content: "No schedule has been confirmed yet.",
+      // Not ephemeral — visible to everyone in the channel, per spec.
+    });
+  }
+
   if (interaction.commandName === "ask") {
     const q = interaction.options.getString("question");
     const reply = getResponse(q);
