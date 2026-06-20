@@ -56,6 +56,26 @@ const commands = [
         .setRequired(false)
     )
     .toJSON(),
+
+  new SlashCommandBuilder()
+    .setName("purge")
+    .setDescription("Delete recent messages and optionally lock the channel for a duration")
+    .setDMPermission(false) // guild-only — needs a real channel with Manage Messages
+    .addIntegerOption((opt) =>
+      opt
+        .setName("amount")
+        .setDescription("How many recent messages to delete (1-100)")
+        .setRequired(true)
+        .setMinValue(1)
+        .setMaxValue(100)
+    )
+    .addStringOption((opt) =>
+      opt
+        .setName("lockdown")
+        .setDescription("Optional: lock the channel for this long, e.g. 10m, 2h, 1d")
+        .setRequired(false)
+    )
+    .toJSON(),
 ];
 
 /* =====================
@@ -79,6 +99,7 @@ const rest = new REST({ version: "10" }).setToken(BOT_TOKEN);
     console.log("ℹ️  Global commands can take up to ~1 hour to fully propagate to all clients.");
     console.log("ℹ️  /forms is DM-enabled — try it by DMing the bot directly, not just in a server.");
     console.log("ℹ️  /notify is guild-only (run it inside your server, not in DMs) and requires a role listed in STAFF_ROLE_IDS.");
+    console.log("ℹ️  /purge is guild-only and requires a role listed in STAFF_ROLE_IDS, plus the bot needs 'Manage Messages' and 'Manage Channels' permissions.");
   } catch (error) {
     console.error("❌ Failed to deploy commands:", error);
   }
