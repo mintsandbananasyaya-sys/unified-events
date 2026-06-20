@@ -321,7 +321,7 @@
   .ticket-toggle .chevron{width:7px;height:7px;border-right:1.5px solid var(--mist);border-bottom:1.5px solid var(--mist);transform:rotate(45deg);transition:transform 0.15s ease;flex-shrink:0;}
   .ticket-toggle[aria-expanded="true"] .chevron{transform:rotate(225deg);}
   .ticket-body{max-height:0;overflow:hidden;opacity:0;transition:max-height 0.35s ease, opacity 0.3s ease;padding:0 1.3rem;}
-  .ticket-body.open{max-height:320px;opacity:1;padding:0 1.3rem 1.2rem;border-top:1px solid var(--line-soft);}
+  .ticket-body.open{max-height:320px;overflow-y:auto;opacity:1;padding:0 1.3rem 1.2rem;border-top:1px solid var(--line-soft);}
   .ticket-body p{font-size:0.85rem;color:var(--mist);margin-top:0.8rem;}
   .ticket-body strong{color:var(--ink);}
 
@@ -601,7 +601,7 @@
             </div>
 
             <div class="ticket-list">
-              <p style="opacity:0.7;">Tickets will load from backend soon...</p>
+              <p style="opacity:0.7;">Loading your tickets...</p>
             </div>
 
           </section>
@@ -769,18 +769,142 @@
   }
 
   // =========================
-  // TICKETS
+  // TICKETS (real data from /api/tickets)
   // =========================
-  function initTickets() {
-    document.querySelectorAll(".ticket-toggle").forEach(btn => {
+  const ticketTranscriptCache = new Map(); // ticketId -> messages[] (avoid re-fetching on re-toggle)
+
+  function formatAbsolute(ms) {
+    if (!ms) return "";
+    const d = new Date(ms);
+    return d.toLocaleString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  function ticketLabel(kind) {
+    if (kind === "report") return "Anonymous report";
+    if (kind === "support") return "Support ticket";
+    return kind;
+  }
+
+  function statusBadge(status) {
+    // Reuses the existing status-badge classes already defined above
+    // (status-accepted = blue, status-completed = muted).
+    if (status === "open") {
+      return `<span class="status-badge status-accepted small-badge"><span class="status-dot"></span>Open</span>`;
+    }
+    return `<span class="status-badge status-completed small-badge"><span class="status-dot"></span>Closed</span>`;
+  }
+
+  function escapeHtml(str) {
+    return str
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  }
+
+  function renderTranscript(container, messages) {
+    if (!messages.length) {
+      container.innerHTML = `<p>No messages were exchanged in this ticket.</p>`;
+      return;
+    }
+
+    container.innerHTML = messages
+      .map((m) => {
+        const who = m.sender === "staff" ? "Staff" : "You";
+        return `<p><strong>${who}:</strong> ${escapeHtml(m.content)}<br><span style="font-family:var(--font-mono);font-size:0.66rem;color:var(--mist-dim);">${formatAbsolute(m.created_at)}</span></p>`;
+      })
+      .join("");
+  }
+
+  async function loadTicketTranscript(ticketId, bodyEl) {
+    if (ticketTranscriptCache.has(ticketId)) {
+      renderTranscript(bodyEl, ticketTranscriptCache.get(ticketId));
+      return;
+    }
+
+    bodyEl.innerHTML = `<p>Loading messages...</p>`;
+
+    try {
+      const res = await fetch(`/api/tickets/${ticketId}`, { credentials: "include" });
+      if (!res.ok) {
+        bodyEl.innerHTML = `<p>Couldn't load this ticket (${res.status}).</p>`;
+        return;
+      }
+      const data = await res.json();
+      ticketTranscriptCache.set(ticketId, data.messages);
+      renderTranscript(bodyEl, data.messages);
+    } catch (err) {
+      console.log("ticket transcript load failed", err);
+      bodyEl.innerHTML = `<p>Couldn't load this ticket. Try again later.</p>`;
+    }
+  }
+
+  function renderTicketList(listEl, tickets) {
+    if (!tickets.length) {
+      listEl.innerHTML = `<p style="opacity:0.7;">You haven't opened any tickets yet. Use <strong>/forms</strong> in Discord to start one.</p>`;
+      return;
+    }
+
+    // Open tickets first, then closed -- each group newest first.
+    const sorted = [...tickets].sort((a, b) => {
+      if (a.status !== b.status) return a.status === "open" ? -1 : 1;
+      return b.created_at - a.created_at;
+    });
+
+    listEl.innerHTML = sorted
+      .map(
+        (t) => `
+      <div class="ticket-item">
+        <button class="ticket-toggle" aria-expanded="false" data-ticket-id="${t.id}">
+          <span class="ticket-title">${ticketLabel(t.kind)}</span>
+          ${statusBadge(t.status)}
+          <span class="ticket-date">${formatAbsolute(t.created_at)}</span>
+          <span class="chevron"></span>
+        </button>
+        <div class="ticket-body"></div>
+      </div>
+    `
+      )
+      .join("");
+
+    listEl.querySelectorAll(".ticket-toggle").forEach((btn) => {
       btn.addEventListener("click", () => {
         const body = btn.nextElementSibling;
         if (!body) return;
 
         const open = body.classList.toggle("open");
         btn.setAttribute("aria-expanded", String(open));
+
+        if (open) {
+          loadTicketTranscript(Number(btn.dataset.ticketId), body);
+        }
       });
     });
+  }
+
+  async function loadTickets() {
+    const listEl = document.querySelector("#tickets .ticket-list");
+    if (!listEl) return;
+
+    listEl.innerHTML = `<p style="opacity:0.7;">Loading your tickets...</p>`;
+
+    try {
+      const res = await fetch("/api/tickets", { credentials: "include" });
+      if (!res.ok) {
+        listEl.innerHTML = `<p style="opacity:0.7;">Couldn't load tickets right now.</p>`;
+        return;
+      }
+      const data = await res.json();
+      renderTicketList(listEl, data.tickets);
+    } catch (err) {
+      console.log("ticket list load failed", err);
+      listEl.innerHTML = `<p style="opacity:0.7;">Couldn't load tickets right now.</p>`;
+    }
   }
 
   // =========================
@@ -892,10 +1016,10 @@
     initMobileNav();
     initMoreMenu();
     initReveal();
-    initTickets();
     initScrollSpy();
     initModal();
     loadUser();
+    loadTickets();
   }
 
   document.addEventListener("DOMContentLoaded", init);
@@ -904,5 +1028,3 @@
 
 </body>
 </html>
-</html>
-
