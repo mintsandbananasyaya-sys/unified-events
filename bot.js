@@ -39,6 +39,17 @@ const STAFF_CHANNEL_ID = process.env.STAFF_CHANNEL_ID;
 // is treated as staff, same as the original behavior).
 const STAFF_ROLE_ID = process.env.STAFF_ROLE_ID || null;
 
+// Comma-separated list of role IDs allowed to run /notify.
+// e.g. STAFF_ROLE_IDS=111111111111111111,222222222222222222
+// If unset, /notify is disabled (command handler will refuse everyone).
+const STAFF_ROLE_IDS = (process.env.STAFF_ROLE_IDS || "")
+  .split(",")
+  .map((id) => id.trim())
+  .filter(Boolean);
+
+// The single guild /notify all targets.
+const GUILD_ID = process.env.GUILD_ID || null;
+
 const MAX_RELAY_LENGTH = 1800; // keep headroom under Discord's 2000 char cap
 
 /* ================= CLIENT ================= */
@@ -47,6 +58,7 @@ const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.GuildMembers, // required for guild.members.fetch() in /notify all
     GatewayIntentBits.DirectMessages,
     GatewayIntentBits.MessageContent,
   ],
@@ -168,6 +180,27 @@ function logTicketMessage(ticketId, sender, content) {
   ).run(ticketId, sender, content, Date.now());
 }
 
+// -- notification helpers --
+function createUserNotification(userId, title, description, sentBy) {
+  const result = db
+    .prepare(
+      `INSERT INTO notifications (scope, user_id, title, description, sent_by, created_at)
+       VALUES ('user', ?, ?, ?, ?, ?)`
+    )
+    .run(userId, title, description, sentBy, Date.now());
+  return result.lastInsertRowid;
+}
+
+function createBroadcastNotification(title, description, sentBy) {
+  const result = db
+    .prepare(
+      `INSERT INTO notifications (scope, user_id, title, description, sent_by, created_at)
+       VALUES ('broadcast', NULL, ?, ?, ?, ?)`
+    )
+    .run(title, description, sentBy, Date.now());
+  return result.lastInsertRowid;
+}
+
 const MENU_TEXT =
   `**How can we help you?**\n\n` +
   `1️⃣ Ticket\n2️⃣ Report (anonymous)\n3️⃣ Apply\n4️⃣ Staff Chat\n\n` +
@@ -196,6 +229,18 @@ async function memberHasStaffRole(guild, userId) {
   } catch {
     return false;
   }
+}
+
+// Used for the /notify command specifically — separate from the staff-thread
+// gate above since the allowed role list is configured independently
+// (STAFF_ROLE_IDS, plural, vs STAFF_ROLE_ID for thread access).
+function memberCanNotify(member) {
+  if (STAFF_ROLE_IDS.length === 0) return false; // disabled if unconfigured
+  return member.roles.cache.some((role) => STAFF_ROLE_IDS.includes(role.id));
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /* ================= READY ================= */
@@ -246,6 +291,127 @@ client.on("interactionCreate", async (interaction) => {
       content: reply,
       flags: MessageFlags.Ephemeral,
     });
+  }
+
+  if (interaction.commandName === "notify") {
+    // --- permission gate ---
+    // Guild-only command (see command definition), so interaction.member
+    // is always populated here — no DM-context fallback needed.
+    if (!memberCanNotify(interaction.member)) {
+      return safeReply(interaction, {
+        content: "You don't have permission to use this command.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
+
+    const target = interaction.options.getUser("user"); // null for /notify all
+    const title = interaction.options.getString("title");
+    const message = interaction.options.getString("message");
+
+    // Defer immediately — /notify all can take a while to DM everyone,
+    // and Discord requires a response within 3 seconds otherwise.
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+    if (target) {
+      // ---- /notify (single user) ----
+      let dmFailed = false;
+      try {
+        const dm = await target.createDM();
+        await dm.send({
+          content: `📢 **${title}**\n${message}`,
+          ...NO_PING,
+        });
+      } catch {
+        dmFailed = true;
+      }
+
+      createUserNotification(target.id, title, message, interaction.user.id);
+
+      if (STAFF_CHANNEL_ID) {
+        await client.channels
+          .fetch(STAFF_CHANNEL_ID)
+          .then((ch) =>
+            ch?.send({
+              content:
+                `🔔 ${interaction.user.tag} notified <@${target.id}>: **${title}**` +
+                (dmFailed ? "\n⚠️ DM failed (closed DMs or left server)." : ""),
+              allowedMentions: { parse: [] },
+            })
+          )
+          .catch(() => {});
+      }
+
+      return interaction.editReply(
+        dmFailed
+          ? `Saved to their dashboard, but the DM failed (they may have DMs off).`
+          : `Notified <@${target.id}>.`
+      );
+    }
+
+    // ---- /notify all ----
+    if (!GUILD_ID) {
+      return interaction.editReply(
+        "⚠️ GUILD_ID isn't configured — can't determine which server's members to notify."
+      );
+    }
+
+    const guild = await client.guilds.fetch(GUILD_ID).catch(() => null);
+    if (!guild) {
+      return interaction.editReply(
+        "⚠️ Couldn't fetch the configured guild. Check GUILD_ID and that the bot is in that server."
+      );
+    }
+
+    let members;
+    try {
+      members = await guild.members.fetch(); // requires GuildMembers privileged intent
+    } catch (err) {
+      console.error("members.fetch failed:", err);
+      return interaction.editReply(
+        "⚠️ Couldn't fetch server members. Make sure the 'Server Members Intent' is enabled for this bot in the Discord Developer Portal."
+      );
+    }
+
+    const recipients = members.filter((m) => !m.user.bot);
+
+    let sent = 0;
+    let failed = 0;
+
+    for (const member of recipients.values()) {
+      try {
+        const dm = await member.user.createDM();
+        await dm.send({
+          content: `📢 **${title}**\n${message}`,
+          ...NO_PING,
+        });
+        sent++;
+      } catch {
+        failed++;
+      }
+      // Small delay between DMs to stay well clear of Discord's rate limits
+      // when notifying a large member list.
+      await sleep(300);
+    }
+
+    createBroadcastNotification(title, message, interaction.user.id);
+
+    if (STAFF_CHANNEL_ID) {
+      await client.channels
+        .fetch(STAFF_CHANNEL_ID)
+        .then((ch) =>
+          ch?.send({
+            content:
+              `🔔 ${interaction.user.tag} broadcasted to ${guild.name}: **${title}**\n` +
+              `Sent: ${sent} · Failed: ${failed} (DMs off / left server)`,
+            allowedMentions: { parse: [] },
+          })
+        )
+        .catch(() => {});
+    }
+
+    return interaction.editReply(
+      `Broadcast sent. ${sent} delivered, ${failed} failed (DMs off or left server).`
+    );
   }
 });
 
