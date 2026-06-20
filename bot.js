@@ -50,6 +50,14 @@ const STAFF_ROLE_IDS = (process.env.STAFF_ROLE_IDS || "")
 // The single guild /notify all targets.
 const GUILD_ID = process.env.GUILD_ID || null;
 
+// If a DM (with no active session) contains any of these words anywhere
+// in the message, nudge the user toward /forms instead of falling through
+// to the generic AI/lore reply. Substring match, case-insensitive — e.g.
+// "support" also matches inside "supporting" or "supportive". Intentionally
+// loose per product decision; tighten to word-boundary matching later if
+// false positives become annoying.
+const FORMS_KEYWORDS = ["support", "help", "staff", "apply"];
+
 const MAX_RELAY_LENGTH = 1800; // keep headroom under Discord's 2000 char cap
 
 /* ================= CLIENT ================= */
@@ -283,6 +291,12 @@ function memberCanNotify(member) {
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Loose substring check against FORMS_KEYWORDS, case-insensitive.
+function mentionsFormsKeyword(text) {
+  const lower = text.toLowerCase();
+  return FORMS_KEYWORDS.some((keyword) => lower.includes(keyword));
 }
 
 /* ================= READY ================= */
@@ -591,7 +605,17 @@ client.on("messageCreate", async (message) => {
       );
     }
 
-    /* ========== FALLBACK AI ========== */
+    /* ========== FALLBACK: KEYWORD NUDGE OR AI ==========
+       By this point in a DM: no active session, no pending menu selection
+       in progress. If the message mentions a forms-relevant keyword,
+       nudge toward /forms instead of handing it to the generic AI reply.
+    */
+    if (mentionsFormsKeyword(content)) {
+      return message.reply(
+        "Looking for support, staff, or to apply? Run `/forms` to get started — it'll DM you a quick menu to pick from."
+      );
+    }
+
     const reply = getResponse(content);
     return message.reply(reply);
   } catch (err) {
