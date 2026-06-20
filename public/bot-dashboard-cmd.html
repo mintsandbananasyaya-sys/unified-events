@@ -163,6 +163,14 @@
     color:var(--mist-dim);
   }
   .cmd-desc{color:var(--mist);font-size:0.94rem;max-width:640px;}
+  .cmd-desc code{
+    background:rgba(255,255,255,0.06);
+    border-radius:4px;
+    padding:0.1rem 0.4rem;
+    color:var(--ink);
+    font-family:var(--font-mono);
+    font-size:0.85em;
+  }
 
   .cmd-options{
     margin-top:1rem;
@@ -276,34 +284,34 @@
             <span class="cmd-where">Opens a DM menu</span>
           </div>
           <p class="cmd-desc">Sends you a private menu with four options. Reply with a number from 1–4 to choose.</p>
+        </div>
+
+        <div class="cmd-card is-red">
+          <div class="cmd-head">
+            <span class="cmd-name">/notify</span>
+            <span class="cmd-where">Staff only · Server channels</span>
+          </div>
+          <p class="cmd-desc">Sends a notification by DM and posts it to the website's notifications page. Leave the <code>user</code> field empty to message everyone in the server at once.</p>
 
           <div class="cmd-options">
             <div class="cmd-option">
-              <span class="num">1️⃣</span>
-              <span><span class="opt-name">Ticket</span> — <span class="opt-desc">opens a private thread with staff for general support.</span></span>
+              <span class="num">1</span>
+              <span><span class="opt-name">title</span> — <span class="opt-desc">Short notification title</span></span>
             </div>
             <div class="cmd-option">
-              <span class="num">2️⃣</span>
-              <span><span class="opt-name">Report</span> — <span class="opt-desc">opens an anonymized thread; staff see you only as "Reporter."</span></span>
+              <span class="num">2</span>
+              <span><span class="opt-name">message</span> — <span class="opt-desc">The notification body</span></span>
             </div>
             <div class="cmd-option">
-              <span class="num">3️⃣</span>
-              <span><span class="opt-name">Apply</span> — <span class="opt-desc">sends you the link to the application form.</span></span>
-            </div>
-            <div class="cmd-option">
-              <span class="num">4️⃣</span>
-              <span><span class="opt-name">Staff Chat</span> — <span class="opt-desc">opens a private thread directly with staff.</span></span>
+              <span class="num">3</span>
+              <span><span class="opt-name">user</span> — <span class="opt-desc">Optional. Pick someone to DM just them</span></span>
             </div>
           </div>
 
           <div class="keyword-note">
-            While a ticket, report, or staff chat is open, anything you type in that DM gets relayed to staff — and their replies come back to you the same way. Type <code>close</code> at any time, from either side, to end the session.
+            Leave <code>user</code> blank to DM every member in the server instead of one person.
           </div>
         </div>
-
-
-            <span class="cmd-name">MORE IN THE WORKS</span>
-
 
       </div>
     </div>
