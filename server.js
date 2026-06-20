@@ -272,6 +272,75 @@ app.get("/api/debug/tickets", requireAuth, (req, res) => {
 });
 
 /* =====================
+   NOTIFICATIONS API
+   Powers notifications.html. Two kinds of rows feed into one merged,
+   newest-first list for the logged-in user:
+     - scope='user'      rows where notifications.user_id matches them
+     - scope='broadcast' rows (sent via /notify all) which everyone sees
+   Broadcasts are always rendered as read (per product decision); only
+   personal notifications carry real unread state via read_at.
+===================== */
+app.get("/api/notifications", requireAuth, (req, res) => {
+  const rows = db
+    .prepare(
+      `SELECT id, scope, title, description, created_at, read_at
+       FROM notifications
+       WHERE scope = 'broadcast' OR user_id = ?
+       ORDER BY created_at DESC`
+    )
+    .all(req.session.user.id);
+
+  const notifications = rows.map((row) => ({
+    id: row.id,
+    icon: row.scope === "broadcast" ? "📢" : "🔔",
+    title: row.title,
+    description: row.description || "",
+    timestamp: new Date(row.created_at).toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+    // Broadcasts are always shown as read; personal notifications reflect
+    // real read_at state (null = unread).
+    read: row.scope === "broadcast" ? true : Boolean(row.read_at),
+  }));
+
+  res.json({ notifications });
+});
+
+// Mark a single personal notification as read. Broadcasts aren't
+// markable (they're always shown as read), and a user can only mark
+// their own — same ownership-check pattern as /api/tickets/:id.
+app.post("/api/notifications/:id/read", requireAuth, (req, res) => {
+  const notifId = Number(req.params.id);
+
+  if (!Number.isInteger(notifId)) {
+    return res.status(400).json({ error: "Invalid notification id" });
+  }
+
+  const notif = db
+    .prepare(`SELECT id, scope, user_id FROM notifications WHERE id = ?`)
+    .get(notifId);
+
+  if (!notif) {
+    return res.status(404).json({ error: "Notification not found" });
+  }
+
+  if (notif.scope !== "user" || notif.user_id !== req.session.user.id) {
+    return res.status(403).json({ error: "Not your notification" });
+  }
+
+  db.prepare(`UPDATE notifications SET read_at = ? WHERE id = ?`).run(
+    Date.now(),
+    notifId
+  );
+
+  res.json({ ok: true });
+});
+
+/* =====================
    SETTINGS API
 ===================== */
 app.get("/api/settings/:guildId", (req, res) => {
