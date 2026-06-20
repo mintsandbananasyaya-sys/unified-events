@@ -100,6 +100,54 @@ const commands = [
         .setRequired(true)
     )
     .toJSON(),
+
+  new SlashCommandBuilder()
+    .setName("kick")
+    .setDescription("Kick a member, DMing them the reason first")
+    .setDMPermission(false)
+    .addUserOption((opt) =>
+      opt
+        .setName("user")
+        .setDescription("The member to kick")
+        .setRequired(true)
+    )
+    .addStringOption((opt) =>
+      opt
+        .setName("reason")
+        .setDescription("Why this member is being kicked")
+        .setRequired(true)
+    )
+    .addStringOption((opt) =>
+      opt
+        .setName("time")
+        .setDescription("Informational only \u2014 e.g. 10m, 2h, 1d (kicks have no native temporary state)")
+        .setRequired(true)
+    )
+    .toJSON(),
+
+  new SlashCommandBuilder()
+    .setName("ban")
+    .setDescription("Ban a member, DMing them the reason first")
+    .setDMPermission(false)
+    .addUserOption((opt) =>
+      opt
+        .setName("user")
+        .setDescription("The member to ban")
+        .setRequired(true)
+    )
+    .addStringOption((opt) =>
+      opt
+        .setName("reason")
+        .setDescription("Why this member is being banned")
+        .setRequired(true)
+    )
+    .addStringOption((opt) =>
+      opt
+        .setName("time")
+        .setDescription("Informational only \u2014 e.g. 10m, 2h, 1d (this is not an auto-unban)")
+        .setRequired(true)
+    )
+    .toJSON(),
 ];
 
 /* =====================
@@ -125,6 +173,7 @@ const rest = new REST({ version: "10" }).setToken(BOT_TOKEN);
     console.log("ℹ️  /notify is guild-only (run it inside your server, not in DMs) and requires a role listed in STAFF_ROLE_IDS.");
     console.log("ℹ️  /purge is guild-only and requires a role listed in STAFF_ROLE_IDS, plus the bot needs 'Manage Messages' and 'Manage Channels' permissions.");
     console.log("ℹ️  /mute is guild-only and requires a role listed in STAFF_ROLE_IDS, plus the bot needs 'Manage Roles' and MUTED_ROLE_ID configured.");
+    console.log("ℹ️  /kick and /ban are guild-only and require a role listed in STAFF_ROLE_IDS, plus 'Kick Members' / 'Ban Members' bot permissions respectively. Their 'time' option is informational text only \u2014 not an auto-unban.");
   } catch (error) {
     console.error("❌ Failed to deploy commands:", error);
   }
