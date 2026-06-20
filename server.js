@@ -254,6 +254,24 @@ app.get("/api/tickets/:id", requireAuth, (req, res) => {
 });
 
 /* =====================
+   TEMPORARY DEBUG ROUTE -- remove once the ticket sync issue is resolved.
+   Shows your logged-in session's Discord ID side-by-side with every
+   user_id currently stored in the tickets table, so we can see directly
+   whether they match instead of guessing from logs.
+===================== */
+app.get("/api/debug/tickets", requireAuth, (req, res) => {
+  const allTickets = db
+    .prepare(`SELECT id, user_id, kind, status, created_at FROM tickets ORDER BY created_at DESC`)
+    .all();
+
+  res.json({
+    yourSessionUserId: req.session.user.id,
+    yourSessionUsername: req.session.user.username,
+    allTicketsInDatabase: allTickets,
+  });
+});
+
+/* =====================
    SETTINGS API
 ===================== */
 app.get("/api/settings/:guildId", (req, res) => {
