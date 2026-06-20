@@ -632,6 +632,16 @@
           </div>
         </div>
 
+        <div class="civ-card is-legacy reveal">
+          <span class="slot-tag">Slot 07</span>
+          <h3 class="civ-name">PrestonMC</h3>
+          <p class="civ-desc">100 Player Civilization events and more!</p>
+          <span class="status-badge status-archived"><span class="status-dot"></span>Legacy Archive</span>
+          <div class="civ-footer">
+            <button class="btn btn-ghost btn-small" data-legacy="preston">View Past Events</button>
+          </div>
+        </div>
+
       </div>
     </div>
   </section>
@@ -912,6 +922,41 @@ const legacyData = {
       { type: "election", text: "DundeeYT won by landslide." },
       { type: "war", text: "Copperdale defeated Dundee forces." }
     ]
+  },
+
+  preston: {
+    name: "PrestonMC",
+    timeline: [
+      {
+        season: "Event 1",
+        role: "Arctic Island Stranding",
+        event: "Players stranded on an arctic island, competing under survival and elimination pressure.",
+        outcome: "Salem survives an assassination attempt",
+        source: "https://youtu.be/SpQ0Zy5hH9c?si=q-_hMeQa0bsWp5hM"
+      },
+      {
+        season: "Event 2",
+        role: "10 Countries Building Competition",
+        event: "Ten countries competed head-to-head in a Minecraft building competition, followed by a King of the Mountain challenge.",
+        outcome: "Poland wins building · Hungary wins King of the Mountain",
+        source: "https://youtu.be/XhX65ZZseLI?si=hIhkkf0NXlalz6wT"
+      },
+      {
+        season: "Event 3",
+        role: "Island Stranding",
+        event: "Players stranded on an island, with a tense fight breaking out over control of a blaze spawner.",
+        outcome: "Spawner-hoarding team wins the fight",
+        source: "https://youtu.be/iz40Kmg_Xnk?si=ZSsABrmTRr1TAOo6"
+      }
+    ],
+    moments: [
+      { type: "betrayal", text: "Assassination attempt on Salem — saved by Waddle at the last moment (12:29)." },
+      { type: "war", text: "Sacred and his teammate are hunted down as fugitives and both killed (15:58)." },
+      { type: "achievement", text: "Poland wins the 10-country building competition (4:37)." },
+      { type: "achievement", text: "Hungary takes King of the Mountain (13:51)." },
+      { type: "war", text: "The team hoarding the blaze spawner wins the fight over it (2:21)." },
+      { type: "betrayal", text: "Heisenberq's rescue attempt on Coke Cow fails — Coke Cow is sheared, turning from a mooshroom back into a normal cow (8:58)." }
+    ]
   }
 };
 
@@ -932,6 +977,7 @@ function openLegacy(id) {
       <span class="t-role">${t.role}</span>
       <p class="t-event">${t.event}</p>
       <span class="t-outcome">${t.outcome}</span>
+      ${t.source ? `<div style="margin-top:0.5rem;"><a href="${t.source}" target="_blank" class="civ-note" style="text-decoration:underline;">Watch the video ↗</a></div>` : ""}
     </div>
   `).join("");
 
@@ -1010,9 +1056,6 @@ async function init() {
     btn.addEventListener("click", handleAuthClick);
   });
 
-  // Render once immediately as logged-out (instant UI), then again once
-  // /api/me actually resolves — avoids a flash of "Login" before the
-  // real session state is known, without blocking the rest of the page.
   renderAuth();
   await loadAuth();
   renderAuth();
