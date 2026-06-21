@@ -578,6 +578,10 @@ const responses = [
     reply: `Historical records reflect that Crabby's community tends to pursue strategies that prioritise disruption and entertainment alongside competitive output. With 837 members, they have the numbers to cause genuine problems for even the most structured opponents.`
   },
   {
+    keys: ['lunamc', 'luna', 'luna mc', 'luna community', 'nox', '8x80', 'lunasmp.xyz'],
+    reply: `Luna MC is a Minecraft community with 600+ members, offering SMP, FFA, and occasional Civ events. The server is owned and operated by Nox (also known as 8x80).`
+  },
+  {
     keys: ['crabbys members', 'crabbys size', 'crabbys server'],
     reply: `Crabby's Civilization Experiments currently has approximately 837 members in their Discord server, placing them alongside Prite's Events in the mid-range of civilization communities within the Unified Events ecosystem.`
   },
