@@ -28,6 +28,30 @@ if (!CLIENT_ID) {
 ===================== */
 const commands = [
   new SlashCommandBuilder()
+    .setName("setign")
+    .setDescription("Link your Minecraft username to verify and unlock the server")
+    .setDMPermission(false) // needs interaction.guild for the role grant
+    .addStringOption((opt) =>
+      opt
+        .setName("ign")
+        .setDescription("Your exact Minecraft in-game name")
+        .setRequired(true)
+    )
+    .toJSON(),
+
+  new SlashCommandBuilder()
+    .setName("ask")
+    .setDescription("Ask the Unified Events Historian a question")
+    .setDMPermission(true) // works in DMs too, same as /forms
+    .addStringOption((opt) =>
+      opt
+        .setName("question")
+        .setDescription("What do you want to know?")
+        .setRequired(true)
+    )
+    .toJSON(),
+
+  new SlashCommandBuilder()
     .setName("forms")
     .setDescription("Get help: tickets, reports, applications, or talk to staff")
     .setDMPermission(true) // REQUIRED — without this, /forms won't show up or work in DMs
@@ -209,6 +233,8 @@ const rest = new REST({ version: "10" }).setToken(BOT_TOKEN);
 
     console.log(`✅ Slash commands loaded (${data.length} registered)`);
     console.log("ℹ️  Global commands can take up to ~1 hour to fully propagate to all clients.");
+    console.log("ℹ️  /setign is guild-only (needs interaction.guild to grant VERIFIED_ROLE_ID) and validates the IGN against the Mojang API before saving it.");
+    console.log("ℹ️  /ask is DM-enabled, same as /forms, and just pipes the question into brain.js's getResponse().");
     console.log("ℹ️  /forms is DM-enabled — try it by DMing the bot directly, not just in a server.");
     console.log("ℹ️  /schedule is open to everyone, DM-enabled, and currently always replies with a placeholder until real schedule data exists.");
     console.log("ℹ️  /bot-message is guild-only and requires a role listed in STAFF_ROLE_IDS. The logo image must exist at SITE_URL + '/' + BOT_MESSAGE_LOGO_PATH (defaults to /logo.png) for the thumbnail to actually load.");
