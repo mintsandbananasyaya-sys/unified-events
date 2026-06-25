@@ -38,8 +38,6 @@ app.use(
 
 /* =====================
    BOT LOAD (SAFE)
-   bot.js runs in this same process so it can
-   require("./brain") directly — same logic as /api/chat below.
 ===================== */
 try {
   require("./bot.js");
@@ -49,13 +47,7 @@ try {
 }
 
 /* =====================
-   ONE-TIME SLASH COMMAND DEPLOY (RENDER WORKAROUND)
-   Render's free tier has no persistent shell, so there's no way to run
-   `node deploy-commands.js` directly. Instead: set DEPLOY_COMMANDS=true
-   in Render's env vars, push/redeploy, watch the logs for confirmation,
-   then DELETE that env var (or set it to anything else) so this doesn't
-   re-register commands on every restart. Registering repeatedly is
-   harmless to Discord but adds needless startup work and log noise.
+   ONE-TIME SLASH COMMAND DEPLOY
 ===================== */
 if (process.env.DEPLOY_COMMANDS === "true") {
   console.log("⏳ DEPLOY_COMMANDS=true detected — registering slash commands...");
@@ -76,7 +68,6 @@ const BOT_TOKEN = process.env.BOT_TOKEN;
 
 /* =====================
    IN-MEMORY STORE
-   guildId -> settings (kept simple, not persisted to db)
 ===================== */
 const settingsStore = {};
 
@@ -189,9 +180,41 @@ app.get("/api/me", (req, res) => {
 });
 
 /* =====================
+   PLAYER LOOKUP
+===================== */
+app.get("/api/player/:username", async (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  const { username } = req.params;
+
+  if (!username || username.trim().length === 0) {
+    return res.status(400).json({ error: "Username is required" });
+  }
+
+  try {
+    const result = await db.query(
+      `SELECT discord_id, username, avatar, created_at
+       FROM users
+       WHERE username ILIKE $1
+       LIMIT 1`,
+      [username.trim()]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Player not found" });
+    }
+
+    return res.json(result.rows[0]);
+  } catch (err) {
+    console.error("Player lookup error:", err.message);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+/* =====================
    CHATBOT API
-   Shared brain with the Discord DM bot — both call getResponse()
-   from brain.js, so website chat and DMs always answer identically.
 ===================== */
 app.post("/api/chat", (req, res) => {
   const { message } = req.body;
@@ -206,15 +229,7 @@ app.post("/api/chat", (req, res) => {
 
 /* =====================
    TICKET LOG API
-   Lets a logged-in user see every ticket/report they've ever opened
-   through the Discord bot's /forms command, plus the full message
-   transcript of each. Both routes are gated by requireAuth AND check
-   that the ticket actually belongs to the requesting user — without
-   that second check, anyone logged in could view anyone else's ticket
-   just by guessing/incrementing the id in the URL.
 ===================== */
-
-// List all tickets for the logged-in user, newest first.
 app.get("/api/tickets", requireAuth, async (req, res) => {
   try {
     const { rows: tickets } = await db.query(
@@ -232,7 +247,6 @@ app.get("/api/tickets", requireAuth, async (req, res) => {
   }
 });
 
-// Full transcript of a single ticket — only if it belongs to this user.
 app.get("/api/tickets/:id", requireAuth, async (req, res) => {
   try {
     const ticketId = Number(req.params.id);
@@ -251,7 +265,6 @@ app.get("/api/tickets/:id", requireAuth, async (req, res) => {
       return res.status(404).json({ error: "Ticket not found" });
     }
 
-    // Ownership check — this is the line that actually protects privacy.
     if (ticket.user_id !== req.session.user.id) {
       return res.status(403).json({ error: "Not your ticket" });
     }
@@ -279,10 +292,7 @@ app.get("/api/tickets/:id", requireAuth, async (req, res) => {
 });
 
 /* =====================
-   TEMPORARY DEBUG ROUTE -- remove once the ticket sync issue is resolved.
-   Shows your logged-in session's Discord ID side-by-side with every
-   user_id currently stored in the tickets table, so we can see directly
-   whether they match instead of guessing from logs.
+   DEBUG ROUTE (TEMPORARY)
 ===================== */
 app.get("/api/debug/tickets", requireAuth, async (req, res) => {
   try {
@@ -303,12 +313,6 @@ app.get("/api/debug/tickets", requireAuth, async (req, res) => {
 
 /* =====================
    NOTIFICATIONS API
-   Powers notifications.html. Two kinds of rows feed into one merged,
-   newest-first list for the logged-in user:
-     - scope='user'      rows where notifications.user_id matches them
-     - scope='broadcast' rows (sent via /notify all) which everyone sees
-   Broadcasts are always rendered as read (per product decision); only
-   personal notifications carry real unread state via read_at.
 ===================== */
 app.get("/api/notifications", requireAuth, async (req, res) => {
   try {
@@ -332,8 +336,6 @@ app.get("/api/notifications", requireAuth, async (req, res) => {
         hour: "2-digit",
         minute: "2-digit",
       }),
-      // Broadcasts are always shown as read; personal notifications reflect
-      // real read_at state (null = unread).
       read: row.scope === "broadcast" ? true : Boolean(row.read_at),
     }));
 
@@ -344,9 +346,6 @@ app.get("/api/notifications", requireAuth, async (req, res) => {
   }
 });
 
-// Mark a single personal notification as read. Broadcasts aren't
-// markable (they're always shown as read), and a user can only mark
-// their own — same ownership-check pattern as /api/tickets/:id.
 app.post("/api/notifications/:id/read", requireAuth, async (req, res) => {
   try {
     const notifId = Number(req.params.id);
