@@ -302,6 +302,28 @@
   }
   .stat-label { font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mist-dim); }
 
+  /* DISCORD ROLES */
+  .roles-section {
+    padding: 1.4rem 2rem 1.7rem;
+    border-top: 1px solid var(--line-soft);
+  }
+  .roles-section h3 {
+    font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--mist-dim); margin-bottom: 0.8rem;
+  }
+  .roles-list { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .role-badge {
+    display: inline-flex; align-items: center; gap: 0.45rem;
+    font-family: var(--font-body); font-size: 0.82rem; font-weight: 600;
+    padding: 0.32rem 0.75rem 0.32rem 0.55rem; border-radius: 99px;
+    border: 1px solid var(--line); background: var(--void-soft);
+  }
+  .role-badge .role-dot {
+    width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
+    background: var(--mist-dim); /* fallback when a role has no color */
+  }
+  .roles-empty { font-size: 0.85rem; color: var(--mist-dim); }
+
   /* NOT FOUND */
   .not-found {
     display: none; text-align: center;
@@ -493,6 +515,10 @@
           </div>
         </div>
         <div class="stats-strip" id="statsStrip"></div>
+        <div class="roles-section">
+          <h3>Discord Roles</h3>
+          <div class="roles-list" id="rolesList"></div>
+        </div>
       </div>
 
       <!-- NOT FOUND STATE -->
@@ -741,6 +767,37 @@ function renderProfile(player) {
     block.innerHTML = `<div class="stat-val">${s.val}</div><div class="stat-label">${s.label}</div>`;
     strip.appendChild(block);
   });
+
+  // Discord roles
+  const rolesList = document.getElementById('rolesList');
+  rolesList.innerHTML = '';
+
+  const roles = Array.isArray(player.roles) ? player.roles : [];
+
+  if (roles.length === 0) {
+    const empty = document.createElement('span');
+    empty.className = 'roles-empty';
+    empty.textContent = 'No roles found.';
+    rolesList.appendChild(empty);
+  } else {
+    roles.forEach(role => {
+      const badge = document.createElement('span');
+      badge.className = 'role-badge';
+
+      const dot = document.createElement('span');
+      dot.className = 'role-dot';
+      if (role.color) dot.style.background = role.color;
+
+      const label = document.createElement('span');
+      label.textContent = role.name; // textContent escapes automatically
+
+      if (role.color) badge.style.color = role.color;
+
+      badge.appendChild(dot);
+      badge.appendChild(label);
+      rolesList.appendChild(badge);
+    });
+  }
 }
 
 async function doSearch() {
