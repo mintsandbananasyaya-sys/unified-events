@@ -26,6 +26,7 @@ const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
 const DISCORD_REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
 const BOT_TOKEN = process.env.BOT_TOKEN;
+const GUILD_ID = process.env.GUILD_ID;
 const SESSION_SECRET = process.env.SESSION_SECRET || "dev-secret";
 
 const PUBLIC_DIR = path.join(__dirname, "public");
@@ -59,6 +60,48 @@ function requireAuth(req, res, next) {
 
 function sendPage(filename) {
   return (req, res) => res.sendFile(path.join(PUBLIC_DIR, filename));
+}
+
+/* =====================
+   DISCORD ROLE HELPER
+   Fetches a guild member's roles (name + hex color), skipping the
+   @everyone role and anything with no real color set (Discord
+   returns color 0 for "default", which we treat as no color).
+===================== */
+async function getMemberRoles(discordId) {
+  if (!BOT_TOKEN || !GUILD_ID) return [];
+
+  try {
+    const [memberRes, rolesRes] = await Promise.all([
+      axios.get(
+        `https://discord.com/api/guilds/${GUILD_ID}/members/${discordId}`,
+        { headers: { Authorization: `Bot ${BOT_TOKEN}` } }
+      ),
+      axios.get(
+        `https://discord.com/api/guilds/${GUILD_ID}/roles`,
+        { headers: { Authorization: `Bot ${BOT_TOKEN}` } }
+      ),
+    ]);
+
+    const memberRoleIds = new Set(memberRes.data.roles || []);
+    const roleLookup = new Map(rolesRes.data.map((r) => [r.id, r]));
+
+    return [...memberRoleIds]
+      .map((id) => roleLookup.get(id))
+      .filter((role) => role && role.name !== "@everyone")
+      .sort((a, b) => b.position - a.position) // highest role first
+      .map((role) => ({
+        name: role.name,
+        color: role.color
+          ? `#${role.color.toString(16).padStart(6, "0")}`
+          : null,
+      }));
+  } catch (err) {
+    // Member not in guild, bot lacks permission, or guild/bot misconfigured —
+    // fail quietly so a profile can still render without roles.
+    console.error("getMemberRoles failed:", err.message);
+    return [];
+  }
 }
 
 /* =====================
@@ -186,7 +229,8 @@ app.get("/api/me", (req, res) => {
 /* =====================
    PLAYER LOOKUP
    Matches on Discord username OR Minecraft IGN (set via /setign),
-   so players.html can find someone by either identifier.
+   so players.html can find someone by either identifier. Also
+   attaches their live Discord roles (name + color) from the guild.
 ===================== */
 app.get("/api/player/:username", async (req, res) => {
   if (!req.session.user) {
@@ -212,7 +256,10 @@ app.get("/api/player/:username", async (req, res) => {
       return res.status(404).json({ error: "Player not found" });
     }
 
-    return res.json(result.rows[0]);
+    const player = result.rows[0];
+    const roles = await getMemberRoles(player.discord_id);
+
+    return res.json({ ...player, roles });
   } catch (err) {
     console.error("Player lookup error:", err.message);
     return res.status(500).json({ error: "Internal server error" });
