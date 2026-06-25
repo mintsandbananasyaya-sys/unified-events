@@ -449,7 +449,7 @@
           type="text"
           class="search-field"
           id="searchInput"
-          placeholder="Enter a username..."
+          placeholder="Enter a Discord username or Minecraft IGN..."
           autocomplete="off"
           spellcheck="false"
           maxlength="64"
@@ -706,6 +706,13 @@ function renderProfile(player) {
   addTag(`Discord ID: ${player.discord_id}`);
   addTag(`Joined: ${formatDate(player.created_at)}`, 'is-blue');
 
+  if (player.ign) {
+    addTag(`IGN: ${player.ign}`, 'is-blue');
+  }
+  if (player.verified) {
+    addTag('Verified ✓', 'is-blue');
+  }
+
   // ── ADD MORE META TAGS HERE as you add more columns to your users table ──
   // e.g. if you add a "role" column:
   //   if (player.role) addTag(player.role);
@@ -720,6 +727,8 @@ function renderProfile(player) {
   // ── Add columns to your DB and add stat blocks below ──
   const stats = [
     { val: formatDate(player.created_at), label: 'Member since' },
+    { val: player.ign || '—', label: 'Minecraft IGN' },
+    { val: player.verified ? 'Yes' : 'No', label: 'Verified' },
     // Uncomment and adapt as you add DB columns:
     // { val: player.seasons_played ?? '—', label: 'Seasons played' },
     // { val: player.wins ?? '—', label: 'Season wins' },
@@ -757,7 +766,7 @@ async function doSearch() {
     if (res.status === 404) {
       resultsArea.classList.add('visible');
       notFound.classList.add('visible');
-      document.getElementById('notFoundText').textContent = `No player found with the username "${query}".`;
+      document.getElementById('notFoundText').textContent = `No player found with the Discord username or IGN "${query}".`;
       setLoading(false);
       return;
     }
