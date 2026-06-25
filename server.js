@@ -1,53 +1,82 @@
+/* =====================================================
+   UNIFIED EVENTS — SERVER
+   Express app: auth, player lookup, tickets, notifications,
+   guild settings, and bot bootstrapping.
+===================================================== */
+
 require("dotenv").config();
 
-const db = require("./database"); // now a pg Pool, not better-sqlite3
 const express = require("express");
 const session = require("express-session");
 const axios = require("axios");
 const path = require("path");
 
+const db = require("./database"); // pg Pool
 const { getResponse } = require("./brain");
 
 const app = express();
 
 /* =====================
-   MIDDLEWARE
+   CONFIG / ENV
 ===================== */
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, "public")));
+const PORT = process.env.PORT || 3000;
+const NODE_ENV = process.env.NODE_ENV || "development";
 
-app.set("trust proxy", 1);
+const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
+const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
+const DISCORD_REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
+const BOT_TOKEN = process.env.BOT_TOKEN;
+const SESSION_SECRET = process.env.SESSION_SECRET || "dev-secret";
+
+const PUBLIC_DIR = path.join(__dirname, "public");
 
 /* =====================
-   SESSION
+   MIDDLEWARE
 ===================== */
+app.set("trust proxy", 1);
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(PUBLIC_DIR));
+
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || "dev-secret",
+    secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 1000 * 60 * 60 * 24,
+      maxAge: 1000 * 60 * 60 * 24, // 24h
     },
   })
 );
 
+function requireAuth(req, res, next) {
+  if (!req.session.user) return res.redirect("/login");
+  next();
+}
+
+function sendPage(filename) {
+  return (req, res) => res.sendFile(path.join(PUBLIC_DIR, filename));
+}
+
 /* =====================
-   BOT LOAD (SAFE)
+   BOT BOOTSTRAP (SAFE)
+   bot.js is required here so the website keeps running even
+   if the Discord bot fails to start (bad token, missing env, etc).
 ===================== */
 try {
   require("./bot.js");
-  console.log("Bot loaded");
+  console.log("✅ Bot loaded");
 } catch (err) {
-  console.log("Bot failed:", err.message);
+  console.log("❌ Bot failed to load:", err.message);
 }
 
 /* =====================
    ONE-TIME SLASH COMMAND DEPLOY
+   Set DEPLOY_COMMANDS=true in env to re-register slash commands
+   with Discord on boot. Turn it back off once they've propagated.
 ===================== */
 if (process.env.DEPLOY_COMMANDS === "true") {
   console.log("⏳ DEPLOY_COMMANDS=true detected — registering slash commands...");
@@ -59,54 +88,29 @@ if (process.env.DEPLOY_COMMANDS === "true") {
 }
 
 /* =====================
-   ENV
-===================== */
-const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
-const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
-const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
-const BOT_TOKEN = process.env.BOT_TOKEN;
-
-/* =====================
    IN-MEMORY STORE
+   Per-guild settings — resets on every restart/deploy. Fine for
+   now, but move to Postgres if these need to persist long-term.
 ===================== */
 const settingsStore = {};
-
-/* =====================
-   AUTH HELPER
-===================== */
-function requireAuth(req, res, next) {
-  if (!req.session.user) return res.redirect("/login");
-  next();
-}
 
 /* =====================
    PAGES
 ===================== */
 app.get("/", (req, res) => {
   if (req.session.user) return res.redirect("/dashboard");
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+  sendPage("index.html")(req, res);
 });
 
-app.get("/login", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "login.html"));
-});
+app.get("/login", sendPage("login.html"));
+app.get("/dashboard", requireAuth, sendPage("dashboard.html"));
+app.get("/bot-dashboard", sendPage("bot-dashboard.html"));
 
-app.get("/dashboard", requireAuth, (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "dashboard.html"));
-});
-
-app.get("/bot-dashboard", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "bot-dashboard.html"));
-});
-
-/* =====================
-   DISCORD OAUTH
-===================== */
 app.get("/auth/discord", (req, res) => {
   const url =
     `https://discord.com/oauth2/authorize` +
-    `?client_id=${CLIENT_ID}` +
-    `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
+    `?client_id=${DISCORD_CLIENT_ID}` +
+    `&redirect_uri=${encodeURIComponent(DISCORD_REDIRECT_URI)}` +
     `&response_type=code` +
     `&scope=identify guilds`;
 
@@ -121,11 +125,11 @@ app.get("/auth/discord/callback", async (req, res) => {
     const tokenRes = await axios.post(
       "https://discord.com/api/oauth2/token",
       new URLSearchParams({
-        client_id: CLIENT_ID,
-        client_secret: CLIENT_SECRET,
+        client_id: DISCORD_CLIENT_ID,
+        client_secret: DISCORD_CLIENT_SECRET,
         grant_type: "authorization_code",
         code,
-        redirect_uri: REDIRECT_URI,
+        redirect_uri: DISCORD_REDIRECT_URI,
       }),
       {
         headers: {
@@ -181,6 +185,8 @@ app.get("/api/me", (req, res) => {
 
 /* =====================
    PLAYER LOOKUP
+   Matches on Discord username OR Minecraft IGN (set via /setign),
+   so players.html can find someone by either identifier.
 ===================== */
 app.get("/api/player/:username", async (req, res) => {
   if (!req.session.user) {
@@ -195,9 +201,9 @@ app.get("/api/player/:username", async (req, res) => {
 
   try {
     const result = await db.query(
-      `SELECT discord_id, username, avatar, created_at
+      `SELECT discord_id, username, avatar, created_at, ign, verified
        FROM users
-       WHERE username ILIKE $1
+       WHERE username ILIKE $1 OR ign ILIKE $1
        LIMIT 1`,
       [username.trim()]
     );
@@ -453,8 +459,6 @@ app.get("/logout", (req, res) => {
 /* =====================
    START SERVER
 ===================== */
-const PORT = process.env.PORT || 3000;
-
 app.listen(PORT, () => {
-  console.log(`Server running on ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
