@@ -1,125 +1,53 @@
-/* =====================================================
-   UNIFIED EVENTS — SERVER
-   Express app: auth, player lookup, tickets, notifications,
-   guild settings, and bot bootstrapping.
-===================================================== */
-
 require("dotenv").config();
 
+const db = require("./database"); // now a pg Pool, not better-sqlite3
 const express = require("express");
 const session = require("express-session");
 const axios = require("axios");
 const path = require("path");
 
-const db = require("./database"); // pg Pool
 const { getResponse } = require("./brain");
 
 const app = express();
 
 /* =====================
-   CONFIG / ENV
-===================== */
-const PORT = process.env.PORT || 3000;
-const NODE_ENV = process.env.NODE_ENV || "development";
-
-const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
-const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
-const DISCORD_REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
-const BOT_TOKEN = process.env.BOT_TOKEN;
-const GUILD_ID = process.env.GUILD_ID;
-const SESSION_SECRET = process.env.SESSION_SECRET || "dev-secret";
-
-const PUBLIC_DIR = path.join(__dirname, "public");
-
-/* =====================
    MIDDLEWARE
 ===================== */
-app.set("trust proxy", 1);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(PUBLIC_DIR));
+app.use(express.static(path.join(__dirname, "public")));
 
+app.set("trust proxy", 1);
+
+/* =====================
+   SESSION
+===================== */
 app.use(
   session({
-    secret: SESSION_SECRET,
+    secret: process.env.SESSION_SECRET || "dev-secret",
     resave: false,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: NODE_ENV === "production",
+      secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 1000 * 60 * 60 * 24, // 24h
+      maxAge: 1000 * 60 * 60 * 24,
     },
   })
 );
 
-function requireAuth(req, res, next) {
-  if (!req.session.user) return res.redirect("/login");
-  next();
-}
-
-function sendPage(filename) {
-  return (req, res) => res.sendFile(path.join(PUBLIC_DIR, filename));
-}
-
 /* =====================
-   DISCORD ROLE HELPER
-   Fetches a guild member's roles (name + hex color), skipping the
-   @everyone role and anything with no real color set (Discord
-   returns color 0 for "default", which we treat as no color).
-===================== */
-async function getMemberRoles(discordId) {
-  if (!BOT_TOKEN || !GUILD_ID) return [];
-
-  try {
-    const [memberRes, rolesRes] = await Promise.all([
-      axios.get(
-        `https://discord.com/api/guilds/${GUILD_ID}/members/${discordId}`,
-        { headers: { Authorization: `Bot ${BOT_TOKEN}` } }
-      ),
-      axios.get(
-        `https://discord.com/api/guilds/${GUILD_ID}/roles`,
-        { headers: { Authorization: `Bot ${BOT_TOKEN}` } }
-      ),
-    ]);
-
-    const memberRoleIds = new Set(memberRes.data.roles || []);
-    const roleLookup = new Map(rolesRes.data.map((r) => [r.id, r]));
-
-    return [...memberRoleIds]
-      .map((id) => roleLookup.get(id))
-      .filter((role) => role && role.name !== "@everyone")
-      .sort((a, b) => b.position - a.position) // highest role first
-      .map((role) => ({
-        name: role.name,
-        color: role.color
-          ? `#${role.color.toString(16).padStart(6, "0")}`
-          : null,
-      }));
-  } catch (err) {
-    // Member not in guild, bot lacks permission, or guild/bot misconfigured —
-    // fail quietly so a profile can still render without roles.
-    console.error("getMemberRoles failed:", err.message);
-    return [];
-  }
-}
-
-/* =====================
-   BOT BOOTSTRAP (SAFE)
-   bot.js is required here so the website keeps running even
-   if the Discord bot fails to start (bad token, missing env, etc).
+   BOT LOAD (SAFE)
 ===================== */
 try {
   require("./bot.js");
-  console.log("✅ Bot loaded");
+  console.log("Bot loaded");
 } catch (err) {
-  console.log("❌ Bot failed to load:", err.message);
+  console.log("Bot failed:", err.message);
 }
 
 /* =====================
    ONE-TIME SLASH COMMAND DEPLOY
-   Set DEPLOY_COMMANDS=true in env to re-register slash commands
-   with Discord on boot. Turn it back off once they've propagated.
 ===================== */
 if (process.env.DEPLOY_COMMANDS === "true") {
   console.log("⏳ DEPLOY_COMMANDS=true detected — registering slash commands...");
@@ -131,29 +59,54 @@ if (process.env.DEPLOY_COMMANDS === "true") {
 }
 
 /* =====================
+   ENV
+===================== */
+const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
+const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
+const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
+const BOT_TOKEN = process.env.BOT_TOKEN;
+
+/* =====================
    IN-MEMORY STORE
-   Per-guild settings — resets on every restart/deploy. Fine for
-   now, but move to Postgres if these need to persist long-term.
 ===================== */
 const settingsStore = {};
+
+/* =====================
+   AUTH HELPER
+===================== */
+function requireAuth(req, res, next) {
+  if (!req.session.user) return res.redirect("/login");
+  next();
+}
 
 /* =====================
    PAGES
 ===================== */
 app.get("/", (req, res) => {
   if (req.session.user) return res.redirect("/dashboard");
-  sendPage("index.html")(req, res);
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-app.get("/login", sendPage("login.html"));
-app.get("/dashboard", requireAuth, sendPage("dashboard.html"));
-app.get("/bot-dashboard", sendPage("bot-dashboard.html"));
+app.get("/login", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "login.html"));
+});
 
+app.get("/dashboard", requireAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "dashboard.html"));
+});
+
+app.get("/bot-dashboard", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "bot-dashboard.html"));
+});
+
+/* =====================
+   DISCORD OAUTH
+===================== */
 app.get("/auth/discord", (req, res) => {
   const url =
     `https://discord.com/oauth2/authorize` +
-    `?client_id=${DISCORD_CLIENT_ID}` +
-    `&redirect_uri=${encodeURIComponent(DISCORD_REDIRECT_URI)}` +
+    `?client_id=${CLIENT_ID}` +
+    `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
     `&response_type=code` +
     `&scope=identify guilds`;
 
@@ -168,11 +121,11 @@ app.get("/auth/discord/callback", async (req, res) => {
     const tokenRes = await axios.post(
       "https://discord.com/api/oauth2/token",
       new URLSearchParams({
-        client_id: DISCORD_CLIENT_ID,
-        client_secret: DISCORD_CLIENT_SECRET,
+        client_id: CLIENT_ID,
+        client_secret: CLIENT_SECRET,
         grant_type: "authorization_code",
         code,
-        redirect_uri: DISCORD_REDIRECT_URI,
+        redirect_uri: REDIRECT_URI,
       }),
       {
         headers: {
@@ -228,9 +181,6 @@ app.get("/api/me", (req, res) => {
 
 /* =====================
    PLAYER LOOKUP
-   Matches on Discord username OR Minecraft IGN (set via /setign),
-   so players.html can find someone by either identifier. Also
-   attaches their live Discord roles (name + color) from the guild.
 ===================== */
 app.get("/api/player/:username", async (req, res) => {
   if (!req.session.user) {
@@ -245,9 +195,9 @@ app.get("/api/player/:username", async (req, res) => {
 
   try {
     const result = await db.query(
-      `SELECT discord_id, username, avatar, created_at, ign, verified
+      `SELECT discord_id, username, avatar, created_at
        FROM users
-       WHERE username ILIKE $1 OR ign ILIKE $1
+       WHERE username ILIKE $1
        LIMIT 1`,
       [username.trim()]
     );
@@ -256,13 +206,139 @@ app.get("/api/player/:username", async (req, res) => {
       return res.status(404).json({ error: "Player not found" });
     }
 
-    const player = result.rows[0];
-    const roles = await getMemberRoles(player.discord_id);
-
-    return res.json({ ...player, roles });
+    return res.json(result.rows[0]);
   } catch (err) {
     console.error("Player lookup error:", err.message);
     return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+/* =====================
+   STAFF AUTH HELPER
+   Checks if the logged-in Discord user has a role called exactly "Staff"
+   in your guild. Requires GUILD_ID in your .env.
+===================== */
+async function requireStaff(req, res, next) {
+  if (!req.session.user) return res.status(401).json({ error: "Unauthorized" });
+
+  const guildId = process.env.GUILD_ID;
+  if (!guildId) return res.status(500).json({ error: "GUILD_ID not configured" });
+
+  try {
+    const memberRes = await axios.get(
+      `https://discord.com/api/guilds/${guildId}/members/${req.session.user.id}`,
+      { headers: { Authorization: `Bot ${BOT_TOKEN}` } }
+    );
+
+    const roles = memberRes.data.roles; // array of role IDs
+
+    // Fetch all roles in the guild to find the one named "Staff"
+    const rolesRes = await axios.get(
+      `https://discord.com/api/guilds/${guildId}/roles`,
+      { headers: { Authorization: `Bot ${BOT_TOKEN}` } }
+    );
+
+    const staffRole = rolesRes.data.find(
+      (r) => r.name.toLowerCase() === "staff"
+    );
+
+    if (!staffRole || !roles.includes(staffRole.id)) {
+      return res.status(403).json({ error: "Forbidden — Staff only" });
+    }
+
+    next();
+  } catch (err) {
+    console.error("Staff auth check failed:", err.message);
+    return res.status(403).json({ error: "Could not verify staff role" });
+  }
+}
+
+/* =====================
+   STAFF — TICKETS
+   Returns all tickets with their full message threads.
+   Paginated: 20 tickets per page. Pass ?page=1, ?page=2 etc.
+===================== */
+app.get("/api/staff/tickets", requireStaff, async (req, res) => {
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = 20;
+  const offset = (page - 1) * limit;
+
+  try {
+    const { rows: tickets } = await db.query(
+      `SELECT t.id, t.user_id, t.kind, t.status, t.created_at, t.closed_at,
+              u.username, u.avatar
+       FROM tickets t
+       LEFT JOIN users u ON u.discord_id = t.user_id
+       ORDER BY t.created_at DESC
+       LIMIT $1 OFFSET $2`,
+      [limit, offset]
+    );
+
+    const { rows: countRows } = await db.query(`SELECT COUNT(*) FROM tickets`);
+    const total = parseInt(countRows[0].count);
+
+    // Attach messages to each ticket
+    const ticketsWithMessages = await Promise.all(
+      tickets.map(async (ticket) => {
+        const { rows: messages } = await db.query(
+          `SELECT sender, content, created_at
+           FROM ticket_messages
+           WHERE ticket_id = $1
+           ORDER BY created_at ASC`,
+          [ticket.id]
+        );
+        return { ...ticket, messages };
+      })
+    );
+
+    res.json({
+      tickets: ticketsWithMessages,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+    });
+  } catch (err) {
+    console.error("Staff tickets error:", err.message);
+    res.status(500).json({ error: "Failed to load tickets" });
+  }
+});
+
+/* =====================
+   STAFF — LOGS
+   Returns audit log entries, newest first.
+   Paginated: 50 per page. Pass ?page=1, ?type=BAN etc to filter.
+===================== */
+app.get("/api/staff/logs", requireStaff, async (req, res) => {
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = 50;
+  const offset = (page - 1) * limit;
+  const typeFilter = req.query.type || null;
+
+  try {
+    const { rows: logs } = await db.query(
+      `SELECT id, type, actor_id, actor_tag, target_id, target_tag, detail, guild_id, channel_id, created_at
+       FROM logs
+       ${typeFilter ? "WHERE type = $3" : ""}
+       ORDER BY created_at DESC
+       LIMIT $1 OFFSET $2`,
+      typeFilter ? [limit, offset, typeFilter] : [limit, offset]
+    );
+
+    const { rows: countRows } = await db.query(
+      `SELECT COUNT(*) FROM logs ${typeFilter ? "WHERE type = $1" : ""}`,
+      typeFilter ? [typeFilter] : []
+    );
+    const total = parseInt(countRows[0].count);
+
+    res.json({
+      logs,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+    });
+  } catch (err) {
+    console.error("Staff logs error:", err.message);
+    res.status(500).json({ error: "Failed to load logs" });
   }
 });
 
@@ -506,6 +582,8 @@ app.get("/logout", (req, res) => {
 /* =====================
    START SERVER
 ===================== */
+const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`Server running on ${PORT}`);
 });
