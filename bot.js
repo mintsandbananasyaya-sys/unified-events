@@ -23,13 +23,8 @@ if (missing.length) {
   );
 }
 
-const APPLY_URL =
-  process.env.APPLY_URL ||
-  "https://unified-events.onrender.com/apply.html";
-
-const SITE_URL =
-  process.env.SITE_URL || "https://unified-events.onrender.com";
-
+const APPLY_URL = process.env.APPLY_URL || "https://unified-events.onrender.com/apply.html";
+const SITE_URL = process.env.SITE_URL || "https://unified-events.onrender.com";
 const BOT_MESSAGE_LOGO_PATH = process.env.BOT_MESSAGE_LOGO_PATH || "logo.png";
 
 const EMBED_COLOR_PRESETS = {
@@ -39,20 +34,16 @@ const EMBED_COLOR_PRESETS = {
 
 const STAFF_CHANNEL_ID = process.env.STAFF_CHANNEL_ID;
 const STAFF_ROLE_ID = process.env.STAFF_ROLE_ID || null;
-
-const STAFF_ROLE_IDS = (process.env.STAFF_ROLE_IDS || "")
-  .split(",")
-  .map((id) => id.trim())
-  .filter(Boolean);
-
+const VERIFIED_ROLE_ID = process.env.VERIFIED_ROLE_ID || null;
 const GUILD_ID = process.env.GUILD_ID || null;
 const FAQ_CHANNEL_ID = process.env.FAQ_CHANNEL_ID || null;
 const MUTED_ROLE_ID = process.env.MUTED_ROLE_ID || null;
 const WELCOME_CHANNEL_ID = process.env.WELCOME_CHANNEL_ID || null;
 
-// Role ID granted to users after running /setign — unlocks your server.
-// Set VERIFIED_ROLE_ID in your Render environment variables.
-const VERIFIED_ROLE_ID = process.env.VERIFIED_ROLE_ID || null;
+const STAFF_ROLE_IDS = (process.env.STAFF_ROLE_IDS || "")
+  .split(",")
+  .map((id) => id.trim())
+  .filter(Boolean);
 
 const FORMS_KEYWORDS = ["support", "help", "staff", "apply"];
 const MAX_RELAY_LENGTH = 1800;
@@ -73,7 +64,6 @@ const client = new Client({
 /* ================= DATABASE SETUP ================= */
 
 async function setupTables() {
-  // Existing tables
   await db.query(`
     CREATE TABLE IF NOT EXISTS pending_menu (
       user_id TEXT PRIMARY KEY,
@@ -127,8 +117,6 @@ async function setupTables() {
 
   await db.query(`CREATE INDEX IF NOT EXISTS idx_tickets_user ON tickets(user_id)`);
   await db.query(`CREATE INDEX IF NOT EXISTS idx_ticket_messages_ticket ON ticket_messages(ticket_id)`);
-
-  // IGN columns — added automatically on every boot, safe to run repeatedly
   await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS ign TEXT`);
   await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS verified BOOLEAN DEFAULT FALSE`);
   await db.query(`CREATE UNIQUE INDEX IF NOT EXISTS idx_users_ign ON users(ign) WHERE ign IS NOT NULL`);
@@ -140,6 +128,20 @@ const tablesReady = setupTables().catch((err) => {
   console.error("Failed to set up bot.js tables:", err.message);
   throw err;
 });
+
+/* ================= AUDIT LOG HELPER ================= */
+
+async function createLog({ type, actorId, actorTag, targetId, targetTag, detail, guildId, channelId }) {
+  try {
+    await db.query(
+      `INSERT INTO logs (type, actor_id, actor_tag, target_id, target_tag, detail, guild_id, channel_id, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [type, actorId || null, actorTag || null, targetId || null, targetTag || null, detail || null, guildId || null, channelId || null, Date.now()]
+    );
+  } catch (err) {
+    console.error("createLog failed:", err.message);
+  }
+}
 
 /* ================= STATE HELPERS ================= */
 
@@ -154,10 +156,7 @@ async function setPendingMenu(userId) {
 }
 
 async function getPendingMenu(userId) {
-  const { rows } = await db.query(
-    `SELECT * FROM pending_menu WHERE user_id = $1`,
-    [userId]
-  );
+  const { rows } = await db.query(`SELECT * FROM pending_menu WHERE user_id = $1`, [userId]);
   return rows[0];
 }
 
@@ -339,7 +338,7 @@ async function postToLogsChannel(content) {
 }
 
 function locationLabel(message) {
-  if (message.guild) return `${message.guild.name} → <#${message.channelId}>`;
+  if (message.guild) return `${message.guild.name} → #${message.channel?.name || message.channelId}`;
   return "Direct Message";
 }
 
@@ -354,19 +353,27 @@ client.once("ready", () => {
 client.on("messageUpdate", async (oldMessage, newMessage) => {
   try {
     const author = newMessage.author?.tag || oldMessage.author?.tag || "Unknown user";
+    const authorId = newMessage.author?.id || oldMessage.author?.id;
     const oldContent = oldMessage.partial ? null : oldMessage.content;
     const newContent = newMessage.partial ? null : newMessage.content;
 
     if (oldContent !== null && newContent !== null && oldContent === newContent) return;
 
     const location = locationLabel(newMessage);
-    const beforeText = oldContent !== null ? truncateForLog(oldContent) : "*(content unavailable — message wasn't cached)*";
-    const afterText = newContent !== null ? truncateForLog(newContent) : "*(content unavailable — message wasn't cached)*";
+    const beforeText = oldContent !== null ? truncateForLog(oldContent) : "*(not cached)*";
+    const afterText = newContent !== null ? truncateForLog(newContent) : "*(not cached)*";
+
+    await createLog({
+      type: "MESSAGE_EDIT",
+      actorId: authorId,
+      actorTag: author,
+      detail: `Before: ${beforeText} | After: ${afterText}`,
+      guildId: newMessage.guild?.id,
+      channelId: newMessage.channelId,
+    });
 
     await postToLogsChannel(
-      `✏️ **Message edited** — ${author} in ${location}\n` +
-      `**Before:** ${beforeText}\n` +
-      `**After:** ${afterText}`
+      `✏️ **Message edited** — ${author} in ${location}\n**Before:** ${beforeText}\n**After:** ${afterText}`
     );
   } catch (err) {
     console.error("messageUpdate logging error:", err);
@@ -376,15 +383,22 @@ client.on("messageUpdate", async (oldMessage, newMessage) => {
 client.on("messageDelete", async (message) => {
   try {
     const author = message.author?.tag || "Unknown user";
+    const authorId = message.author?.id;
     const location = locationLabel(message);
     const content = message.partial ? null : message.content;
-    const contentText = content !== null && content !== ""
-      ? truncateForLog(content)
-      : "*(content unavailable — message wasn't cached, or had no text)*";
+    const contentText = content !== null && content !== "" ? truncateForLog(content) : "*(not cached)*";
+
+    await createLog({
+      type: "MESSAGE_DELETE",
+      actorId: authorId,
+      actorTag: author,
+      detail: contentText,
+      guildId: message.guild?.id,
+      channelId: message.channelId,
+    });
 
     await postToLogsChannel(
-      `🗑️ **Message deleted** — ${author} in ${location}\n` +
-      `**Content:** ${contentText}`
+      `🗑️ **Message deleted** — ${author} in ${location}\n**Content:** ${contentText}`
     );
   } catch (err) {
     console.error("messageDelete logging error:", err);
@@ -420,14 +434,12 @@ client.on("interactionCreate", async (interaction) => {
   if (interaction.commandName === "setign") {
     const ign = interaction.options.getString("ign").trim();
 
-    // 1. Validate against Mojang API — checks if it's a real MC account
     let mojangData;
     try {
       const axios = require("axios");
       const res = await axios.get(`https://api.mojang.com/users/profiles/minecraft/${encodeURIComponent(ign)}`);
-      mojangData = res.data; // { id, name } — name is the correctly-cased IGN
+      mojangData = res.data;
     } catch (err) {
-      // Mojang returns 404 for unknown usernames
       if (err.response?.status === 404) {
         return safeReply(interaction, {
           content: `❌ **${ign}** doesn't exist on Mojang. Check the spelling and try again.`,
@@ -441,9 +453,8 @@ client.on("interactionCreate", async (interaction) => {
       });
     }
 
-    const verifiedIgn = mojangData.name; // use Mojang's correctly-cased version
+    const verifiedIgn = mojangData.name;
 
-    // 2. Check if this IGN is already claimed by someone else
     const { rows: existing } = await db.query(
       `SELECT discord_id FROM users WHERE ign ILIKE $1`,
       [verifiedIgn]
@@ -456,31 +467,19 @@ client.on("interactionCreate", async (interaction) => {
       });
     }
 
-    // 3. Save IGN to the database against their Discord ID
-    // If they're not in the users table yet (haven't logged into the website),
-    // insert them. If they are, just update the IGN.
     await db.query(
       `INSERT INTO users (discord_id, username, avatar, ign, verified)
        VALUES ($1, $2, $3, $4, TRUE)
-       ON CONFLICT (discord_id) DO UPDATE SET
-         ign = EXCLUDED.ign,
-         verified = TRUE`,
-      [
-        interaction.user.id,
-        interaction.user.username,
-        interaction.user.avatar,
-        verifiedIgn,
-      ]
+       ON CONFLICT (discord_id) DO UPDATE SET ign = EXCLUDED.ign, verified = TRUE`,
+      [interaction.user.id, interaction.user.username, interaction.user.avatar, verifiedIgn]
     );
 
-    // 4. Grant verified role if configured
     if (VERIFIED_ROLE_ID && interaction.guild) {
       try {
         const member = await interaction.guild.members.fetch(interaction.user.id);
         await member.roles.add(VERIFIED_ROLE_ID);
       } catch (err) {
         console.error("Failed to assign verified role:", err.message);
-        // Don't fail the whole command — IGN is saved, role is the only thing that failed
         return safeReply(interaction, {
           content: `✅ IGN set to **${verifiedIgn}** — but I couldn't assign your role. Ask a staff member to sort it.`,
           flags: MessageFlags.Ephemeral,
@@ -488,16 +487,17 @@ client.on("interactionCreate", async (interaction) => {
       }
     }
 
-    // 5. Log to staff channel
+    await createLog({
+      type: "SETIGN",
+      actorId: interaction.user.id,
+      actorTag: interaction.user.tag,
+      detail: `Set IGN to ${verifiedIgn}`,
+      guildId: interaction.guild?.id,
+    });
+
     if (STAFF_CHANNEL_ID) {
-      await client.channels
-        .fetch(STAFF_CHANNEL_ID)
-        .then((ch) =>
-          ch?.send({
-            content: `✅ <@${interaction.user.id}> verified as **${verifiedIgn}**`,
-            allowedMentions: { parse: [] },
-          })
-        )
+      await client.channels.fetch(STAFF_CHANNEL_ID)
+        .then((ch) => ch?.send({ content: `✅ <@${interaction.user.id}> verified as **${verifiedIgn}**`, allowedMentions: { parse: [] } }))
         .catch(() => {});
     }
 
@@ -515,37 +515,25 @@ client.on("interactionCreate", async (interaction) => {
         flags: MessageFlags.Ephemeral,
       });
     }
-
     try {
       const dm = await interaction.user.createDM();
       await dm.send(MENU_TEXT);
       await setPendingMenu(interaction.user.id);
-      return safeReply(interaction, {
-        content: "Check your DMs 📩",
-        flags: MessageFlags.Ephemeral,
-      });
+      return safeReply(interaction, { content: "Check your DMs 📩", flags: MessageFlags.Ephemeral });
     } catch {
-      return safeReply(interaction, {
-        content: "Turn on DMs bro 😭",
-        flags: MessageFlags.Ephemeral,
-      });
+      return safeReply(interaction, { content: "Turn on DMs bro 😭", flags: MessageFlags.Ephemeral });
     }
   }
 
   /* ================= /schedule ================= */
   if (interaction.commandName === "schedule") {
-    return safeReply(interaction, {
-      content: "No schedule has been confirmed yet.",
-    });
+    return safeReply(interaction, { content: "No schedule has been confirmed yet." });
   }
 
   /* ================= /bot-message ================= */
   if (interaction.commandName === "bot-message") {
     if (!memberCanNotify(interaction.member)) {
-      return safeReply(interaction, {
-        content: "You don't have permission to use this command.",
-        flags: MessageFlags.Ephemeral,
-      });
+      return safeReply(interaction, { content: "You don't have permission to use this command.", flags: MessageFlags.Ephemeral });
     }
 
     const targetChannel = interaction.options.getChannel("channel");
@@ -554,19 +542,8 @@ client.on("interactionCreate", async (interaction) => {
     const colorKey = interaction.options.getString("color");
     const color = EMBED_COLOR_PRESETS[colorKey];
 
-    if (!color) {
-      return safeReply(interaction, {
-        content: `⚠️ Unknown color "${colorKey}". Pick one from the list Discord shows you.`,
-        flags: MessageFlags.Ephemeral,
-      });
-    }
-
-    if (!targetChannel.isTextBased()) {
-      return safeReply(interaction, {
-        content: "⚠️ Pick a text channel — that one can't receive messages.",
-        flags: MessageFlags.Ephemeral,
-      });
-    }
+    if (!color) return safeReply(interaction, { content: `⚠️ Unknown color "${colorKey}".`, flags: MessageFlags.Ephemeral });
+    if (!targetChannel.isTextBased()) return safeReply(interaction, { content: "⚠️ Pick a text channel.", flags: MessageFlags.Ephemeral });
 
     const embed = new EmbedBuilder()
       .setColor(color)
@@ -578,47 +555,38 @@ client.on("interactionCreate", async (interaction) => {
       await targetChannel.send({ embeds: [embed] });
     } catch (err) {
       console.error("bot-message send failed:", err);
-      return safeReply(interaction, {
-        content: "⚠️ Failed to send. Make sure the bot can see and post in that channel.",
-        flags: MessageFlags.Ephemeral,
-      });
+      return safeReply(interaction, { content: "⚠️ Failed to send. Check bot permissions.", flags: MessageFlags.Ephemeral });
     }
 
+    await createLog({
+      type: "BOT_MESSAGE",
+      actorId: interaction.user.id,
+      actorTag: interaction.user.tag,
+      detail: `Title: ${title} | Color: ${colorKey} | Channel: #${targetChannel.name}`,
+      guildId: interaction.guild?.id,
+      channelId: targetChannel.id,
+    });
+
     if (STAFF_CHANNEL_ID) {
-      await client.channels
-        .fetch(STAFF_CHANNEL_ID)
-        .then((ch) =>
-          ch?.send({
-            content: `📨 ${interaction.user.tag} posted a ${colorKey} bot-message to <#${targetChannel.id}>: **${title}**`,
-            allowedMentions: { parse: [] },
-          })
-        )
+      await client.channels.fetch(STAFF_CHANNEL_ID)
+        .then((ch) => ch?.send({ content: `📨 ${interaction.user.tag} posted a ${colorKey} bot-message to <#${targetChannel.id}>: **${title}**`, allowedMentions: { parse: [] } }))
         .catch(() => {});
     }
 
-    return safeReply(interaction, {
-      content: `Sent to <#${targetChannel.id}>.`,
-      flags: MessageFlags.Ephemeral,
-    });
+    return safeReply(interaction, { content: `Sent to <#${targetChannel.id}>.`, flags: MessageFlags.Ephemeral });
   }
 
   /* ================= /ask ================= */
   if (interaction.commandName === "ask") {
     const q = interaction.options.getString("question");
     const reply = getResponse(q);
-    return safeReply(interaction, {
-      content: reply,
-      flags: MessageFlags.Ephemeral,
-    });
+    return safeReply(interaction, { content: reply, flags: MessageFlags.Ephemeral });
   }
 
   /* ================= /notify ================= */
   if (interaction.commandName === "notify") {
     if (!memberCanNotify(interaction.member)) {
-      return safeReply(interaction, {
-        content: "You don't have permission to use this command.",
-        flags: MessageFlags.Ephemeral,
-      });
+      return safeReply(interaction, { content: "You don't have permission to use this command.", flags: MessageFlags.Ephemeral });
     }
 
     const target = interaction.options.getUser("user");
@@ -632,119 +600,91 @@ client.on("interactionCreate", async (interaction) => {
       try {
         const dm = await target.createDM();
         await dm.send({ content: `📢 **${title}**\n${message}`, ...NO_PING });
-      } catch {
-        dmFailed = true;
-      }
+      } catch { dmFailed = true; }
 
       await createUserNotification(target.id, title, message, interaction.user.id);
 
+      await createLog({
+        type: "NOTIFY",
+        actorId: interaction.user.id,
+        actorTag: interaction.user.tag,
+        targetId: target.id,
+        targetTag: target.tag,
+        detail: `Title: ${title} | Message: ${message}${dmFailed ? " | DM failed" : ""}`,
+        guildId: interaction.guild?.id,
+      });
+
       if (STAFF_CHANNEL_ID) {
-        await client.channels
-          .fetch(STAFF_CHANNEL_ID)
-          .then((ch) =>
-            ch?.send({
-              content:
-                `🔔 ${interaction.user.tag} notified <@${target.id}>: **${title}**` +
-                (dmFailed ? "\n⚠️ DM failed (closed DMs or left server)." : ""),
-              allowedMentions: { parse: [] },
-            })
-          )
+        await client.channels.fetch(STAFF_CHANNEL_ID)
+          .then((ch) => ch?.send({ content: `🔔 ${interaction.user.tag} notified <@${target.id}>: **${title}**${dmFailed ? "\n⚠️ DM failed." : ""}`, allowedMentions: { parse: [] } }))
           .catch(() => {});
       }
 
-      return interaction.editReply(
-        dmFailed
-          ? `Saved to their dashboard, but the DM failed (they may have DMs off).`
-          : `Notified <@${target.id}>.`
-      );
+      return interaction.editReply(dmFailed ? `Saved to dashboard, DM failed.` : `Notified <@${target.id}>.`);
     }
 
-    if (!GUILD_ID) {
-      return interaction.editReply(
-        "⚠️ GUILD_ID isn't configured — can't determine which server's members to notify."
-      );
-    }
+    if (!GUILD_ID) return interaction.editReply("⚠️ GUILD_ID isn't configured.");
 
     const guild = await client.guilds.fetch(GUILD_ID).catch(() => null);
-    if (!guild) {
-      return interaction.editReply(
-        "⚠️ Couldn't fetch the configured guild. Check GUILD_ID and that the bot is in that server."
-      );
-    }
+    if (!guild) return interaction.editReply("⚠️ Couldn't fetch the configured guild.");
 
     let members;
     try {
       members = await guild.members.fetch();
     } catch (err) {
       console.error("members.fetch failed:", err);
-      return interaction.editReply(
-        "⚠️ Couldn't fetch server members. Make sure the 'Server Members Intent' is enabled."
-      );
+      return interaction.editReply("⚠️ Couldn't fetch server members. Enable the Server Members Intent.");
     }
 
     const recipients = members.filter((m) => !m.user.bot);
-    let sent = 0;
-    let failed = 0;
+    let sent = 0, failed = 0;
 
     for (const member of recipients.values()) {
       try {
         const dm = await member.user.createDM();
         await dm.send({ content: `📢 **${title}**\n${message}`, ...NO_PING });
         sent++;
-      } catch {
-        failed++;
-      }
+      } catch { failed++; }
       await sleep(300);
     }
 
     await createBroadcastNotification(title, message, interaction.user.id);
 
+    await createLog({
+      type: "NOTIFY_ALL",
+      actorId: interaction.user.id,
+      actorTag: interaction.user.tag,
+      detail: `Title: ${title} | Message: ${message} | Sent: ${sent} | Failed: ${failed}`,
+      guildId: interaction.guild?.id,
+    });
+
     if (STAFF_CHANNEL_ID) {
-      await client.channels
-        .fetch(STAFF_CHANNEL_ID)
-        .then((ch) =>
-          ch?.send({
-            content:
-              `🔔 ${interaction.user.tag} broadcasted to ${guild.name}: **${title}**\n` +
-              `Sent: ${sent} · Failed: ${failed}`,
-            allowedMentions: { parse: [] },
-          })
-        )
+      await client.channels.fetch(STAFF_CHANNEL_ID)
+        .then((ch) => ch?.send({ content: `🔔 ${interaction.user.tag} broadcasted to ${guild.name}: **${title}**\nSent: ${sent} · Failed: ${failed}`, allowedMentions: { parse: [] } }))
         .catch(() => {});
     }
 
-    return interaction.editReply(
-      `Broadcast sent. ${sent} delivered, ${failed} failed (DMs off or left server).`
-    );
+    return interaction.editReply(`Broadcast sent. ${sent} delivered, ${failed} failed.`);
   }
 
   /* ================= /purge ================= */
   if (interaction.commandName === "purge") {
     if (!memberCanNotify(interaction.member)) {
-      return safeReply(interaction, {
-        content: "You don't have permission to use this command.",
-        flags: MessageFlags.Ephemeral,
-      });
+      return safeReply(interaction, { content: "You don't have permission to use this command.", flags: MessageFlags.Ephemeral });
     }
 
     const amount = interaction.options.getInteger("amount");
     const lockdownInput = interaction.options.getString("lockdown");
 
     if (amount < 1 || amount > 100) {
-      return safeReply(interaction, {
-        content: "⚠️ Amount must be between 1 and 100.",
-        flags: MessageFlags.Ephemeral,
-      });
+      return safeReply(interaction, { content: "⚠️ Amount must be between 1 and 100.", flags: MessageFlags.Ephemeral });
     }
 
     let lockdownMs = null;
     if (lockdownInput) {
       lockdownMs = parseDuration(lockdownInput);
       if (lockdownMs === null) {
-        return safeReply(interaction, {
-          content: "⚠️ Couldn't parse that lockdown duration. Use e.g. `10m`, `2h`, `30s`, or `1d`.",
-          flags: MessageFlags.Ephemeral,
-        });
+        return safeReply(interaction, { content: "⚠️ Couldn't parse duration. Use e.g. `10m`, `2h`, `1d`.", flags: MessageFlags.Ephemeral });
       }
     }
 
@@ -757,9 +697,7 @@ client.on("interactionCreate", async (interaction) => {
       deletedCount = deleted.size;
     } catch (err) {
       console.error("purge bulkDelete failed:", err);
-      return interaction.editReply(
-        "⚠️ Failed to delete messages. Make sure the bot has 'Manage Messages' permission."
-      );
+      return interaction.editReply("⚠️ Failed to delete messages. Check bot permissions.");
     }
 
     let lockdownNote = "";
@@ -767,44 +705,36 @@ client.on("interactionCreate", async (interaction) => {
       const everyoneRole = interaction.guild.roles.everyone;
       const existingOverwrite = channel.permissionOverwrites.cache.get(everyoneRole.id);
       const priorSendMessages = existingOverwrite
-        ? existingOverwrite.deny.has("SendMessages")
-          ? false
-          : existingOverwrite.allow.has("SendMessages")
-            ? true
-            : null
+        ? existingOverwrite.deny.has("SendMessages") ? false : existingOverwrite.allow.has("SendMessages") ? true : null
         : null;
 
       try {
         await channel.permissionOverwrites.edit(everyoneRole, { SendMessages: false });
-      } catch (err) {
-        console.error("purge lockdown permission edit failed:", err);
-        lockdownNote = "\n⚠️ Deleted messages, but failed to lock the channel.";
-      }
-
-      if (!lockdownNote) {
         lockdownNote = `\n🔒 Channel locked for ${formatDuration(lockdownMs)}.`;
         setTimeout(async () => {
           try {
             await channel.permissionOverwrites.edit(everyoneRole, { SendMessages: priorSendMessages });
-            await channel.send("🔓 Lockdown lifted — this channel is open again.").catch(() => {});
-          } catch (err) {
-            console.error("purge lockdown auto-restore failed:", err);
-          }
+            await channel.send("🔓 Lockdown lifted.").catch(() => {});
+          } catch (err) { console.error("purge lockdown auto-restore failed:", err); }
         }, lockdownMs);
+      } catch (err) {
+        console.error("purge lockdown failed:", err);
+        lockdownNote = "\n⚠️ Deleted messages, but failed to lock the channel.";
       }
     }
 
+    await createLog({
+      type: "PURGE",
+      actorId: interaction.user.id,
+      actorTag: interaction.user.tag,
+      detail: `Deleted ${deletedCount} messages${lockdownMs ? ` | Locked for ${formatDuration(lockdownMs)}` : ""}`,
+      guildId: interaction.guild?.id,
+      channelId: channel.id,
+    });
+
     if (STAFF_CHANNEL_ID) {
-      await client.channels
-        .fetch(STAFF_CHANNEL_ID)
-        .then((ch) =>
-          ch?.send({
-            content:
-              `🧹 ${interaction.user.tag} purged ${deletedCount} message(s) in <#${channel.id}>` +
-              (lockdownMs !== null ? ` and locked it for ${formatDuration(lockdownMs)}.` : "."),
-            allowedMentions: { parse: [] },
-          })
-        )
+      await client.channels.fetch(STAFF_CHANNEL_ID)
+        .then((ch) => ch?.send({ content: `🧹 ${interaction.user.tag} purged ${deletedCount} message(s) in <#${channel.id}>${lockdownMs ? ` and locked it for ${formatDuration(lockdownMs)}.` : "."}`, allowedMentions: { parse: [] } }))
         .catch(() => {});
     }
 
@@ -814,17 +744,10 @@ client.on("interactionCreate", async (interaction) => {
   /* ================= /mute ================= */
   if (interaction.commandName === "mute") {
     if (!memberCanNotify(interaction.member)) {
-      return safeReply(interaction, {
-        content: "You don't have permission to use this command.",
-        flags: MessageFlags.Ephemeral,
-      });
+      return safeReply(interaction, { content: "You don't have permission to use this command.", flags: MessageFlags.Ephemeral });
     }
-
     if (!MUTED_ROLE_ID) {
-      return safeReply(interaction, {
-        content: "⚠️ MUTED_ROLE_ID isn't configured — can't apply a mute.",
-        flags: MessageFlags.Ephemeral,
-      });
+      return safeReply(interaction, { content: "⚠️ MUTED_ROLE_ID isn't configured.", flags: MessageFlags.Ephemeral });
     }
 
     const target = interaction.options.getUser("user");
@@ -833,10 +756,7 @@ client.on("interactionCreate", async (interaction) => {
     const muteMs = parseDuration(timeInput);
 
     if (muteMs === null) {
-      return safeReply(interaction, {
-        content: "⚠️ Couldn't parse that duration. Use e.g. `10m`, `2h`, `30s`, or `1d`.",
-        flags: MessageFlags.Ephemeral,
-      });
+      return safeReply(interaction, { content: "⚠️ Couldn't parse duration. Use e.g. `10m`, `2h`, `1d`.", flags: MessageFlags.Ephemeral });
     }
 
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
@@ -847,9 +767,7 @@ client.on("interactionCreate", async (interaction) => {
       await member.roles.add(MUTED_ROLE_ID);
     } catch (err) {
       console.error("mute role assignment failed:", err);
-      return interaction.editReply(
-        "⚠️ Failed to apply the muted role. Check bot permissions and role hierarchy."
-      );
+      return interaction.editReply("⚠️ Failed to apply the muted role. Check bot permissions.");
     }
 
     const durationLabel = formatDuration(muteMs);
@@ -857,45 +775,33 @@ client.on("interactionCreate", async (interaction) => {
     try {
       const dm = await target.createDM();
       await dm.send({ content: `You've been muted for ${durationLabel} for: ${reason}`, ...NO_PING });
-    } catch {
-      dmFailed = true;
-    }
+    } catch { dmFailed = true; }
 
-    await createUserNotification(
-      target.id,
-      "You've been muted",
-      `Muted for ${durationLabel} for: ${reason}`,
-      interaction.user.id
-    );
+    await createUserNotification(target.id, "You've been muted", `Muted for ${durationLabel} for: ${reason}`, interaction.user.id);
+
+    await createLog({
+      type: "MUTE",
+      actorId: interaction.user.id,
+      actorTag: interaction.user.tag,
+      targetId: target.id,
+      targetTag: target.tag,
+      detail: `Duration: ${durationLabel} | Reason: ${reason}${dmFailed ? " | DM failed" : ""}`,
+      guildId: interaction.guild?.id,
+    });
 
     if (STAFF_CHANNEL_ID) {
-      await client.channels
-        .fetch(STAFF_CHANNEL_ID)
-        .then((ch) =>
-          ch?.send({
-            content:
-              `🔇 ${interaction.user.tag} muted <@${target.id}> for ${durationLabel}: ${reason}` +
-              (dmFailed ? "\n⚠️ DM failed." : ""),
-            allowedMentions: { parse: [] },
-          })
-        )
+      await client.channels.fetch(STAFF_CHANNEL_ID)
+        .then((ch) => ch?.send({ content: `🔇 ${interaction.user.tag} muted <@${target.id}> for ${durationLabel}: ${reason}${dmFailed ? "\n⚠️ DM failed." : ""}`, allowedMentions: { parse: [] } }))
         .catch(() => {});
     }
 
-    return interaction.editReply(
-      dmFailed
-        ? `Muted <@${target.id}> for ${durationLabel}. Saved to their dashboard, but the DM failed.`
-        : `Muted <@${target.id}> for ${durationLabel}.`
-    );
+    return interaction.editReply(dmFailed ? `Muted <@${target.id}> for ${durationLabel}. DM failed.` : `Muted <@${target.id}> for ${durationLabel}.`);
   }
 
   /* ================= /kick ================= */
   if (interaction.commandName === "kick") {
     if (!memberCanNotify(interaction.member)) {
-      return safeReply(interaction, {
-        content: "You don't have permission to use this command.",
-        flags: MessageFlags.Ephemeral,
-      });
+      return safeReply(interaction, { content: "You don't have permission to use this command.", flags: MessageFlags.Ephemeral });
     }
 
     const target = interaction.options.getUser("user");
@@ -918,39 +824,32 @@ client.on("interactionCreate", async (interaction) => {
       await member.kick(reason);
     } catch (err) {
       console.error("kick failed:", err);
-      return interaction.editReply(
-        "⚠️ Failed to kick. Check bot permissions and role hierarchy."
-      );
+      return interaction.editReply("⚠️ Failed to kick. Check bot permissions.");
     }
 
+    await createLog({
+      type: "KICK",
+      actorId: interaction.user.id,
+      actorTag: interaction.user.tag,
+      targetId: target.id,
+      targetTag: target.tag,
+      detail: `Duration: ${timeInput} | Reason: ${reason}${!dmSucceeded ? " | DM failed" : ""}`,
+      guildId: interaction.guild?.id,
+    });
+
     if (STAFF_CHANNEL_ID) {
-      await client.channels
-        .fetch(STAFF_CHANNEL_ID)
-        .then((ch) =>
-          ch?.send({
-            content:
-              `👋 ${interaction.user.tag} kicked <@${target.id}> (${timeInput}): ${reason}` +
-              (!dmSucceeded ? "\n⚠️ DM failed before kick." : ""),
-            allowedMentions: { parse: [] },
-          })
-        )
+      await client.channels.fetch(STAFF_CHANNEL_ID)
+        .then((ch) => ch?.send({ content: `👋 ${interaction.user.tag} kicked <@${target.id}> (${timeInput}): ${reason}${!dmSucceeded ? "\n⚠️ DM failed." : ""}`, allowedMentions: { parse: [] } }))
         .catch(() => {});
     }
 
-    return interaction.editReply(
-      !dmSucceeded
-        ? `Kicked <@${target.id}>. Saved to their dashboard, but the DM failed.`
-        : `Kicked <@${target.id}>.`
-    );
+    return interaction.editReply(!dmSucceeded ? `Kicked <@${target.id}>. DM failed.` : `Kicked <@${target.id}>.`);
   }
 
   /* ================= /ban ================= */
   if (interaction.commandName === "ban") {
     if (!memberCanNotify(interaction.member)) {
-      return safeReply(interaction, {
-        content: "You don't have permission to use this command.",
-        flags: MessageFlags.Ephemeral,
-      });
+      return safeReply(interaction, { content: "You don't have permission to use this command.", flags: MessageFlags.Ephemeral });
     }
 
     const target = interaction.options.getUser("user");
@@ -971,30 +870,26 @@ client.on("interactionCreate", async (interaction) => {
       await interaction.guild.members.ban(target.id, { reason });
     } catch (err) {
       console.error("ban failed:", err);
-      return interaction.editReply(
-        "⚠️ Failed to ban. Check bot permissions and role hierarchy."
-      );
+      return interaction.editReply("⚠️ Failed to ban. Check bot permissions.");
     }
 
+    await createLog({
+      type: "BAN",
+      actorId: interaction.user.id,
+      actorTag: interaction.user.tag,
+      targetId: target.id,
+      targetTag: target.tag,
+      detail: `Duration: ${timeInput} | Reason: ${reason}${!dmSucceeded ? " | DM failed" : ""}`,
+      guildId: interaction.guild?.id,
+    });
+
     if (STAFF_CHANNEL_ID) {
-      await client.channels
-        .fetch(STAFF_CHANNEL_ID)
-        .then((ch) =>
-          ch?.send({
-            content:
-              `🔨 ${interaction.user.tag} banned <@${target.id}> (${timeInput}): ${reason}` +
-              (!dmSucceeded ? "\n⚠️ DM failed before ban." : ""),
-            allowedMentions: { parse: [] },
-          })
-        )
+      await client.channels.fetch(STAFF_CHANNEL_ID)
+        .then((ch) => ch?.send({ content: `🔨 ${interaction.user.tag} banned <@${target.id}> (${timeInput}): ${reason}${!dmSucceeded ? "\n⚠️ DM failed." : ""}`, allowedMentions: { parse: [] } }))
         .catch(() => {});
     }
 
-    return interaction.editReply(
-      !dmSucceeded
-        ? `Banned <@${target.id}>. Saved to their dashboard, but the DM failed.`
-        : `Banned <@${target.id}>.`
-    );
+    return interaction.editReply(!dmSucceeded ? `Banned <@${target.id}>. DM failed.` : `Banned <@${target.id}>.`);
   }
 });
 
@@ -1032,7 +927,6 @@ client.on("messageCreate", async (message) => {
       await user.send({ content: `Staff: ${truncate(content)}`, ...NO_PING }).catch(() => {
         message.reply("user DM closed 💀");
       });
-
       return;
     }
 
@@ -1068,30 +962,23 @@ client.on("messageCreate", async (message) => {
       if (["1", "2", "4"].includes(content)) {
         const kind = content === "2" ? "report" : "support";
         const channel = await client.channels.fetch(STAFF_CHANNEL_ID).catch(() => null);
-
         if (!channel) return message.reply("⚠️ Staff channel is unavailable right now.");
 
-        const threadName =
-          kind === "report"
-            ? `report-${Date.now().toString(36)}`
-            : `support-${message.author.id.slice(-4)}`;
+        const threadName = kind === "report"
+          ? `report-${Date.now().toString(36)}`
+          : `support-${message.author.id.slice(-4)}`;
 
-        const thread = await channel.threads.create({
-          name: threadName,
-          type: ChannelType.PrivateThread,
-        });
+        const thread = await channel.threads.create({ name: threadName, type: ChannelType.PrivateThread });
 
         const ticketId = await createTicket(message.author.id, thread.id, kind);
         await createSession(message.author.id, thread.id, kind, ticketId);
 
         const announceMention = STAFF_ROLE_ID ? `<@&${STAFF_ROLE_ID}> ` : "";
         const announceLabel = kind === "report" ? "anonymous report" : "ticket";
-        await channel
-          .send({
-            content: `${announceMention}New ${announceLabel} opened: ${thread}`,
-            allowedMentions: STAFF_ROLE_ID ? { roles: [STAFF_ROLE_ID] } : { parse: [] },
-          })
-          .catch(() => {});
+        await channel.send({
+          content: `${announceMention}New ${announceLabel} opened: ${thread}`,
+          allowedMentions: STAFF_ROLE_ID ? { roles: [STAFF_ROLE_ID] } : { parse: [] },
+        }).catch(() => {});
 
         if (kind === "report") {
           await thread.send("📩 New anonymous report opened. Reply here to respond — the reporter only sees you as **Staff**.");
@@ -1103,14 +990,11 @@ client.on("messageCreate", async (message) => {
       }
 
       if (content === "3") return message.reply(APPLY_URL);
-
       return message.reply("Didn't catch that — please reply with a number from 1 to 4, or run `/forms` again.");
     }
 
     if (mentionsFormsKeyword(content)) {
-      return message.reply(
-        "Looking for support, staff, or to apply? Run `/forms` to get started."
-      );
+      return message.reply("Looking for support, staff, or to apply? Run `/forms` to get started.");
     }
 
     const reply = getResponse(content);
@@ -1124,6 +1008,4 @@ client.on("messageCreate", async (message) => {
 
 tablesReady
   .then(() => client.login(process.env.BOT_TOKEN))
-  .catch((err) => {
-    console.error("bot.js failed to start:", err.message);
-  });
+  .catch((err) => { console.error("bot.js failed to start:", err.message); });
