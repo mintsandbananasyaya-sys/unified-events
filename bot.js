@@ -35,6 +35,9 @@ const EMBED_COLOR_PRESETS = {
 const STAFF_CHANNEL_ID = process.env.STAFF_CHANNEL_ID;
 const STAFF_ROLE_ID = process.env.STAFF_ROLE_ID || null;
 const VERIFIED_ROLE_ID = process.env.VERIFIED_ROLE_ID || null;
+
+// If set, /setign only works in this channel. Set SETIGN_CHANNEL_ID in Render env vars.
+const SETIGN_CHANNEL_ID = process.env.SETIGN_CHANNEL_ID || null;
 const GUILD_ID = process.env.GUILD_ID || null;
 const FAQ_CHANNEL_ID = process.env.FAQ_CHANNEL_ID || null;
 const MUTED_ROLE_ID = process.env.MUTED_ROLE_ID || null;
@@ -432,6 +435,14 @@ client.on("interactionCreate", async (interaction) => {
 
   /* ================= /setign ================= */
   if (interaction.commandName === "setign") {
+    // Channel restriction — only works in the designated verification channel
+    if (SETIGN_CHANNEL_ID && interaction.channelId !== SETIGN_CHANNEL_ID) {
+      return safeReply(interaction, {
+        content: `❌ You can only use this command in <#${SETIGN_CHANNEL_ID}>.`,
+        flags: MessageFlags.Ephemeral,
+      });
+    }
+
     const ign = interaction.options.getString("ign").trim();
 
     let mojangData;
