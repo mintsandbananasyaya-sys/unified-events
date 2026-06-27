@@ -518,6 +518,92 @@ client.on("interactionCreate", async (interaction) => {
     });
   }
 
+  /* ================= /unsetign ================= */
+  if (interaction.commandName === "unsetign") {
+    if (!memberCanNotify(interaction.member)) {
+      return safeReply(interaction, {
+        content: "You don't have permission to use this command.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
+
+    const target = interaction.options.getUser("user");
+    const reason = interaction.options.getString("reason") || "No reason provided";
+
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+    // 1. Look up their current IGN before clearing it
+    const { rows } = await db.query(
+      `SELECT ign FROM users WHERE discord_id = $1`,
+      [target.id]
+    );
+    const oldIgn = rows[0]?.ign || null;
+
+    if (!oldIgn) {
+      return interaction.editReply(`⚠️ <@${target.id}> doesn't have an IGN linked.`);
+    }
+
+    // 2. Clear IGN and verified flag in the database
+    await db.query(
+      `UPDATE users SET ign = NULL, verified = FALSE WHERE discord_id = $1`,
+      [target.id]
+    );
+
+    // 3. Remove verified role if configured
+    if (VERIFIED_ROLE_ID && interaction.guild) {
+      try {
+        const member = await interaction.guild.members.fetch(target.id);
+        await member.roles.remove(VERIFIED_ROLE_ID);
+      } catch (err) {
+        console.error("Failed to remove verified role:", err.message);
+      }
+    }
+
+    // 4. DM the user to let them know
+    try {
+      const dm = await target.createDM();
+      await dm.send({
+        content: `Your IGN (**${oldIgn}**) has been unlinked from your account by staff. Reason: ${reason}\n\nRun **/setign** again when you're ready to re-verify.`,
+        ...NO_PING,
+      });
+    } catch {
+      // DMs off — not a blocker
+    }
+
+    // 5. Send notification to their dashboard
+    await createUserNotification(
+      target.id,
+      "IGN unlinked by staff",
+      `Your IGN (${oldIgn}) was removed. Reason: ${reason}`,
+      interaction.user.id
+    );
+
+    // 6. Log it
+    await createLog({
+      type: "UNSETIGN",
+      actorId: interaction.user.id,
+      actorTag: interaction.user.tag,
+      targetId: target.id,
+      targetTag: target.tag,
+      detail: `Removed IGN: ${oldIgn} | Reason: ${reason}`,
+      guildId: interaction.guild?.id,
+    });
+
+    // 7. Post to staff channel
+    if (STAFF_CHANNEL_ID) {
+      await client.channels.fetch(STAFF_CHANNEL_ID)
+        .then((ch) => ch?.send({
+          content: `🔗 ${interaction.user.tag} unlinked IGN **${oldIgn}** from <@${target.id}>. Reason: ${reason}`,
+          allowedMentions: { parse: [] },
+        }))
+        .catch(() => {});
+    }
+
+    return interaction.editReply(
+      `✅ Removed IGN **${oldIgn}** from <@${target.id}> and revoked their verified role.`
+    );
+  }
+
   /* ================= /forms ================= */
   if (interaction.commandName === "forms") {
     if (await getSessionByUser(interaction.user.id)) {
