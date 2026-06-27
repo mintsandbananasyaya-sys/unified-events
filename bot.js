@@ -922,7 +922,9 @@ client.on("messageCreate", async (message) => {
       const user = await client.users.fetch(session.user_id).catch(() => null);
       if (!user) return message.reply("⚠️ couldn't reach that user (left/blocked the bot).");
 
-      if (session.ticket_id) await logTicketMessage(session.ticket_id, "staff", content);
+      // Save the real staff username for the staff panel — user's DM still shows generic "Staff"
+      const staffSender = `staff:${message.author.username}`;
+      if (session.ticket_id) await logTicketMessage(session.ticket_id, staffSender, content);
 
       await user.send({ content: `Staff: ${truncate(content)}`, ...NO_PING }).catch(() => {
         message.reply("user DM closed 💀");
