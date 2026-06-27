@@ -194,10 +194,11 @@ app.get("/api/player/:username", async (req, res) => {
   }
 
   try {
+    // Search by Discord username OR by IGN
     const result = await db.query(
-      `SELECT discord_id, username, avatar, created_at
+      `SELECT discord_id, username, avatar, created_at, ign, verified
        FROM users
-       WHERE username ILIKE $1
+       WHERE username ILIKE $1 OR ign ILIKE $1
        LIMIT 1`,
       [username.trim()]
     );
@@ -206,7 +207,36 @@ app.get("/api/player/:username", async (req, res) => {
       return res.status(404).json({ error: "Player not found" });
     }
 
-    return res.json(result.rows[0]);
+    const player = result.rows[0];
+
+    // Fetch Discord roles from the guild if GUILD_ID and BOT_TOKEN are set
+    let roles = [];
+    if (process.env.GUILD_ID && BOT_TOKEN) {
+      try {
+        const [memberRes, rolesRes] = await Promise.all([
+          axios.get(
+            `https://discord.com/api/guilds/${process.env.GUILD_ID}/members/${player.discord_id}`,
+            { headers: { Authorization: `Bot ${BOT_TOKEN}` } }
+          ),
+          axios.get(
+            `https://discord.com/api/guilds/${process.env.GUILD_ID}/roles`,
+            { headers: { Authorization: `Bot ${BOT_TOKEN}` } }
+          ),
+        ]);
+
+        const memberRoleIds = memberRes.data.roles || [];
+        const allRoles = rolesRes.data || [];
+
+        roles = allRoles
+          .filter(r => memberRoleIds.includes(r.id) && r.name !== "@everyone")
+          .map(r => ({ id: r.id, name: r.name, color: r.color }));
+      } catch (err) {
+        // Player may have left the server — return empty roles gracefully
+        console.error("Discord roles fetch failed:", err.message);
+      }
+    }
+
+    return res.json({ ...player, roles });
   } catch (err) {
     console.error("Player lookup error:", err.message);
     return res.status(500).json({ error: "Internal server error" });
