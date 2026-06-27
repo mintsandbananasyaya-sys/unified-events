@@ -302,28 +302,6 @@
   }
   .stat-label { font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mist-dim); }
 
-  /* DISCORD ROLES */
-  .roles-section {
-    padding: 1.4rem 2rem 1.7rem;
-    border-top: 1px solid var(--line-soft);
-  }
-  .roles-section h3 {
-    font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase;
-    color: var(--mist-dim); margin-bottom: 0.8rem;
-  }
-  .roles-list { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-  .role-badge {
-    display: inline-flex; align-items: center; gap: 0.45rem;
-    font-family: var(--font-body); font-size: 0.82rem; font-weight: 600;
-    padding: 0.32rem 0.75rem 0.32rem 0.55rem; border-radius: 99px;
-    border: 1px solid var(--line); background: var(--void-soft);
-  }
-  .role-badge .role-dot {
-    width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
-    background: var(--mist-dim); /* fallback when a role has no color */
-  }
-  .roles-empty { font-size: 0.85rem; color: var(--mist-dim); }
-
   /* NOT FOUND */
   .not-found {
     display: none; text-align: center;
@@ -471,7 +449,7 @@
           type="text"
           class="search-field"
           id="searchInput"
-          placeholder="Enter a Discord username or Minecraft IGN..."
+          placeholder="Enter a username..."
           autocomplete="off"
           spellcheck="false"
           maxlength="64"
@@ -515,10 +493,6 @@
           </div>
         </div>
         <div class="stats-strip" id="statsStrip"></div>
-        <div class="roles-section">
-          <h3>Discord Roles</h3>
-          <div class="roles-list" id="rolesList"></div>
-        </div>
       </div>
 
       <!-- NOT FOUND STATE -->
@@ -731,34 +705,17 @@ function renderProfile(player) {
 
   addTag(`Discord ID: ${player.discord_id}`);
   addTag(`Joined: ${formatDate(player.created_at)}`, 'is-blue');
-
-  if (player.ign) {
-    addTag(`IGN: ${player.ign}`, 'is-blue');
-  }
-  if (player.verified) {
-    addTag('Verified ✓', 'is-blue');
-  }
-
-  // ── ADD MORE META TAGS HERE as you add more columns to your users table ──
-  // e.g. if you add a "role" column:
-  //   if (player.role) addTag(player.role);
-  // e.g. if you add a "civ" column:
-  //   if (player.civ) addTag(player.civ, 'is-blue');
+  if (player.ign) addTag(`IGN: ${player.ign}`, 'is-blue');
+  if (player.verified) addTag('✓ Verified', 'is-blue');
 
   // Stats strip
   const strip = document.getElementById('statsStrip');
   strip.innerHTML = '';
 
-  // ── RIGHT NOW this only shows what's in your users table ──
-  // ── Add columns to your DB and add stat blocks below ──
   const stats = [
     { val: formatDate(player.created_at), label: 'Member since' },
     { val: player.ign || '—', label: 'Minecraft IGN' },
     { val: player.verified ? 'Yes' : 'No', label: 'Verified' },
-    // Uncomment and adapt as you add DB columns:
-    // { val: player.seasons_played ?? '—', label: 'Seasons played' },
-    // { val: player.wins ?? '—', label: 'Season wins' },
-    // { val: player.civ ?? '—', label: 'Current civ' },
   ];
 
   stats.forEach(s => {
@@ -769,34 +726,46 @@ function renderProfile(player) {
   });
 
   // Discord roles
-  const rolesList = document.getElementById('rolesList');
-  rolesList.innerHTML = '';
+  const existingRoles = document.getElementById('profileRoles');
+  if (existingRoles) existingRoles.remove();
 
-  const roles = Array.isArray(player.roles) ? player.roles : [];
+  if (player.roles && player.roles.length > 0) {
+    const rolesSection = document.createElement('div');
+    rolesSection.id = 'profileRoles';
+    rolesSection.style.cssText = 'padding: 1rem 1.5rem; border-top: 1px solid rgba(255,255,255,0.09);';
 
-  if (roles.length === 0) {
-    const empty = document.createElement('span');
-    empty.className = 'roles-empty';
-    empty.textContent = 'No roles found.';
-    rolesList.appendChild(empty);
-  } else {
-    roles.forEach(role => {
-      const badge = document.createElement('span');
-      badge.className = 'role-badge';
+    const label = document.createElement('div');
+    label.style.cssText = 'font-family: var(--font-mono, monospace); font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mist, #8b92a6); margin-bottom: 0.6rem;';
+    label.textContent = 'Discord Roles';
+    rolesSection.appendChild(label);
 
-      const dot = document.createElement('span');
-      dot.className = 'role-dot';
-      if (role.color) dot.style.background = role.color;
+    const rolesWrap = document.createElement('div');
+    rolesWrap.style.cssText = 'display: flex; flex-wrap: wrap; gap: 0.4rem;';
 
-      const label = document.createElement('span');
-      label.textContent = role.name; // textContent escapes automatically
-
-      if (role.color) badge.style.color = role.color;
-
-      badge.appendChild(dot);
-      badge.appendChild(label);
-      rolesList.appendChild(badge);
+    player.roles.forEach(role => {
+      const chip = document.createElement('span');
+      // Convert Discord color int to hex
+      const hex = role.color ? `#${role.color.toString(16).padStart(6, '0')}` : null;
+      chip.style.cssText = `font-family: var(--font-mono, monospace); font-size: 0.68rem; padding: 0.25rem 0.65rem; border-radius: 99px; border: 1px solid ${hex ? hex + '55' : 'rgba(255,255,255,0.09)'}; background: ${hex ? hex + '18' : 'rgba(255,255,255,0.04)'}; color: ${hex || 'var(--mist, #8b92a6)'};`;
+      chip.textContent = role.name;
+      rolesWrap.appendChild(chip);
     });
+
+    rolesSection.appendChild(rolesWrap);
+    document.getElementById('profileCard').appendChild(rolesSection);
+  } else {
+    const rolesSection = document.createElement('div');
+    rolesSection.id = 'profileRoles';
+    rolesSection.style.cssText = 'padding: 1rem 1.5rem; border-top: 1px solid rgba(255,255,255,0.09);';
+    const label = document.createElement('div');
+    label.style.cssText = 'font-family: var(--font-mono, monospace); font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mist, #8b92a6); margin-bottom: 0.4rem;';
+    label.textContent = 'Discord Roles';
+    const empty = document.createElement('div');
+    empty.style.cssText = 'font-size: 0.84rem; color: var(--mist-dim, #5b6175);';
+    empty.textContent = 'No roles found.';
+    rolesSection.appendChild(label);
+    rolesSection.appendChild(empty);
+    document.getElementById('profileCard').appendChild(rolesSection);
   }
 }
 
@@ -823,7 +792,7 @@ async function doSearch() {
     if (res.status === 404) {
       resultsArea.classList.add('visible');
       notFound.classList.add('visible');
-      document.getElementById('notFoundText').textContent = `No player found with the Discord username or IGN "${query}".`;
+      document.getElementById('notFoundText').textContent = `No player found with the username "${query}".`;
       setLoading(false);
       return;
     }
