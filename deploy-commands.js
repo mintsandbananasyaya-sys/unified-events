@@ -8,20 +8,8 @@ const { REST, Routes, SlashCommandBuilder } = require("discord.js");
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 
-// Throw instead of process.exit() — this file can now be loaded two ways:
-//   1. `node deploy-commands.js` directly (process.exit is fine there, but
-//      throwing still works — Node prints the error and exits non-zero)
-//   2. `require("./deploy-commands.js")` from inside server.js (see
-//      DEPLOY_COMMANDS workaround). process.exit() there would kill the
-//      entire website process, not just this script — throwing instead
-//      lets the caller's try/catch contain the damage.
-if (!BOT_TOKEN) {
-  throw new Error("Missing BOT_TOKEN in .env");
-}
-
-if (!CLIENT_ID) {
-  throw new Error("Missing DISCORD_CLIENT_ID in .env");
-}
+if (!BOT_TOKEN) throw new Error("Missing BOT_TOKEN in .env");
+if (!CLIENT_ID) throw new Error("Missing DISCORD_CLIENT_ID in .env");
 
 /* =====================
    DEFINE COMMANDS
@@ -30,138 +18,103 @@ const commands = [
   new SlashCommandBuilder()
     .setName("setign")
     .setDescription("Link your Minecraft username to verify and unlock the server")
-    .setDMPermission(false) // needs interaction.guild for the role grant
+    .setDMPermission(false)
     .addStringOption((opt) =>
-      opt
-        .setName("ign")
-        .setDescription("Your exact Minecraft in-game name")
-        .setRequired(true)
+      opt.setName("ign").setDescription("Your exact Minecraft in-game name").setRequired(true)
+    )
+    .toJSON(),
+
+  new SlashCommandBuilder()
+    .setName("unsetign")
+    .setDescription("Remove a user's IGN and revoke their verified role (Staff only)")
+    .setDMPermission(false)
+    .addUserOption((opt) =>
+      opt.setName("user").setDescription("The member to unverify").setRequired(true)
+    )
+    .addStringOption((opt) =>
+      opt.setName("reason").setDescription("Why you're removing their IGN").setRequired(false)
     )
     .toJSON(),
 
   new SlashCommandBuilder()
     .setName("ask")
-    .setDescription("Ask the Unified Events Historian a question")
-    .setDMPermission(true) // works in DMs too, same as /forms
+    .setDescription("Ask the Unified Events bot a question")
+    .setDMPermission(true)
     .addStringOption((opt) =>
-      opt
-        .setName("question")
-        .setDescription("What do you want to know?")
-        .setRequired(true)
+      opt.setName("question").setDescription("What do you want to know?").setRequired(true)
     )
     .toJSON(),
 
   new SlashCommandBuilder()
     .setName("forms")
     .setDescription("Get help: tickets, reports, applications, or talk to staff")
-    .setDMPermission(true) // REQUIRED — without this, /forms won't show up or work in DMs
+    .setDMPermission(true)
     .toJSON(),
 
   new SlashCommandBuilder()
     .setName("schedule")
     .setDescription("See the schedule for the upcoming event")
-    .setDMPermission(true) // works in DMs and server channels both
+    .setDMPermission(true)
     .toJSON(),
 
   new SlashCommandBuilder()
     .setName("bot-message")
-    .setDescription("Post a styled announcement embed to a channel, with the site logo and a brand color")
-    .setDMPermission(false) // guild-only, needs a real channel to target
+    .setDescription("Post a styled announcement embed to a channel")
+    .setDMPermission(false)
     .addChannelOption((opt) =>
-      opt
-        .setName("channel")
-        .setDescription("Which channel to post the message in")
-        .setRequired(true)
+      opt.setName("channel").setDescription("Which channel to post the message in").setRequired(true)
     )
     .addStringOption((opt) =>
-      opt
-        .setName("title")
-        .setDescription("The embed's header/title")
-        .setRequired(true)
+      opt.setName("title").setDescription("The embed's header/title").setRequired(true)
     )
     .addStringOption((opt) =>
-      opt
-        .setName("message")
-        .setDescription("The embed's body text")
-        .setRequired(true)
+      opt.setName("message").setDescription("The embed's body text").setRequired(true)
     )
     .addStringOption((opt) =>
-      opt
-        .setName("color")
-        .setDescription("Accent color for the embed's side bar")
-        .setRequired(true)
-        .addChoices(
-          { name: "Blue", value: "blue" },
-          { name: "Red", value: "red" }
-        )
+      opt.setName("color").setDescription("Accent color for the embed's side bar").setRequired(true)
+        .addChoices({ name: "Blue", value: "blue" }, { name: "Red", value: "red" })
     )
     .toJSON(),
 
   new SlashCommandBuilder()
     .setName("notify")
-    .setDescription("Send a notification DM + dashboard entry to one user or everyone in the server")
-    .setDMPermission(false) // guild-only — interaction.member must exist for the role check
+    .setDescription("Send a notification DM + dashboard entry to one user or everyone")
+    .setDMPermission(false)
     .addStringOption((opt) =>
-      opt
-        .setName("title")
-        .setDescription("Short notification title")
-        .setRequired(true)
+      opt.setName("title").setDescription("Short notification title").setRequired(true)
     )
     .addStringOption((opt) =>
-      opt
-        .setName("message")
-        .setDescription("The notification body")
-        .setRequired(true)
+      opt.setName("message").setDescription("The notification body").setRequired(true)
     )
     .addUserOption((opt) =>
-      opt
-        .setName("user")
-        .setDescription("Leave empty to notify every member of the server instead")
-        .setRequired(false)
+      opt.setName("user").setDescription("Leave empty to notify every member").setRequired(false)
     )
     .toJSON(),
 
   new SlashCommandBuilder()
     .setName("purge")
-    .setDescription("Delete recent messages and optionally lock the channel for a duration")
-    .setDMPermission(false) // guild-only — needs a real channel with Manage Messages
+    .setDescription("Delete recent messages and optionally lock the channel")
+    .setDMPermission(false)
     .addIntegerOption((opt) =>
-      opt
-        .setName("amount")
-        .setDescription("How many recent messages to delete (1-100)")
-        .setRequired(true)
-        .setMinValue(1)
-        .setMaxValue(100)
+      opt.setName("amount").setDescription("How many recent messages to delete (1-100)").setRequired(true).setMinValue(1).setMaxValue(100)
     )
     .addStringOption((opt) =>
-      opt
-        .setName("lockdown")
-        .setDescription("Optional: lock the channel for this long, e.g. 10m, 2h, 1d")
-        .setRequired(false)
+      opt.setName("lockdown").setDescription("Optional: lock the channel for this long, e.g. 10m, 2h, 1d").setRequired(false)
     )
     .toJSON(),
 
   new SlashCommandBuilder()
     .setName("mute")
     .setDescription("Mute a member and DM them the reason and duration")
-    .setDMPermission(false) // guild-only — needs interaction.guild for the role check
+    .setDMPermission(false)
     .addUserOption((opt) =>
-      opt
-        .setName("user")
-        .setDescription("The member to mute")
-        .setRequired(true)
+      opt.setName("user").setDescription("The member to mute").setRequired(true)
     )
     .addStringOption((opt) =>
-      opt
-        .setName("reason")
-        .setDescription("Why this member is being muted")
-        .setRequired(true)
+      opt.setName("reason").setDescription("Why this member is being muted").setRequired(true)
     )
     .addStringOption((opt) =>
-      opt
-        .setName("time")
-        .setDescription("How long, e.g. 10m, 2h, 1d")
-        .setRequired(true)
+      opt.setName("time").setDescription("How long, e.g. 10m, 2h, 1d").setRequired(true)
     )
     .toJSON(),
 
@@ -170,22 +123,13 @@ const commands = [
     .setDescription("Kick a member, DMing them the reason first")
     .setDMPermission(false)
     .addUserOption((opt) =>
-      opt
-        .setName("user")
-        .setDescription("The member to kick")
-        .setRequired(true)
+      opt.setName("user").setDescription("The member to kick").setRequired(true)
     )
     .addStringOption((opt) =>
-      opt
-        .setName("reason")
-        .setDescription("Why this member is being kicked")
-        .setRequired(true)
+      opt.setName("reason").setDescription("Why this member is being kicked").setRequired(true)
     )
     .addStringOption((opt) =>
-      opt
-        .setName("time")
-        .setDescription("Informational only \u2014 e.g. 10m, 2h, 1d (kicks have no native temporary state)")
-        .setRequired(true)
+      opt.setName("time").setDescription("Informational only — e.g. 10m, 2h, 1d").setRequired(true)
     )
     .toJSON(),
 
@@ -194,22 +138,13 @@ const commands = [
     .setDescription("Ban a member, DMing them the reason first")
     .setDMPermission(false)
     .addUserOption((opt) =>
-      opt
-        .setName("user")
-        .setDescription("The member to ban")
-        .setRequired(true)
+      opt.setName("user").setDescription("The member to ban").setRequired(true)
     )
     .addStringOption((opt) =>
-      opt
-        .setName("reason")
-        .setDescription("Why this member is being banned")
-        .setRequired(true)
+      opt.setName("reason").setDescription("Why this member is being banned").setRequired(true)
     )
     .addStringOption((opt) =>
-      opt
-        .setName("time")
-        .setDescription("Informational only \u2014 e.g. 10m, 2h, 1d (this is not an auto-unban)")
-        .setRequired(true)
+      opt.setName("time").setDescription("Informational only — e.g. 10m, 2h, 1d").setRequired(true)
     )
     .toJSON(),
 ];
@@ -225,23 +160,20 @@ const rest = new REST({ version: "10" }).setToken(BOT_TOKEN);
 (async () => {
   try {
     console.log("⏳ Registering slash commands globally...");
-
-    const data = await rest.put(
-      Routes.applicationCommands(CLIENT_ID),
-      { body: commands }
-    );
-
+    const data = await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
     console.log(`✅ Slash commands loaded (${data.length} registered)`);
-    console.log("ℹ️  Global commands can take up to ~1 hour to fully propagate to all clients.");
-    console.log("ℹ️  /setign is guild-only (needs interaction.guild to grant VERIFIED_ROLE_ID) and validates the IGN against the Mojang API before saving it.");
-    console.log("ℹ️  /ask is DM-enabled, same as /forms, and just pipes the question into brain.js's getResponse().");
-    console.log("ℹ️  /forms is DM-enabled — try it by DMing the bot directly, not just in a server.");
-    console.log("ℹ️  /schedule is open to everyone, DM-enabled, and currently always replies with a placeholder until real schedule data exists.");
-    console.log("ℹ️  /bot-message is guild-only and requires a role listed in STAFF_ROLE_IDS. The logo image must exist at SITE_URL + '/' + BOT_MESSAGE_LOGO_PATH (defaults to /logo.png) for the thumbnail to actually load.");
-    console.log("ℹ️  /notify is guild-only (run it inside your server, not in DMs) and requires a role listed in STAFF_ROLE_IDS.");
-    console.log("ℹ️  /purge is guild-only and requires a role listed in STAFF_ROLE_IDS, plus the bot needs 'Manage Messages' and 'Manage Channels' permissions.");
-    console.log("ℹ️  /mute is guild-only and requires a role listed in STAFF_ROLE_IDS, plus the bot needs 'Manage Roles' and MUTED_ROLE_ID configured.");
-    console.log("ℹ️  /kick and /ban are guild-only and require a role listed in STAFF_ROLE_IDS, plus 'Kick Members' / 'Ban Members' bot permissions respectively. Their 'time' option is informational text only \u2014 not an auto-unban.");
+    console.log("ℹ️  /setign — guild-only, validates IGN against Mojang API, restricted to SETIGN_CHANNEL_ID if set.");
+    console.log("ℹ️  /unsetign — Staff only, removes IGN and revokes VERIFIED_ROLE_ID.");
+    console.log("ℹ️  /feed — Staff only, teaches the bot a new keyword → response pair.");
+    console.log("ℹ️  /unfeed — Staff only, removes a keyword → response pair by keyword.");
+    console.log("ℹ️  /ask — DM-enabled, checks custom feeds first, then falls back to brain.js.");
+    console.log("ℹ️  /forms — DM-enabled, opens the support menu.");
+    console.log("ℹ️  /schedule — DM-enabled, currently a placeholder.");
+    console.log("ℹ️  /bot-message — guild-only, requires STAFF_ROLE_IDS.");
+    console.log("ℹ️  /notify — guild-only, requires STAFF_ROLE_IDS.");
+    console.log("ℹ️  /purge — guild-only, requires STAFF_ROLE_IDS + Manage Messages.");
+    console.log("ℹ️  /mute — guild-only, requires STAFF_ROLE_IDS + Manage Roles + MUTED_ROLE_ID.");
+    console.log("ℹ️  /kick and /ban — guild-only, require STAFF_ROLE_IDS + Kick/Ban Members.");
   } catch (error) {
     console.error("❌ Failed to deploy commands:", error);
   }
