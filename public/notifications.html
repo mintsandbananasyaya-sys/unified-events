@@ -9,7 +9,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 
-  /* ---------- TOKENS ---------- */
   :root{
     --void:#0a0d14;
     --void-soft:#11151f;
@@ -64,7 +63,6 @@
   .eyebrow.is-blue{color:var(--blue);}
   .eyebrow.is-red{color:var(--red);}
 
-  /* ---------- BUTTONS ---------- */
   .btn{
     display:inline-flex;
     align-items:center;
@@ -94,7 +92,6 @@
   .btn[disabled]{opacity:0.5;cursor:not-allowed;}
   .btn[disabled]:hover{transform:none;}
 
-  /* ---------- NAV ---------- */
   .nav{
     position:sticky;top:0;z-index:60;
     background:rgba(10,13,20,0.78);
@@ -193,7 +190,6 @@
   .mobile-divider{padding-top:0.6rem;margin-top:0.4rem;border-top:1px solid var(--line-soft);font-family:var(--font-mono);font-size:0.68rem;color:var(--mist-dim);letter-spacing:0.12em;text-transform:uppercase;}
   .mobile-panel .btn{width:100%;justify-content:center;margin-top:1rem;}
 
-  /* ---------- PAGE HEADER ---------- */
   .page-head{
     padding-top:clamp(56px,9vw,96px);
     padding-bottom:clamp(32px,5vw,48px);
@@ -208,7 +204,6 @@
   }
   .page-head p{margin-top:0.9rem;color:var(--mist);font-size:1.02rem;max-width:560px;}
 
-  /* ---------- VIEWER STRIP ---------- */
   .viewer-strip{
     display:flex;align-items:center;justify-content:space-between;
     flex-wrap:wrap;gap:1rem;
@@ -232,7 +227,6 @@
   .viewer-strip .btn{flex-shrink:0;}
   .viewer-strip-actions{display:flex;align-items:center;gap:0.6rem;}
 
-  /* ---------- NOTIFICATIONS LIST ---------- */
   .notif-section{padding-block:clamp(40px,7vw,72px);}
 
   .notif-toolbar{
@@ -298,7 +292,6 @@
     background:var(--blue);flex-shrink:0;margin-top:0.4rem;
   }
 
-  /* ---------- EMPTY STATE ---------- */
   .empty-state{
     border:1px dashed var(--line);
     border-radius:var(--radius-lg);
@@ -316,7 +309,6 @@
   .empty-state h3{font-family:var(--font-display);font-weight:700;font-size:1.4rem;}
   .empty-state p{margin-top:0.6rem;color:var(--mist);font-size:0.92rem;max-width:380px;margin-inline:auto;}
 
-  /* ---------- LOCKED / LOGGED-OUT STATE ---------- */
   .locked-state{
     border:1px solid var(--line);
     border-radius:var(--radius-lg);
@@ -336,7 +328,6 @@
   .locked-state p{margin-top:0.6rem;color:var(--mist);font-size:0.92rem;max-width:380px;margin-inline:auto;}
   .locked-state .btn{margin-top:1.6rem;}
 
-  /* ---------- ERROR STATE ---------- */
   .error-state{
     border:1px solid var(--red-dim);
     border-radius:var(--radius-lg);
@@ -356,7 +347,6 @@
   .error-state p{margin-top:0.6rem;color:var(--mist);font-size:0.92rem;max-width:380px;margin-inline:auto;}
   .error-state .btn{margin-top:1.4rem;}
 
-  /* ---------- LOADING STATE ---------- */
   .loading-state{
     display:flex;flex-direction:column;align-items:center;justify-content:center;
     padding:clamp(48px,8vw,80px) 2rem;
@@ -374,7 +364,6 @@
   @keyframes spin{to{transform:rotate(360deg);}}
   .loading-state p{font-family:var(--font-mono);font-size:0.78rem;color:var(--mist-dim);letter-spacing:0.05em;text-transform:uppercase;}
 
-  /* ---------- FOOTER ---------- */
   footer{border-top:1px solid var(--line-soft);padding-top:3.2rem;padding-bottom:2rem;}
   .footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:2.5rem;padding-bottom:2.6rem;}
   .footer-brand .brand{margin-bottom:0.9rem;}
@@ -388,7 +377,6 @@
     font-family:var(--font-mono);font-size:0.74rem;color:var(--mist-dim);flex-wrap:wrap;gap:0.8rem;
   }
 
-  /* ---------- RESPONSIVE ---------- */
   @media (max-width:1080px){
     .nav-links{display:none;}
     .nav-more{display:none;}
@@ -612,7 +600,7 @@
 </footer>
 
 <script>
-/* ---------------- NAV ---------------- */
+
 const burgerBtn = document.getElementById("burgerBtn");
 const mobilePanel = document.getElementById("mobilePanel");
 
@@ -641,7 +629,7 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
-/* ---------------- AUTH ---------------- */
+
 let currentUser = null;
 
 async function loadUser() {
@@ -712,7 +700,7 @@ async function loadUser() {
   }
 }
 
-/* ---------------- NOTIFICATIONS STATES ---------------- */
+
 function hideAllStates() {
   document.getElementById("loadingState").style.display = "none";
   document.getElementById("loggedOutState").style.display = "none";
