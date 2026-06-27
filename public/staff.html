@@ -691,8 +691,15 @@ function renderTickets() {
   list.innerHTML = tickets.map(ticket => {
     const av = ticket.avatar ? `<img src="${avatarUrl(ticket.user_id, ticket.avatar)}" alt="${ticket.username || 'User'}">` : initials(ticket.username);
     const msgs = (ticket.messages || []).map(m => {
-      const side = m.sender === 'staff' ? 'staff' : 'user';
-      const label = m.sender === 'staff' ? 'Staff' : (ticket.username || 'User');
+      // sender is either "user", "staff", or "staff:Username"
+      const isStaff = m.sender === 'staff' || m.sender.startsWith('staff:');
+      const side = isStaff ? 'staff' : 'user';
+      let label;
+      if (isStaff) {
+        label = m.sender.startsWith('staff:') ? m.sender.slice(6) : 'Staff';
+      } else {
+        label = ticket.username || 'User';
+      }
       return `<div class="msg ${side}">
         <span class="msg-sender">${label}</span>
         <div class="msg-bubble">${escHtml(m.content)}</div>
