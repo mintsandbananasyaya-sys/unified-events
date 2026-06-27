@@ -9,7 +9,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 
-  /* ---------- TOKENS ---------- */
   :root{
     --void:#0a0d14;
     --void-soft:#11151f;
@@ -64,7 +63,6 @@
   .eyebrow.is-blue{color:var(--blue);}
   .eyebrow.is-red{color:var(--red);}
 
-  /* ---------- BUTTONS ---------- */
   .btn{
     display:inline-flex;
     align-items:center;
@@ -94,7 +92,6 @@
   .btn-ghost[disabled]:hover{border-color:var(--line);background:transparent;}
   .btn-small{padding:0.55rem 1.05rem;font-size:0.82rem;}
 
-  /* ---------- NAV ---------- */
   .nav{
     position:sticky;top:0;z-index:60;
     background:rgba(10,13,20,0.78);
@@ -196,7 +193,6 @@
   .mobile-divider{padding-top:0.6rem;margin-top:0.4rem;border-top:1px solid var(--line-soft);font-family:var(--font-mono);font-size:0.68rem;color:var(--mist-dim);letter-spacing:0.12em;text-transform:uppercase;}
   .mobile-panel .btn{width:100%;justify-content:center;margin-top:1rem;}
 
-  /* ---------- PAGE HERO (shared pattern across inner pages) ---------- */
   .hero{
     position:relative;
     padding-top:clamp(56px,9vw,84px);
@@ -250,12 +246,10 @@
     max-width:560px;margin-inline:auto;
   }
 
-  /* ---------- SECTIONS GENERIC ---------- */
   section{padding-block:clamp(40px,7vw,72px);}
   .reveal{opacity:0;transform:translateY(16px);transition:opacity 0.6s ease, transform 0.6s ease;}
   .reveal.in{opacity:1;transform:translateY(0);}
 
-  /* ---------- STATUS BADGES ---------- */
   .status-badge{
     display:inline-flex;align-items:center;gap:0.45rem;
     font-family:var(--font-mono);font-size:0.66rem;letter-spacing:0.08em;text-transform:uppercase;
@@ -275,7 +269,6 @@
   .small-badge{padding:0.22rem 0.55rem;font-size:0.62rem;flex-shrink:0;}
   @keyframes pulse-op{0%,100%{opacity:1;}50%{opacity:0.25;}}
 
-  /* ---------- PHASE TRACK (reused from Events) ---------- */
   .phase-track{position:relative;display:flex;justify-content:space-between;margin:1.3rem 0;max-width:380px;}
   .phase-track::before{content:"";position:absolute;top:5px;left:5px;right:5px;height:2px;background:var(--line);z-index:0;}
   .phase-step{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:0.45rem;flex:1;}
@@ -286,7 +279,6 @@
   .phase-label{font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.04em;text-transform:uppercase;color:var(--mist-dim);text-align:center;}
   .phase-step.done .phase-label,.phase-step.current .phase-label{color:var(--mist);}
 
-  /* ---------- DASHBOARD LAYOUT ---------- */
   .dashboard-layout{display:grid;grid-template-columns:240px 1fr 280px;gap:1.6rem;align-items:start;padding-block:clamp(24px,4vw,48px);}
 
   .dash-sidebar{display:flex;flex-direction:column;gap:1.4rem;}
@@ -341,7 +333,6 @@
     .dash-sidebar,.dash-notifications{position:sticky;top:96px;}
   }
 
-  /* ---------- MODAL ---------- */
   .modal-overlay{
     position:fixed;inset:0;z-index:200;
     background:rgba(6,8,13,0.78);backdrop-filter:blur(6px);
@@ -371,7 +362,6 @@
   .modal-section p{font-size:0.9rem;color:var(--mist);}
   .modal-footer{display:flex;justify-content:flex-end;margin-top:1.8rem;padding-top:1.4rem;border-top:1px solid var(--line-soft);}
 
-  /* ---------- FOOTER ---------- */
   footer{border-top:1px solid var(--line-soft);padding-top:3.2rem;padding-bottom:2rem;}
   .footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:2.5rem;padding-bottom:2.6rem;}
   .footer-brand .brand{margin-bottom:0.9rem;}
@@ -385,7 +375,6 @@
     font-family:var(--font-mono);font-size:0.74rem;color:var(--mist-dim);flex-wrap:wrap;gap:0.8rem;
   }
 
-  /* ---------- RESPONSIVE ---------- */
   @media (max-width:1080px){
     .nav-links{display:none;}
     .nav-more{display:none;}
@@ -653,9 +642,6 @@
 
   let user = null;
 
-  // =========================
-  // MOBILE NAV
-  // =========================
   function initMobileNav() {
     if (!burgerBtn || !mobilePanel) return;
 
@@ -665,9 +651,6 @@
     });
   }
 
-  // =========================
-  // MORE MENU
-  // =========================
   function initMoreMenu() {
     if (!moreMenu || !moreBtn) return;
 
@@ -685,9 +668,6 @@
     });
   }
 
-  // =========================
-  // AUTH UI UPDATE (REAL)
-  // =========================
   function renderUser(u) {
     if (!u) return;
 
@@ -746,9 +726,6 @@
     }
   }
 
-  // =========================
-  // SCROLL REVEAL
-  // =========================
   function initReveal() {
     const items = document.querySelectorAll(".reveal");
     if (!items.length) return;
@@ -770,9 +747,6 @@
     items.forEach(el => obs.observe(el));
   }
 
-  // =========================
-  // TICKETS (real data from /api/tickets)
-  // =========================
   const ticketTranscriptCache = new Map(); // ticketId -> messages[] (avoid re-fetching on re-toggle)
 
   function formatAbsolute(ms) {
@@ -909,9 +883,6 @@
     }
   }
 
-  // =========================
-  // SCROLLSPY
-  // =========================
   function initScrollSpy() {
     const sections = document.querySelectorAll(".dash-module");
     const links = document.querySelectorAll(".dash-nav-link");
@@ -935,9 +906,6 @@
     sections.forEach(s => spy.observe(s));
   }
 
-  // =========================
-  // MODAL
-  // =========================
   function initModal() {
     if (!submissionModal) return;
 
@@ -971,9 +939,6 @@
     });
   }
 
-  // =========================
-  // SOCKET.IO (REAL DM POPUPS)
-  // =========================
   function initSocket() {
     if (typeof io === "undefined" || !user) return;
 
@@ -1011,9 +976,6 @@
     });
   }
 
-  // =========================
-  // INIT ALL
-  // =========================
   function init() {
     initMobileNav();
     initMoreMenu();
