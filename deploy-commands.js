@@ -78,7 +78,7 @@ const commands = [
 
   new SlashCommandBuilder()
     .setName("notify")
-    .setDescription("Send a notification DM + dashboard entry to one user or everyone")
+    .setDescription("Send a notification DM + dashboard entry to one user, a role, or everyone")
     .setDMPermission(false)
     .addStringOption((opt) =>
       opt.setName("title").setDescription("Short notification title").setRequired(true)
@@ -87,7 +87,10 @@ const commands = [
       opt.setName("message").setDescription("The notification body").setRequired(true)
     )
     .addUserOption((opt) =>
-      opt.setName("user").setDescription("Leave empty to notify every member").setRequired(false)
+      opt.setName("user").setDescription("Notify a specific user (leave empty for role or everyone)").setRequired(false)
+    )
+    .addRoleOption((opt) =>
+      opt.setName("role").setDescription("Notify everyone with this role (leave empty to notify everyone)").setRequired(false)
     )
     .toJSON(),
 
@@ -164,13 +167,11 @@ const rest = new REST({ version: "10" }).setToken(BOT_TOKEN);
     console.log(`✅ Slash commands loaded (${data.length} registered)`);
     console.log("ℹ️  /setign — guild-only, validates IGN against Mojang API, restricted to SETIGN_CHANNEL_ID if set.");
     console.log("ℹ️  /unsetign — Staff only, removes IGN and revokes VERIFIED_ROLE_ID.");
-    console.log("ℹ️  /feed — Staff only, teaches the bot a new keyword → response pair.");
-    console.log("ℹ️  /unfeed — Staff only, removes a keyword → response pair by keyword.");
     console.log("ℹ️  /ask — DM-enabled, checks custom feeds first, then falls back to brain.js.");
     console.log("ℹ️  /forms — DM-enabled, opens the support menu.");
     console.log("ℹ️  /schedule — DM-enabled, currently a placeholder.");
     console.log("ℹ️  /bot-message — guild-only, requires STAFF_ROLE_IDS.");
-    console.log("ℹ️  /notify — guild-only, requires STAFF_ROLE_IDS.");
+    console.log("ℹ️  /notify — guild-only, requires STAFF_ROLE_IDS. Supports user, role, or everyone.");
     console.log("ℹ️  /purge — guild-only, requires STAFF_ROLE_IDS + Manage Messages.");
     console.log("ℹ️  /mute — guild-only, requires STAFF_ROLE_IDS + Manage Roles + MUTED_ROLE_ID.");
     console.log("ℹ️  /kick and /ban — guild-only, require STAFF_ROLE_IDS + Kick/Ban Members.");
