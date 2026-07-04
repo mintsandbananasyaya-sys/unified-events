@@ -36,7 +36,6 @@ const STAFF_CHANNEL_ID = process.env.STAFF_CHANNEL_ID;
 const STAFF_ROLE_ID = process.env.STAFF_ROLE_ID || null;
 const VERIFIED_ROLE_ID = process.env.VERIFIED_ROLE_ID || null;
 
-// If set, /setign only works in this channel. Set SETIGN_CHANNEL_ID in Render env vars.
 const SETIGN_CHANNEL_ID = process.env.SETIGN_CHANNEL_ID || null;
 const GUILD_ID = process.env.GUILD_ID || null;
 const FAQ_CHANNEL_ID = process.env.FAQ_CHANNEL_ID || null;
@@ -435,7 +434,6 @@ client.on("interactionCreate", async (interaction) => {
 
   /* ================= /setign ================= */
   if (interaction.commandName === "setign") {
-    // Channel restriction — only works in the designated verification channel
     if (SETIGN_CHANNEL_ID && interaction.channelId !== SETIGN_CHANNEL_ID) {
       return safeReply(interaction, {
         content: `❌ You can only use this command in <#${SETIGN_CHANNEL_ID}>.`,
@@ -532,7 +530,6 @@ client.on("interactionCreate", async (interaction) => {
 
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-    // 1. Look up their current IGN before clearing it
     const { rows } = await db.query(
       `SELECT ign FROM users WHERE discord_id = $1`,
       [target.id]
@@ -543,13 +540,11 @@ client.on("interactionCreate", async (interaction) => {
       return interaction.editReply(`⚠️ <@${target.id}> doesn't have an IGN linked.`);
     }
 
-    // 2. Clear IGN and verified flag in the database
     await db.query(
       `UPDATE users SET ign = NULL, verified = FALSE WHERE discord_id = $1`,
       [target.id]
     );
 
-    // 3. Remove verified role if configured
     if (VERIFIED_ROLE_ID && interaction.guild) {
       try {
         const member = await interaction.guild.members.fetch(target.id);
@@ -559,18 +554,14 @@ client.on("interactionCreate", async (interaction) => {
       }
     }
 
-    // 4. DM the user to let them know
     try {
       const dm = await target.createDM();
       await dm.send({
         content: `Your IGN (**${oldIgn}**) has been unlinked from your account by staff. Reason: ${reason}\n\nRun **/setign** again when you're ready to re-verify.`,
         ...NO_PING,
       });
-    } catch {
-      // DMs off — not a blocker
-    }
+    } catch {}
 
-    // 5. Send notification to their dashboard
     await createUserNotification(
       target.id,
       "IGN unlinked by staff",
@@ -578,7 +569,6 @@ client.on("interactionCreate", async (interaction) => {
       interaction.user.id
     );
 
-    // 6. Log it
     await createLog({
       type: "UNSETIGN",
       actorId: interaction.user.id,
@@ -589,7 +579,6 @@ client.on("interactionCreate", async (interaction) => {
       guildId: interaction.guild?.id,
     });
 
-    // 7. Post to staff channel
     if (STAFF_CHANNEL_ID) {
       await client.channels.fetch(STAFF_CHANNEL_ID)
         .then((ch) => ch?.send({
@@ -687,11 +676,13 @@ client.on("interactionCreate", async (interaction) => {
     }
 
     const target = interaction.options.getUser("user");
-    const title = interaction.options.getString("title");
+    const role   = interaction.options.getRole("role");
+    const title   = interaction.options.getString("title");
     const message = interaction.options.getString("message");
 
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
+    // ---- Single user ----
     if (target) {
       let dmFailed = false;
       try {
@@ -720,6 +711,7 @@ client.on("interactionCreate", async (interaction) => {
       return interaction.editReply(dmFailed ? `Saved to dashboard, DM failed.` : `Notified <@${target.id}>.`);
     }
 
+    // ---- Role or everyone — need the guild ----
     if (!GUILD_ID) return interaction.editReply("⚠️ GUILD_ID isn't configured.");
 
     const guild = await client.guilds.fetch(GUILD_ID).catch(() => null);
@@ -733,6 +725,43 @@ client.on("interactionCreate", async (interaction) => {
       return interaction.editReply("⚠️ Couldn't fetch server members. Enable the Server Members Intent.");
     }
 
+    // ---- Role-specific ----
+    if (role) {
+      const roleMembers = members.filter((m) => !m.user.bot && m.roles.cache.has(role.id));
+
+      if (roleMembers.size === 0) {
+        return interaction.editReply(`⚠️ No members found with the role **${role.name}**.`);
+      }
+
+      let sent = 0, failed = 0;
+      for (const member of roleMembers.values()) {
+        try {
+          const dm = await member.user.createDM();
+          await dm.send({ content: `📢 **${title}**\n${message}`, ...NO_PING });
+          await createUserNotification(member.id, title, message, interaction.user.id);
+          sent++;
+        } catch { failed++; }
+        await sleep(300);
+      }
+
+      await createLog({
+        type: "NOTIFY_ROLE",
+        actorId: interaction.user.id,
+        actorTag: interaction.user.tag,
+        detail: `Role: ${role.name} | Title: ${title} | Message: ${message} | Sent: ${sent} | Failed: ${failed}`,
+        guildId: interaction.guild?.id,
+      });
+
+      if (STAFF_CHANNEL_ID) {
+        await client.channels.fetch(STAFF_CHANNEL_ID)
+          .then((ch) => ch?.send({ content: `🔔 ${interaction.user.tag} notified **@${role.name}**: **${title}**\nSent: ${sent} · Failed: ${failed}`, allowedMentions: { parse: [] } }))
+          .catch(() => {});
+      }
+
+      return interaction.editReply(`Role notification sent. ${sent} delivered, ${failed} failed.`);
+    }
+
+    // ---- Everyone ----
     const recipients = members.filter((m) => !m.user.bot);
     let sent = 0, failed = 0;
 
@@ -1019,7 +1048,6 @@ client.on("messageCreate", async (message) => {
       const user = await client.users.fetch(session.user_id).catch(() => null);
       if (!user) return message.reply("⚠️ couldn't reach that user (left/blocked the bot).");
 
-      // Save the real staff username for the staff panel — user's DM still shows generic "Staff"
       const staffSender = `staff:${message.author.username}`;
       if (session.ticket_id) await logTicketMessage(session.ticket_id, staffSender, content);
 
