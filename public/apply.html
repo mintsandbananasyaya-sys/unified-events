@@ -9,6 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 
+  /* ---------- TOKENS ---------- */
   :root{
     --void:#0a0d14;
     --void-soft:#11151f;
@@ -67,6 +68,7 @@
   .eyebrow.is-red{color:var(--red);}
   .eyebrow.is-mist{color:var(--mist-dim);}
 
+  /* ---------- BUTTONS ---------- */
   .btn{
     display:inline-flex;
     align-items:center;
@@ -94,6 +96,7 @@
   .btn-ghost:hover{border-color:rgba(255,255,255,0.3);background:rgba(255,255,255,0.03);}
   .btn-small{padding:0.55rem 1.05rem;font-size:0.82rem;}
 
+  /* ---------- NAV ---------- */
   .nav{
     position:sticky;top:0;z-index:60;
     background:rgba(10,13,20,0.78);
@@ -351,6 +354,7 @@
   .tile-value.is-blue{color:var(--blue);}
   .tile-value.is-red{color:var(--red);}
 
+  /* Actions */
   .card-actions{
     display:flex;
     align-items:center;
@@ -359,6 +363,7 @@
     flex-wrap:wrap;
   }
 
+  /* ---------- FOOTER ---------- */
   footer{border-top:1px solid var(--line-soft);padding-top:3.2rem;padding-bottom:2rem;}
   .footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:2.5rem;padding-bottom:2.6rem;}
   .footer-brand .brand{margin-bottom:0.9rem;}
@@ -372,6 +377,7 @@
     font-family:var(--font-mono);font-size:0.74rem;color:var(--mist-dim);flex-wrap:wrap;gap:0.8rem;
   }
 
+  /* ---------- RESPONSIVE ---------- */
   @media (max-width:1080px){
     .nav-links{display:none;}
     .nav-more{display:none;}
@@ -423,7 +429,6 @@
         <a href="perks.html">Advantages</a>
         <a href="terms.html">Rules & Conditions</a>
         <a href="staff.html">Staff</a>
-        <a href="players.html">Players Info</a>
       </div>
     </div>
 
@@ -456,7 +461,6 @@
       <a href="perks.html">Advantages</a>
       <a href="terms.html">Rules & Conditions</a>
       <a href="staff.html">Staff</a>
-      <a href="players.html">Players Info</a>
       <button class="btn btn-primary" data-auth-btn>Login with Discord</button>
     </div>
   </div>
@@ -486,14 +490,17 @@
         Closed
       </h1>
 
+        <div class="card-actions">
+        <a href="https://unified-apply.onrender.com/" class="btn btn-primary">
+          Applications Page Here
+        </a>    
+      </div>
+
       <p>The application window for the current season has ended. All slots have been filled and placements are being finalized. Check back when the next season opens.</p>
 
       <div class="card-actions">
         <a href="notifications.html" class="btn btn-primary">
           Get notified
-        </a>
-        <a href="event.html" class="btn btn-ghost">
-          View active events
         </a>
       </div>
 
@@ -556,7 +563,6 @@
         <a href="terms.html">Rules & Conditions</a>
         <a href="staff.html">Staff</a>
         <a href="forms.html">Other Forms</a>
-        <a href="players.html">Players Info</a>
       </div>
     </div>
     <div class="footer-bottom">
@@ -567,7 +573,7 @@
 </footer>
 
 <script>
-
+/* NAV */
 async function loadUser() {
   const btns = document.querySelectorAll("[data-auth-btn]");
   const chip = document.getElementById("authChip");
