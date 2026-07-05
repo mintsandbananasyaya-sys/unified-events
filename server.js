@@ -1,6 +1,6 @@
 require("dotenv").config();
 
-const db = require("./database"); // now a pg Pool, not better-sqlite3
+const db = require("./database");
 const express = require("express");
 const session = require("express-session");
 const axios = require("axios");
@@ -194,7 +194,6 @@ app.get("/api/player/:username", async (req, res) => {
   }
 
   try {
-    // Search by Discord username OR by IGN
     const result = await db.query(
       `SELECT discord_id, username, avatar, created_at, ign, verified
        FROM users
@@ -209,7 +208,6 @@ app.get("/api/player/:username", async (req, res) => {
 
     const player = result.rows[0];
 
-    // Fetch Discord roles from the guild if GUILD_ID and BOT_TOKEN are set
     let roles = [];
     if (process.env.GUILD_ID && BOT_TOKEN) {
       try {
@@ -231,7 +229,6 @@ app.get("/api/player/:username", async (req, res) => {
           .filter(r => memberRoleIds.includes(r.id) && r.name !== "@everyone")
           .map(r => ({ id: r.id, name: r.name, color: r.color }));
       } catch (err) {
-        // Player may have left the server — return empty roles gracefully
         console.error("Discord roles fetch failed:", err.message);
       }
     }
@@ -245,8 +242,6 @@ app.get("/api/player/:username", async (req, res) => {
 
 /* =====================
    STAFF AUTH HELPER
-   Checks if the logged-in Discord user has a role called exactly "Staff"
-   in your guild. Requires GUILD_ID in your .env.
 ===================== */
 async function requireStaff(req, res, next) {
   if (!req.session.user) return res.status(401).json({ error: "Unauthorized" });
@@ -260,9 +255,8 @@ async function requireStaff(req, res, next) {
       { headers: { Authorization: `Bot ${BOT_TOKEN}` } }
     );
 
-    const roles = memberRes.data.roles; // array of role IDs
+    const roles = memberRes.data.roles;
 
-    // Fetch all roles in the guild to find the one named "Staff"
     const rolesRes = await axios.get(
       `https://discord.com/api/guilds/${guildId}/roles`,
       { headers: { Authorization: `Bot ${BOT_TOKEN}` } }
@@ -285,8 +279,6 @@ async function requireStaff(req, res, next) {
 
 /* =====================
    STAFF — TICKETS
-   Returns all tickets with their full message threads.
-   Paginated: 20 tickets per page. Pass ?page=1, ?page=2 etc.
 ===================== */
 app.get("/api/staff/tickets", requireStaff, async (req, res) => {
   const page = Math.max(1, parseInt(req.query.page) || 1);
@@ -307,7 +299,6 @@ app.get("/api/staff/tickets", requireStaff, async (req, res) => {
     const { rows: countRows } = await db.query(`SELECT COUNT(*) FROM tickets`);
     const total = parseInt(countRows[0].count);
 
-    // Attach messages to each ticket
     const ticketsWithMessages = await Promise.all(
       tickets.map(async (ticket) => {
         const { rows: messages } = await db.query(
@@ -335,8 +326,6 @@ app.get("/api/staff/tickets", requireStaff, async (req, res) => {
 
 /* =====================
    STAFF — LOGS
-   Returns audit log entries, newest first.
-   Paginated: 50 per page. Pass ?page=1, ?type=BAN etc to filter.
 ===================== */
 app.get("/api/staff/logs", requireStaff, async (req, res) => {
   const page = Math.max(1, parseInt(req.query.page) || 1);
@@ -536,6 +525,35 @@ app.post("/api/notifications/:id/read", requireAuth, async (req, res) => {
   } catch (err) {
     console.log("Failed to mark notification read:", err.message);
     res.status(500).json({ error: "Failed to mark notification read" });
+  }
+});
+
+/* =====================
+   INTERNAL NOTIFICATIONS API
+   Called by Unified Applications when an application
+   is accepted or rejected. Protected by a shared secret.
+===================== */
+app.post("/api/notifications/internal", async (req, res) => {
+  const secret = req.headers["x-internal-secret"];
+  if (!secret || secret !== process.env.INTERNAL_SECRET) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  const { userId, title, description } = req.body;
+  if (!userId || !title) {
+    return res.status(400).json({ error: "Missing userId or title" });
+  }
+
+  try {
+    await db.query(
+      `INSERT INTO notifications (scope, user_id, title, description, sent_by, created_at)
+       VALUES ('user', $1, $2, $3, 'unified-applications', $4)`,
+      [userId, title, description || "", Date.now()]
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("Internal notification failed:", err.message);
+    res.status(500).json({ error: "Failed to create notification" });
   }
 });
 
