@@ -627,23 +627,6 @@ app.get("/logout", (req, res) => {
   req.session.destroy(() => res.redirect("/login"));
 });
 
-app.get("/admin/check-logs", async (req, res) => {
-  const secret = req.query.secret;
-  if (secret !== "clearlogs123") return res.status(403).send("no");
-  try {
-    const { rows } = await db.query(`
-      SELECT type, COUNT(*) as count 
-      FROM logs 
-      GROUP BY type 
-      ORDER BY count DESC
-    `);
-    res.json(rows);
-  } catch (err) {
-    res.status(500).send("Error: " + err.message);
-  }
-});
-
-
 /* =====================
    START SERVER
 ===================== */
