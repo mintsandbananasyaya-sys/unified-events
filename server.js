@@ -627,17 +627,6 @@ app.get("/logout", (req, res) => {
   req.session.destroy(() => res.redirect("/login"));
 });
 
-app.get("/admin/clear-logs", async (req, res) => {
-  const secret = req.query.secret;
-  if (secret !== "clearlogs123") return res.status(403).send("no");
-  try {
-    await db.query("DELETE FROM logs");
-    const { rows } = await db.query("SELECT COUNT(*) FROM logs");
-    res.send(`Done. Logs remaining: ${rows[0].count}`);
-  } catch (err) {
-    res.status(500).send("Error: " + err.message);
-  }
-});
 
 /* =====================
    START SERVER
