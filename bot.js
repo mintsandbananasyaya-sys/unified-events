@@ -441,28 +441,35 @@ client.on("interactionCreate", async (interaction) => {
       });
     }
 
-    const ign = interaction.options.getString("ign").trim();
+const ign = interaction.options.getString("ign").trim();
 
-    let mojangData;
-    try {
-      const axios = require("axios");
-      const res = await axios.get(`https://api.mojang.com/users/profiles/minecraft/${encodeURIComponent(ign)}`);
-      mojangData = res.data;
-    } catch (err) {
-      if (err.response?.status === 404) {
+    let verifiedIgn;
+
+    if (ign.startsWith(".")) {
+      // Bedrock player — skip Mojang verification, use as-is
+      verifiedIgn = ign;
+    } else {
+      // Java player — verify against Mojang API
+      let mojangData;
+      try {
+        const axios = require("axios");
+        const res = await axios.get(`https://api.mojang.com/users/profiles/minecraft/${encodeURIComponent(ign)}`);
+        mojangData = res.data;
+      } catch (err) {
+        if (err.response?.status === 404) {
+          return safeReply(interaction, {
+            content: `❌ **${ign}** doesn't exist on Mojang. Check the spelling and try again.\n\nIf you're on Bedrock, prefix your username with a dot — e.g. \`.${ign}\``,
+            flags: MessageFlags.Ephemeral,
+          });
+        }
+        console.error("Mojang API error:", err.message);
         return safeReply(interaction, {
-          content: `❌ **${ign}** doesn't exist on Mojang. Check the spelling and try again.`,
+          content: "⚠️ Couldn't reach Mojang's servers right now. Try again in a moment.",
           flags: MessageFlags.Ephemeral,
         });
       }
-      console.error("Mojang API error:", err.message);
-      return safeReply(interaction, {
-        content: "⚠️ Couldn't reach Mojang's servers right now. Try again in a moment.",
-        flags: MessageFlags.Ephemeral,
-      });
+      verifiedIgn = mojangData.name;
     }
-
-    const verifiedIgn = mojangData.name;
 
     const { rows: existing } = await db.query(
       `SELECT discord_id FROM users WHERE ign ILIKE $1`,
