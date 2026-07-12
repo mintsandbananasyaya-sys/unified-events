@@ -57,7 +57,6 @@
   .eyebrow.is-blue { color: var(--blue); }
   .eyebrow.is-red { color: var(--red); }
 
-  /* BUTTONS */
   .btn {
     display: inline-flex; align-items: center; gap: 0.55rem;
     font-family: var(--font-body); font-weight: 600; font-size: 0.92rem;
@@ -70,12 +69,11 @@
     color: #fff;
     box-shadow: 0 0 0 1px rgba(255,255,255,0.06) inset, 0 10px 26px -12px rgba(255,59,78,0.45);
   }
-  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 0 0 1px rgba(255,255,255,0.1) inset, 0 14px 30px -10px rgba(65,105,255,0.5); }
+  .btn-primary:hover { transform: translateY(-1px); }
   .btn-ghost { background: transparent; color: var(--ink); border-color: var(--line); }
   .btn-ghost:hover { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.03); }
   .btn-small { padding: 0.55rem 1.05rem; font-size: 0.82rem; }
 
-  /* NAV */
   .nav {
     position: sticky; top: 0; z-index: 60;
     background: rgba(10,13,20,0.78);
@@ -161,7 +159,6 @@
   .mobile-divider { padding-top: 0.6rem; margin-top: 0.4rem; border-top: 1px solid var(--line-soft); font-family: var(--font-mono); font-size: 0.68rem; color: var(--mist-dim); letter-spacing: 0.12em; text-transform: uppercase; }
   .mobile-panel .btn { width: 100%; justify-content: center; margin-top: 1rem; }
 
-  /* HERO */
   .hero {
     position: relative;
     padding-top: clamp(56px, 9vw, 84px);
@@ -203,7 +200,6 @@
 
   .hero-sub { margin-top: 1.3rem; font-size: clamp(1rem, 2.2vw, 1.15rem); color: var(--mist); max-width: 560px; margin-inline: auto; }
 
-  /* SEARCH BAR */
   .search-wrap {
     position: relative; z-index: 2;
     max-width: 560px; margin: 2.2rem auto 0;
@@ -228,7 +224,6 @@
   .search-btn:hover { transform: translateY(-1px); opacity: 0.9; }
   .search-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-  /* GATE — shown when not logged in */
   .gate {
     display: none;
     text-align: center;
@@ -245,11 +240,9 @@
   .gate h2 { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.5rem, 3vw, 2rem); margin-bottom: 0.8rem; }
   .gate p { color: var(--mist); font-size: 1rem; margin-bottom: 1.8rem; }
 
-  /* RESULTS AREA */
   .results-area { padding-block: clamp(40px, 6vw, 72px); display: none; }
   .results-area.visible { display: block; }
 
-  /* PROFILE CARD */
   .profile-card {
     background: var(--void-soft); border: 1px solid var(--line);
     border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 1.5rem;
@@ -276,14 +269,65 @@
     -webkit-background-clip: text; background-clip: text; color: transparent;
     margin-bottom: 0.5rem;
   }
-  .profile-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 0.55rem; }
+  .profile-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 0.55rem; margin-bottom: 0.8rem; }
   .meta-tag {
     font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase;
     padding: 0.28rem 0.65rem; border-radius: 99px; border: 1px solid var(--line); color: var(--mist);
   }
   .meta-tag.is-blue { color: var(--blue); border-color: rgba(65,105,255,0.4); background: rgba(65,105,255,0.07); }
 
-  /* STATS STRIP */
+  /* TIER BADGES ROW */
+  .tier-row {
+    display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;
+    margin-top: 0.5rem;
+  }
+  .tier-badge {
+    display: flex; flex-direction: column; align-items: center; gap: 0.2rem;
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 8px; padding: 0.35rem 0.5rem;
+    min-width: 44px;
+    transition: border-color 0.15s ease;
+  }
+  .tier-badge:hover { border-color: rgba(255,255,255,0.2); }
+  .tier-badge .mode-icon {
+    width: 22px; height: 22px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .tier-badge .mode-icon svg { width: 16px; height: 16px; }
+  .tier-badge .tier-label {
+    font-family: var(--font-mono); font-size: 0.6rem; font-weight: 600;
+    letter-spacing: 0.03em; text-transform: uppercase;
+    line-height: 1;
+  }
+  .tier-badge.ht1 { border-color: rgba(255,215,0,0.5); background: rgba(255,215,0,0.08); }
+  .tier-badge.ht1 .tier-label { color: #ffd700; }
+  .tier-badge.lt1 { border-color: rgba(255,215,0,0.3); background: rgba(255,215,0,0.05); }
+  .tier-badge.lt1 .tier-label { color: #ffd700; }
+  .tier-badge.ht2 { border-color: rgba(192,192,192,0.5); background: rgba(192,192,192,0.07); }
+  .tier-badge.ht2 .tier-label { color: #c0c0c0; }
+  .tier-badge.lt2 { border-color: rgba(192,192,192,0.3); background: rgba(192,192,192,0.05); }
+  .tier-badge.lt2 .tier-label { color: #c0c0c0; }
+  .tier-badge.ht3 { border-color: rgba(205,127,50,0.5); background: rgba(205,127,50,0.07); }
+  .tier-badge.ht3 .tier-label { color: #cd7f32; }
+  .tier-badge.lt3 { border-color: rgba(205,127,50,0.3); background: rgba(205,127,50,0.05); }
+  .tier-badge.lt3 .tier-label { color: #cd7f32; }
+  .tier-badge.ht4 { border-color: rgba(65,105,255,0.4); background: rgba(65,105,255,0.07); }
+  .tier-badge.ht4 .tier-label { color: var(--blue); }
+  .tier-badge.lt4 { border-color: rgba(65,105,255,0.25); background: rgba(65,105,255,0.05); }
+  .tier-badge.lt4 .tier-label { color: var(--blue); }
+  .tier-badge.ht5 { border-color: rgba(139,146,166,0.4); background: rgba(139,146,166,0.06); }
+  .tier-badge.ht5 .tier-label { color: var(--mist); }
+  .tier-badge.lt5 { border-color: rgba(139,146,166,0.2); background: rgba(139,146,166,0.04); }
+  .tier-badge.lt5 .tier-label { color: var(--mist-dim); }
+  .tier-source {
+    font-family: var(--font-mono); font-size: 0.58rem; color: var(--mist-dim);
+    letter-spacing: 0.04em; text-transform: uppercase; margin-top: 0.15rem;
+  }
+  .no-tiers {
+    font-family: var(--font-mono); font-size: 0.72rem; color: var(--mist-dim);
+    letter-spacing: 0.04em;
+  }
+
   .stats-strip {
     display: grid; grid-template-columns: repeat(4, 1fr);
     border-top: 1px solid var(--line-soft);
@@ -302,7 +346,6 @@
   }
   .stat-label { font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mist-dim); }
 
-  /* NOT FOUND */
   .not-found {
     display: none; text-align: center;
     padding: clamp(48px, 8vw, 96px) 0;
@@ -317,7 +360,6 @@
   .not-found h2 { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.3rem, 3vw, 1.8rem); margin-bottom: 0.6rem; }
   .not-found p { color: var(--mist); font-size: 0.95rem; }
 
-  /* ERROR */
   .error-bar {
     display: none; align-items: center; gap: 0.7rem;
     background: rgba(255,59,78,0.08); border: 1px solid rgba(255,59,78,0.25);
@@ -327,7 +369,6 @@
   }
   .error-bar.visible { display: flex; }
 
-  /* LOADING SPINNER */
   .spinner {
     display: none; width: 18px; height: 18px;
     border: 2px solid rgba(255,255,255,0.15);
@@ -337,11 +378,9 @@
   .spinner.visible { display: block; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* REVEAL */
   .reveal { opacity: 0; transform: translateY(16px); transition: opacity 0.6s ease, transform 0.6s ease; }
   .reveal.in { opacity: 1; transform: translateY(0); }
 
-  /* FOOTER */
   footer { border-top: 1px solid var(--line-soft); padding-top: 3.2rem; padding-bottom: 2rem; }
   .footer-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 2.5rem; padding-bottom: 2.6rem; }
   .footer-brand .brand { margin-bottom: 0.9rem; }
@@ -355,7 +394,6 @@
     font-family: var(--font-mono); font-size: 0.74rem; color: var(--mist-dim); flex-wrap: wrap; gap: 0.8rem;
   }
 
-  /* RESPONSIVE */
   @media (max-width: 1080px) { .nav-links { display: none; } .nav-more { display: none; } .nav-burger { display: flex; } }
   @media (max-width: 700px) { .stats-strip { grid-template-columns: repeat(2, 1fr); } .stat-block:nth-child(2) { border-right: none; } .stat-block:nth-child(3), .stat-block:nth-child(4) { border-top: 1px solid var(--line-soft); } }
   @media (max-width: 640px) { .profile-top { flex-direction: column; } .search-wrap { flex-direction: column; } .footer-grid { grid-template-columns: 1fr 1fr; gap: 2rem 1.5rem; } .footer-brand { grid-column: span 2; } }
@@ -432,8 +470,6 @@
 </header>
 
 <main>
-
-  <!-- HERO -->
   <section class="hero">
     <div class="hero-glow blue"></div>
     <div class="hero-glow red"></div>
@@ -443,7 +479,6 @@
       <h1 class="wordmark page-wordmark">PLAYERS</h1>
       <p class="hero-sub">Search any registered Unified Events player to view their profile, season history, and platform record.</p>
 
-      <!-- Search — always visible but blocked by gate if not authed -->
       <div class="search-wrap" id="searchWrap">
         <input
           type="text"
@@ -469,8 +504,6 @@
   </section>
 
   <div class="wrap">
-
-    <!-- LOGIN GATE -->
     <div class="gate" id="gate">
       <div class="gate-icon">
         <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -480,30 +513,25 @@
       <button class="btn btn-primary" data-auth-btn>Login with Discord</button>
     </div>
 
-    <!-- RESULTS -->
     <div class="results-area" id="resultsArea">
-
-      <!-- PROFILE CARD (populated by JS) -->
       <div class="profile-card reveal" id="profileCard" style="display:none;">
         <div class="profile-top">
           <div class="avatar-lg" id="profileAvatar">--</div>
           <div class="profile-info">
             <div class="profile-username" id="profileUsername">—</div>
             <div class="profile-meta" id="profileMeta"></div>
+            <div class="tier-row" id="tierRow"></div>
           </div>
         </div>
         <div class="stats-strip" id="statsStrip"></div>
       </div>
 
-      <!-- NOT FOUND STATE -->
       <div class="not-found" id="notFound">
         <div class="nf-code">404</div>
         <h2>Player not found</h2>
         <p id="notFoundText">No player registered under that username.</p>
       </div>
-
     </div>
-
   </div>
 </main>
 
@@ -552,6 +580,123 @@
 
 <script>
 /* =====================
+   TIER SYSTEM
+===================== */
+
+// Convert tier + position to a score (higher = better)
+// pos: 0 = High (HT), 1 = Low (LT)
+// HT1=10, LT1=9, HT2=8, LT2=7, HT3=6, LT3=5, HT4=4, LT4=3, HT5=2, LT5=1
+function tierScore(tier, pos) {
+  if (tier == null) return 0;
+  const base = (5 - tier) * 2;
+  return pos === 0 ? base + 2 : base + 1;
+}
+
+function tierLabel(tier, pos) {
+  const prefix = pos === 0 ? "HT" : "LT";
+  return `${prefix}${tier}`;
+}
+
+function tierClass(tier, pos) {
+  return (pos === 0 ? "ht" : "lt") + tier;
+}
+
+// Mode display config: label + SVG icon
+const MODE_CONFIG = {
+  smp: {
+    label: "SMP",
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>`
+  },
+  uhc: {
+    label: "UHC",
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`
+  },
+  mace: {
+    label: "MACE",
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><line x1="12" y1="12" x2="12" y2="22"/></svg>`
+  },
+  sword: {
+    label: "SWORD",
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M2 2l5 5"/><path d="M17 21l4-4"/></svg>`
+  },
+  axe: {
+    label: "AXE",
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 10l-4 4"/><path d="M3 3l7 7"/><path d="M17 3c0 0-7 2-7 9s7 9 7 9"/><path d="M7 3c0 0 7 2 7 9"/></svg>`
+  },
+  pot: {
+    label: "POT",
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6l1 9H8L9 3z"/><path d="M6 12h12l-2 8H8l-2-8z"/><path d="M12 3v2"/></svg>`
+  },
+  nethop: {
+    label: "NETHOP",
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18"/><path d="M3 6l9-3 9 3"/><path d="M3 18l9 3 9-3"/></svg>`
+  },
+  neth_pot: {
+    label: "NETHPOT",
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6l1 9H8L9 3z"/><path d="M6 12h12l-2 8H8l-2-8z"/><path d="M3 6l9-3 9 3"/></svg>`
+  },
+};
+
+// Merge MCTiers and PvPTiers — pick best tier per mode
+function mergeTiers(mctiers, pvptiers) {
+  const merged = {};
+
+  const addRankings = (rankings, source) => {
+    if (!rankings) return;
+    Object.entries(rankings).forEach(([mode, data]) => {
+      if (data.retired) return;
+      const score = tierScore(data.tier, data.pos);
+      if (!merged[mode] || score > merged[mode].score) {
+        merged[mode] = {
+          tier: data.tier,
+          pos: data.pos,
+          score,
+          source,
+        };
+      }
+    });
+  };
+
+  addRankings(mctiers?.rankings, "MCTiers");
+  addRankings(pvptiers?.rankings, "PvPTiers");
+
+  return merged;
+}
+
+function renderTierRow(mctiers, pvptiers) {
+  const tierRow = document.getElementById("tierRow");
+  tierRow.innerHTML = "";
+
+  const merged = mergeTiers(mctiers, pvptiers);
+  const modes = Object.keys(merged);
+
+  if (modes.length === 0) {
+    tierRow.innerHTML = `<span class="no-tiers">No tier data found</span>`;
+    return;
+  }
+
+  // Sort by score descending (best first)
+  modes.sort((a, b) => merged[b].score - merged[a].score);
+
+  modes.forEach(mode => {
+    const entry = merged[mode];
+    const config = MODE_CONFIG[mode] || { label: mode.toUpperCase(), icon: "" };
+    const label = tierLabel(entry.tier, entry.pos);
+    const cls = tierClass(entry.tier, entry.pos);
+
+    const badge = document.createElement("div");
+    badge.className = `tier-badge ${cls}`;
+    badge.title = `${config.label} — ${label} (${entry.source})`;
+    badge.innerHTML = `
+      <div class="mode-icon">${config.icon}</div>
+      <span class="tier-label">${label}</span>
+      <span class="tier-source">${config.label}</span>
+    `;
+    tierRow.appendChild(badge);
+  });
+}
+
+/* =====================
    STATE
 ===================== */
 const appState = { user: null };
@@ -586,7 +731,7 @@ function renderAuth() {
     if (avatarEl) {
       if (appState.user.avatar) {
         const img = document.createElement('img');
-        img.src = `https://cdn.discordapp.com/avatars/${appState.user.discord_id}/${appState.user.avatar}.png?size=64`;
+        img.src = `https://cdn.discordapp.com/avatars/${appState.user.id}/${appState.user.avatar}.png?size=64`;
         img.alt = appState.user.username;
         img.className = 'avatar-sm';
         avatarEl.replaceWith(img);
@@ -597,7 +742,6 @@ function renderAuth() {
     if (usernameEl) usernameEl.textContent = appState.user.username || '';
   }
 
-  // Show gate or search
   const gate = document.getElementById('gate');
   const searchInput = document.getElementById('searchInput');
   const searchBtn = document.getElementById('searchBtn');
@@ -620,9 +764,6 @@ document.querySelectorAll('[data-auth-btn]').forEach(btn => {
   });
 });
 
-/* =====================
-   NAV
-===================== */
 const burgerBtn = document.getElementById('burgerBtn');
 const mobilePanel = document.getElementById('mobilePanel');
 const moreMenu = document.getElementById('moreMenu');
@@ -647,7 +788,7 @@ document.addEventListener('click', e => {
 });
 
 /* =====================
-   PLAYER SEARCH
+   SEARCH
 ===================== */
 const searchInput = document.getElementById('searchInput');
 const searchBtn = document.getElementById('searchBtn');
@@ -675,13 +816,18 @@ function setLoading(on) {
   searchInput.disabled = on;
 }
 
-function formatDate(iso) {
-  if (!iso) return 'Unknown';
-  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+function formatDate(val) {
+  if (!val) return 'Unknown';
+  // Handle both ISO strings and bigint timestamps
+  const num = Number(val);
+  const date = !isNaN(num) && num > 1000000000000
+    ? new Date(num)
+    : new Date(val);
+  if (isNaN(date.getTime())) return 'Unknown';
+  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
 function renderProfile(player) {
-  // Avatar
   const avatarEl = document.getElementById('profileAvatar');
   if (player.avatar) {
     avatarEl.innerHTML = `<img src="https://cdn.discordapp.com/avatars/${player.discord_id}/${player.avatar}.png?size=128" alt="${player.username}'s avatar" />`;
@@ -689,10 +835,8 @@ function renderProfile(player) {
     avatarEl.textContent = (player.username || '?').slice(0, 2).toUpperCase();
   }
 
-  // Username
   document.getElementById('profileUsername').textContent = player.username || 'Unknown';
 
-  // Meta tags
   const meta = document.getElementById('profileMeta');
   meta.innerHTML = '';
 
@@ -708,7 +852,9 @@ function renderProfile(player) {
   if (player.ign) addTag(`IGN: ${player.ign}`, 'is-blue');
   if (player.verified) addTag('✓ Verified', 'is-blue');
 
-  // Stats strip
+  // Render tier badges
+  renderTierRow(player.mctiers, player.pvptiers);
+
   const strip = document.getElementById('statsStrip');
   strip.innerHTML = '';
 
@@ -717,6 +863,11 @@ function renderProfile(player) {
     { val: player.ign || '—', label: 'Minecraft IGN' },
     { val: player.verified ? 'Yes' : 'No', label: 'Verified' },
   ];
+
+  // Add MCTiers overall if available
+  if (player.mctiers?.overall) {
+    stats.push({ val: `#${player.mctiers.overall}`, label: 'MCTiers Overall' });
+  }
 
   stats.forEach(s => {
     const block = document.createElement('div');
@@ -729,44 +880,36 @@ function renderProfile(player) {
   const existingRoles = document.getElementById('profileRoles');
   if (existingRoles) existingRoles.remove();
 
+  const rolesSection = document.createElement('div');
+  rolesSection.id = 'profileRoles';
+  rolesSection.style.cssText = 'padding: 1rem 1.5rem; border-top: 1px solid rgba(255,255,255,0.09);';
+
+  const label = document.createElement('div');
+  label.style.cssText = 'font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mist); margin-bottom: 0.6rem;';
+  label.textContent = 'Discord Roles';
+  rolesSection.appendChild(label);
+
   if (player.roles && player.roles.length > 0) {
-    const rolesSection = document.createElement('div');
-    rolesSection.id = 'profileRoles';
-    rolesSection.style.cssText = 'padding: 1rem 1.5rem; border-top: 1px solid rgba(255,255,255,0.09);';
-
-    const label = document.createElement('div');
-    label.style.cssText = 'font-family: var(--font-mono, monospace); font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mist, #8b92a6); margin-bottom: 0.6rem;';
-    label.textContent = 'Discord Roles';
-    rolesSection.appendChild(label);
-
     const rolesWrap = document.createElement('div');
     rolesWrap.style.cssText = 'display: flex; flex-wrap: wrap; gap: 0.4rem;';
 
     player.roles.forEach(role => {
-      const chip = document.createElement('span');
-      // Convert Discord color int to hex
       const hex = role.color ? `#${role.color.toString(16).padStart(6, '0')}` : null;
-      chip.style.cssText = `font-family: var(--font-mono, monospace); font-size: 0.68rem; padding: 0.25rem 0.65rem; border-radius: 99px; border: 1px solid ${hex ? hex + '55' : 'rgba(255,255,255,0.09)'}; background: ${hex ? hex + '18' : 'rgba(255,255,255,0.04)'}; color: ${hex || 'var(--mist, #8b92a6)'};`;
+      const chip = document.createElement('span');
+      chip.style.cssText = `font-family: var(--font-mono); font-size: 0.68rem; padding: 0.25rem 0.65rem; border-radius: 99px; border: 1px solid ${hex ? hex + '55' : 'rgba(255,255,255,0.09)'}; background: ${hex ? hex + '18' : 'rgba(255,255,255,0.04)'}; color: ${hex || 'var(--mist)'};`;
       chip.textContent = role.name;
       rolesWrap.appendChild(chip);
     });
 
     rolesSection.appendChild(rolesWrap);
-    document.getElementById('profileCard').appendChild(rolesSection);
   } else {
-    const rolesSection = document.createElement('div');
-    rolesSection.id = 'profileRoles';
-    rolesSection.style.cssText = 'padding: 1rem 1.5rem; border-top: 1px solid rgba(255,255,255,0.09);';
-    const label = document.createElement('div');
-    label.style.cssText = 'font-family: var(--font-mono, monospace); font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mist, #8b92a6); margin-bottom: 0.4rem;';
-    label.textContent = 'Discord Roles';
     const empty = document.createElement('div');
-    empty.style.cssText = 'font-size: 0.84rem; color: var(--mist-dim, #5b6175);';
+    empty.style.cssText = 'font-size: 0.84rem; color: var(--mist-dim);';
     empty.textContent = 'No roles found.';
-    rolesSection.appendChild(label);
     rolesSection.appendChild(empty);
-    document.getElementById('profileCard').appendChild(rolesSection);
   }
+
+  document.getElementById('profileCard').appendChild(rolesSection);
 }
 
 async function doSearch() {
@@ -821,9 +964,6 @@ async function doSearch() {
 searchBtn.addEventListener('click', doSearch);
 searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
 
-/* =====================
-   SCROLL REVEAL
-===================== */
 function setupReveal() {
   const els = document.querySelectorAll('.reveal');
   if (!('IntersectionObserver' in window)) { els.forEach(el => el.classList.add('in')); return; }
@@ -833,9 +973,6 @@ function setupReveal() {
   els.forEach(el => obs.observe(el));
 }
 
-/* =====================
-   INIT
-===================== */
 async function init() {
   renderAuth();
   await loadAuth();
