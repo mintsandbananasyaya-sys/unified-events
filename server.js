@@ -208,6 +208,7 @@ app.get("/api/player/:username", async (req, res) => {
 
     const player = result.rows[0];
 
+    // Fetch Discord roles
     let roles = [];
     if (process.env.GUILD_ID && BOT_TOKEN) {
       try {
@@ -221,10 +222,8 @@ app.get("/api/player/:username", async (req, res) => {
             { headers: { Authorization: `Bot ${BOT_TOKEN}` } }
           ),
         ]);
-
         const memberRoleIds = memberRes.data.roles || [];
         const allRoles = rolesRes.data || [];
-
         roles = allRoles
           .filter(r => memberRoleIds.includes(r.id) && r.name !== "@everyone")
           .map(r => ({ id: r.id, name: r.name, color: r.color }));
@@ -233,7 +232,33 @@ app.get("/api/player/:username", async (req, res) => {
       }
     }
 
-    return res.json({ ...player, roles });
+    // Fetch MCTiers and PvPTiers in parallel using the player's IGN
+    let mctiers = null;
+    let pvptiers = null;
+
+    if (player.ign) {
+      // Strip leading dot for Bedrock players
+      const ign = player.ign.startsWith(".") ? player.ign.slice(1) : player.ign;
+
+      const [mctiersRes, pvptiersRes] = await Promise.allSettled([
+        axios.get(`https://mctiers.com/api/v2/profile/by-name/${encodeURIComponent(ign)}`),
+        axios.get(`https://pvptiers.com/api/search_profile/${encodeURIComponent(ign)}`),
+      ]);
+
+      if (mctiersRes.status === "fulfilled") {
+        mctiers = mctiersRes.value.data;
+      } else {
+        console.error("MCTiers fetch failed:", mctiersRes.reason?.message);
+      }
+
+      if (pvptiersRes.status === "fulfilled") {
+        pvptiers = pvptiersRes.value.data;
+      } else {
+        console.error("PvPTiers fetch failed:", pvptiersRes.reason?.message);
+      }
+    }
+
+    return res.json({ ...player, roles, mctiers, pvptiers });
   } catch (err) {
     console.error("Player lookup error:", err.message);
     return res.status(500).json({ error: "Internal server error" });
