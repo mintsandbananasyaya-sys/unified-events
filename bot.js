@@ -26,6 +26,8 @@ if (missing.length) {
 const APPLY_URL = process.env.APPLY_URL || "https://unified-events.onrender.com/apply.html";
 const SITE_URL = process.env.SITE_URL || "https://unified-events.onrender.com";
 const BOT_MESSAGE_LOGO_PATH = process.env.BOT_MESSAGE_LOGO_PATH || "logo.png";
+const UNIFIED_APPLY_URL = process.env.UNIFIED_APPLY_URL || "https://unified-apply.onrender.com";
+const INTERNAL_SECRET = process.env.INTERNAL_SECRET || "";
 
 const EMBED_COLOR_PRESETS = {
   blue: 0x4169ff,
@@ -122,6 +124,12 @@ async function setupTables() {
   await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS ign TEXT`);
   await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS verified BOOLEAN DEFAULT FALSE`);
   await db.query(`CREATE UNIQUE INDEX IF NOT EXISTS idx_users_ign ON users(ign) WHERE ign IS NOT NULL`);
+
+  // Auto-delete logs older than 30 days
+  await db.query(`
+    DELETE FROM logs
+    WHERE created_at < $1
+  `, [Date.now() - (30 * 24 * 60 * 60 * 1000)]);
 
   console.log("Database tables ready");
 }
@@ -441,15 +449,13 @@ client.on("interactionCreate", async (interaction) => {
       });
     }
 
-const ign = interaction.options.getString("ign").trim();
+    const ign = interaction.options.getString("ign").trim();
 
     let verifiedIgn;
 
     if (ign.startsWith(".")) {
-      // Bedrock player — skip Mojang verification, use as-is
       verifiedIgn = ign;
     } else {
-      // Java player — verify against Mojang API
       let mojangData;
       try {
         const axios = require("axios");
@@ -623,6 +629,89 @@ const ign = interaction.options.getString("ign").trim();
     return safeReply(interaction, { content: "No schedule has been confirmed yet." });
   }
 
+  /* ================= /status ================= */
+  if (interaction.commandName === "status") {
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+    try {
+      const res = await fetch(
+        `${UNIFIED_APPLY_URL}/api/applications/status/${interaction.user.id}`,
+        {
+          headers: {
+            "x-internal-secret": INTERNAL_SECRET,
+          },
+        }
+      );
+
+      if (!res.ok) {
+        return interaction.editReply("⚠️ Couldn't reach the applications server. Try again later.");
+      }
+
+      const data = await res.json();
+
+      if (!data.success) {
+        return interaction.editReply("⚠️ Something went wrong checking your status. Try again later.");
+      }
+
+      // No application at all
+      if (data.status === "none") {
+        return interaction.editReply(
+          `📋 **Application Status — Season 1**\n\nYou haven't submitted an application yet.\n\nApply here: ${UNIFIED_APPLY_URL}`
+        );
+      }
+
+      const app = data.application;
+      const submittedDate = new Date(app.createdAt).toLocaleDateString("en-GB", {
+        day: "numeric", month: "short", year: "numeric",
+      });
+
+      // Pending
+      if (app.status === "pending") {
+        return interaction.editReply(
+          `📋 **Application Status — Season 1**\n\n🕐 **Pending review**\n\nYour application (attempt ${app.attemptNumber}) was submitted on ${submittedDate} and is waiting to be reviewed by staff. You'll receive a DM when a decision is made — this usually takes 24–72 hours.`
+        );
+      }
+
+      // Accepted
+      if (app.status === "accepted") {
+        const note = app.reviewNote ? `\n\n📝 Note from staff: *${app.reviewNote}*` : "";
+        return interaction.editReply(
+          `📋 **Application Status — Season 1**\n\n✅ **Accepted!**\n\nCongratulations — your application was accepted. You should have been given the Season 1 Participant role. Check your roles in the server and your DMs for any additional information.${note}`
+        );
+      }
+
+      // Rejected — blocked (used both attempts)
+      if (app.status === "rejected" && app.blocked) {
+        const note = app.reviewNote ? `\n\n📝 Note from staff: *${app.reviewNote}*` : "";
+        return interaction.editReply(
+          `📋 **Application Status — Season 1**\n\n❌ **Not accepted**\n\nUnfortunately your application wasn't successful and you've used both attempts for this season. You won't be able to reapply until a new season opens.${note}`
+        );
+      }
+
+      // Rejected — can reapply
+      if (app.status === "rejected" && app.canReapply) {
+        const note = app.reviewNote ? `\n\n📝 Note from staff: *${app.reviewNote}*` : "";
+        return interaction.editReply(
+          `📋 **Application Status — Season 1**\n\n🔄 **Not accepted — second attempt granted**\n\nYour first application wasn't successful, but staff have granted you a second attempt. Head to the applications portal to reapply.\n\n${UNIFIED_APPLY_URL}${note}`
+        );
+      }
+
+      // Rejected — waiting to hear if they get a second attempt
+      if (app.status === "rejected") {
+        const note = app.reviewNote ? `\n\n📝 Note from staff: *${app.reviewNote}*` : "";
+        return interaction.editReply(
+          `📋 **Application Status — Season 1**\n\n❌ **Not accepted**\n\nUnfortunately your application wasn't successful this time. Staff may grant you a second attempt — keep an eye on your DMs and notifications.${note}`
+        );
+      }
+
+      return interaction.editReply("⚠️ Couldn't determine your application status. Try again later.");
+
+    } catch (err) {
+      console.error("[/status]", err);
+      return interaction.editReply("⚠️ Something went wrong. Try again later.");
+    }
+  }
+
   /* ================= /bot-message ================= */
   if (interaction.commandName === "bot-message") {
     if (!memberCanNotify(interaction.member)) {
@@ -689,7 +778,6 @@ const ign = interaction.options.getString("ign").trim();
 
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-    // ---- Single user ----
     if (target) {
       let dmFailed = false;
       try {
@@ -718,7 +806,6 @@ const ign = interaction.options.getString("ign").trim();
       return interaction.editReply(dmFailed ? `Saved to dashboard, DM failed.` : `Notified <@${target.id}>.`);
     }
 
-    // ---- Role or everyone — need the guild ----
     if (!GUILD_ID) return interaction.editReply("⚠️ GUILD_ID isn't configured.");
 
     const guild = await client.guilds.fetch(GUILD_ID).catch(() => null);
@@ -732,7 +819,6 @@ const ign = interaction.options.getString("ign").trim();
       return interaction.editReply("⚠️ Couldn't fetch server members. Enable the Server Members Intent.");
     }
 
-    // ---- Role-specific ----
     if (role) {
       const roleMembers = members.filter((m) => !m.user.bot && m.roles.cache.has(role.id));
 
@@ -768,7 +854,6 @@ const ign = interaction.options.getString("ign").trim();
       return interaction.editReply(`Role notification sent. ${sent} delivered, ${failed} failed.`);
     }
 
-    // ---- Everyone ----
     const recipients = members.filter((m) => !m.user.bot);
     let sent = 0, failed = 0;
 
