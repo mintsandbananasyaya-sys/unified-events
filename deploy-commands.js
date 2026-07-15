@@ -2,18 +2,12 @@ require("dotenv").config();
 
 const { REST, Routes, SlashCommandBuilder } = require("discord.js");
 
-/* =====================
-   ENV CHECK
-===================== */
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 
 if (!BOT_TOKEN) throw new Error("Missing BOT_TOKEN in .env");
 if (!CLIENT_ID) throw new Error("Missing DISCORD_CLIENT_ID in .env");
 
-/* =====================
-   DEFINE COMMANDS
-===================== */
 const commands = [
   new SlashCommandBuilder()
     .setName("setign")
@@ -54,6 +48,12 @@ const commands = [
   new SlashCommandBuilder()
     .setName("schedule")
     .setDescription("See the schedule for the upcoming event")
+    .setDMPermission(true)
+    .toJSON(),
+
+  new SlashCommandBuilder()
+    .setName("status")
+    .setDescription("Check the status of your Season 1 application")
     .setDMPermission(true)
     .toJSON(),
 
@@ -152,24 +152,19 @@ const commands = [
     .toJSON(),
 ];
 
-/* =====================
-   DISCORD REST CLIENT
-===================== */
 const rest = new REST({ version: "10" }).setToken(BOT_TOKEN);
 
-/* =====================
-   REGISTER COMMANDS (GLOBAL)
-===================== */
 (async () => {
   try {
     console.log("⏳ Registering slash commands globally...");
     const data = await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
     console.log(`✅ Slash commands loaded (${data.length} registered)`);
-    console.log("ℹ️  /setign — guild-only, validates IGN against Mojang API, restricted to SETIGN_CHANNEL_ID if set.");
+    console.log("ℹ️  /setign — guild-only, validates IGN against Mojang API.");
     console.log("ℹ️  /unsetign — Staff only, removes IGN and revokes VERIFIED_ROLE_ID.");
-    console.log("ℹ️  /ask — DM-enabled, checks custom feeds first, then falls back to brain.js.");
+    console.log("ℹ️  /ask — DM-enabled, falls back to brain.js.");
     console.log("ℹ️  /forms — DM-enabled, opens the support menu.");
     console.log("ℹ️  /schedule — DM-enabled, currently a placeholder.");
+    console.log("ℹ️  /status — DM-enabled, checks Season 1 application status.");
     console.log("ℹ️  /bot-message — guild-only, requires STAFF_ROLE_IDS.");
     console.log("ℹ️  /notify — guild-only, requires STAFF_ROLE_IDS. Supports user, role, or everyone.");
     console.log("ℹ️  /purge — guild-only, requires STAFF_ROLE_IDS + Manage Messages.");
