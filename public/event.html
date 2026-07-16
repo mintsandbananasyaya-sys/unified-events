@@ -737,9 +737,9 @@
 </div>
 
 <script>
-====
-   AUTH STATE
-====
+
+
+
 const state = {
   user: null // null = not logged in
 };
@@ -754,15 +754,11 @@ async function loadAuth() {
   }
 }
 
-====
-   ELEMENTS
-====
+
 const authButtons = document.querySelectorAll("[data-auth-btn]");
 const authChip = document.getElementById("authChip");
 
-====
-   RENDER AUTH UI
-====
+
 function renderAuth() {
   const isLoggedIn = !!state.user;
 
@@ -786,9 +782,7 @@ function renderAuth() {
   document.body.classList.toggle("is-authed", isLoggedIn);
 }
 
-====
-   AUTH ACTIONS
-====
+
 function login() {
   window.location.href = "/auth/discord";
 }
@@ -801,9 +795,7 @@ function handleAuthClick() {
   }
 }
 
-====
-   NAV / MOBILE
-====
+
 const burgerBtn = document.getElementById("burgerBtn");
 const mobilePanel = document.getElementById("mobilePanel");
 const moreMenu = document.getElementById("moreMenu");
@@ -836,9 +828,7 @@ function setupNav() {
   });
 }
 
-====
-   SEASON FILTERS
-====
+
 function setupFilters() {
   const tabs = document.querySelectorAll(".tab");
   const cards = document.querySelectorAll(".season-card");
@@ -858,9 +848,7 @@ function setupFilters() {
   });
 }
 
-====
-   EXPANDABLE SEASON DETAILS
-====
+
 function setupSeasonToggles() {
   document.querySelectorAll('.season-toggle').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -873,9 +861,7 @@ function setupSeasonToggles() {
   });
 }
 
-====
-   LEGACY CIVILIZATION ARCHIVE
-====
+
 const legacyData = {
   oracles: {
     name: "Oracles",
@@ -1045,9 +1031,7 @@ function setupLegacyModal() {
   });
 }
 
-====
-   SCROLL REVEAL
-====
+
 function setupReveal() {
   const targets = document.querySelectorAll(".reveal");
   if (!("IntersectionObserver" in window)) {
@@ -1065,9 +1049,7 @@ function setupReveal() {
   targets.forEach(el => observer.observe(el));
 }
 
-====
-   INIT
-====
+
 async function init() {
   setupNav();
   setupFilters();
