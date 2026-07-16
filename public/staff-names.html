@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Staff — Unified Events</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void:#0a0d14;--void-soft:#11151f;--panel:#141925;
+    --line:rgba(255,255,255,0.09);--line-soft:rgba(255,255,255,0.05);
+    --ink:#edeff5;--mist:#8b92a6;--mist-dim:#5b6175;
+    --blue:#4169ff;--red:#ff3b4e;--violet:#a25cff;
+    --radius:7px;--radius-lg:10px;
+    --font-display:'Big Shoulders Display',sans-serif;
+    --font-body:'IBM Plex Sans',sans-serif;
+    --font-mono:'IBM Plex Mono',monospace;
+    --container:1180px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{background:var(--void);color:var(--ink);font-family:var(--font-body);line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+  a{color:inherit;text-decoration:none;}
+  button{font-family:inherit;cursor:pointer;}
+  *:focus-visible{outline:2px solid var(--blue);outline-offset:3px;border-radius:3px;}
+  .wrap{max-width:var(--container);margin:0 auto;padding-inline:clamp(20px,5vw,56px);}
+  .eyebrow{font-family:var(--font-mono);font-size:0.72rem;letter-spacing:0.18em;text-transform:uppercase;font-weight:500;}
+  .eyebrow.is-blue{color:var(--blue);}
+
+  /* BUTTONS */
+  .btn{display:inline-flex;align-items:center;gap:0.55rem;font-family:var(--font-body);font-weight:600;font-size:0.92rem;padding:0.8rem 1.5rem;border-radius:var(--radius);border:1px solid transparent;transition:transform 0.18s,box-shadow 0.18s,border-color 0.18s,background 0.18s;white-space:nowrap;}
+  .btn-primary{background:linear-gradient(115deg,var(--blue),var(--red));color:#fff;box-shadow:0 0 0 1px rgba(255,255,255,0.06) inset,0 10px 26px -12px rgba(255,59,78,0.45);}
+  .btn-primary:hover{transform:translateY(-1px);}
+  .btn-ghost{background:transparent;color:var(--ink);border-color:var(--line);}
+  .btn-ghost:hover{border-color:rgba(255,255,255,0.3);background:rgba(255,255,255,0.03);}
+  .btn-small{padding:0.55rem 1.05rem;font-size:0.82rem;}
+
+  /* NAV */
+  .nav{position:sticky;top:0;z-index:60;background:rgba(10,13,20,0.82);backdrop-filter:blur(14px);border-bottom:1px solid var(--line-soft);}
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;height:72px;}
+  .brand{display:flex;align-items:center;gap:0.65rem;font-family:var(--font-display);font-weight:700;font-size:1.15rem;letter-spacing:0.01em;}
+  .brand-mark{width:30px;height:30px;flex-shrink:0;}
+  .nav-links{display:flex;align-items:center;gap:1.7rem;}
+  .nav-links a{font-family:var(--font-mono);font-size:0.78rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--mist);transition:color 0.15s;}
+  .nav-links a:hover,.nav-links a.active{color:var(--ink);}
+  .nav-more{position:relative;}
+  .nav-more>button{display:flex;align-items:center;gap:0.35rem;background:none;border:none;font-family:var(--font-mono);font-size:0.78rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--mist);}
+  .nav-more>button:hover{color:var(--ink);}
+  .caret{width:8px;height:8px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg);margin-top:-3px;transition:transform 0.15s;}
+  .nav-more.open .caret{transform:rotate(225deg);margin-top:3px;}
+  .dropdown{position:absolute;top:calc(100% + 14px);right:0;min-width:220px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-lg);padding:0.4rem;opacity:0;visibility:hidden;transform:translateY(-6px);transition:opacity 0.16s,transform 0.16s,visibility 0.16s;box-shadow:0 20px 40px -16px rgba(0,0,0,0.6);}
+  .nav-more.open .dropdown{opacity:1;visibility:visible;transform:translateY(0);}
+  .dropdown a{display:block;padding:0.6rem 0.75rem;font-size:0.88rem;color:var(--mist);border-radius:6px;}
+  .dropdown a:hover{background:var(--void-soft);color:var(--ink);}
+  .nav-actions{display:flex;align-items:center;gap:0.85rem;}
+  .auth-chip{display:none;align-items:center;gap:0.55rem;font-family:var(--font-mono);font-size:0.78rem;color:var(--mist);border:1px solid var(--line);border-radius:99px;padding:0.35rem 0.85rem 0.35rem 0.4rem;}
+  .auth-chip .av{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--red));display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:0.7rem;color:#fff;}
+  body.is-authed .auth-chip{display:flex;}
+  .nav-burger{display:none;width:38px;height:38px;align-items:center;justify-content:center;background:transparent;border:1px solid var(--line);border-radius:var(--radius);}
+  .nav-burger span{display:block;width:16px;height:1.5px;background:var(--ink);position:relative;}
+  .nav-burger span::before,.nav-burger span::after{content:"";position:absolute;left:0;width:16px;height:1.5px;background:var(--ink);transition:transform 0.2s;}
+  .nav-burger span::before{top:-5px;}
+  .nav-burger span::after{top:5px;}
+  .mobile-panel{display:none;border-top:1px solid var(--line-soft);background:var(--void-soft);}
+  .mobile-panel.open{display:block;}
+  .mobile-panel .wrap{padding-block:1.1rem;}
+  .mobile-panel a{display:block;padding:0.7rem 0;font-family:var(--font-mono);font-size:0.85rem;letter-spacing:0.04em;text-transform:uppercase;color:var(--mist);border-bottom:1px solid var(--line-soft);}
+  .mobile-divider{padding-top:0.6rem;margin-top:0.4rem;border-top:1px solid var(--line-soft);font-family:var(--font-mono);font-size:0.68rem;color:var(--mist-dim);letter-spacing:0.12em;text-transform:uppercase;}
+  .mobile-panel .btn{width:100%;justify-content:center;margin-top:1rem;}
+
+  /* HERO */
+  .page-hero{padding-top:clamp(56px,9vw,96px);padding-bottom:clamp(44px,7vw,72px);position:relative;overflow:hidden;}
+  .hglow{position:absolute;top:-30%;width:40%;height:120%;filter:blur(70px);opacity:0.25;border-radius:50%;pointer-events:none;}
+  .hglow.b{left:-8%;background:radial-gradient(circle,var(--blue) 0%,transparent 70%);}
+  .hglow.r{right:-8%;background:radial-gradient(circle,var(--red) 0%,transparent 70%);}
+  .page-hero h1{font-family:var(--font-display);font-weight:800;font-size:clamp(2.8rem,7vw,5.2rem);letter-spacing:0.01em;text-transform:uppercase;background:linear-gradient(92deg,var(--blue) 0%,var(--ink) 50%,var(--red) 100%);-webkit-background-clip:text;background-clip:text;color:transparent;margin-top:0.7rem;line-height:0.96;}
+  .page-hero p{margin-top:1.1rem;color:var(--mist);font-size:1.02rem;max-width:520px;}
+
+  /* STAFF SECTION */
+  .staff-section{padding-block:clamp(48px,8vw,88px);}
+  .dept-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:1.2rem;}
+
+  /* DEPT CARD */
+  .dept-card{background:var(--void-soft);border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden;transition:border-color 0.2s,transform 0.2s;}
+  .dept-card:hover{border-color:rgba(255,255,255,0.15);transform:translateY(-2px);}
+  .dept-card.open{border-color:rgba(255,255,255,0.2);transform:none;}
+  .dept-bar{height:3px;width:100%;}
+  .dept-header{padding:1.45rem 1.5rem 1.3rem;display:flex;align-items:center;gap:1rem;cursor:pointer;user-select:none;}
+  .dept-icon{width:46px;height:46px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.35rem;flex-shrink:0;}
+  .dept-info{flex:1;min-width:0;}
+  .dept-name{font-family:var(--font-display);font-weight:700;font-size:1.22rem;letter-spacing:0.01em;text-transform:uppercase;}
+  .dept-sub{font-family:var(--font-mono);font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--mist-dim);margin-top:0.2rem;}
+  .dept-chev{width:30px;height:30px;border-radius:6px;flex-shrink:0;background:rgba(255,255,255,0.04);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;transition:background 0.15s,transform 0.25s;}
+  .dept-card.open .dept-chev{transform:rotate(180deg);background:rgba(255,255,255,0.08);}
+  .dept-chev svg{width:11px;height:11px;stroke:var(--mist);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
+
+  /* BODY */
+  .dept-body{max-height:0;overflow:hidden;transition:max-height 0.4s cubic-bezier(0.4,0,0.2,1);}
+  .dept-card.open .dept-body{max-height:1400px;}
+  .dept-inner{border-top:1px solid var(--line);padding:0 1.5rem 1.5rem;}
+
+  /* RANK BLOCKS */
+  .rank-block{padding-top:1.2rem;}
+  .rank-block+.rank-block{border-top:1px solid var(--line-soft);}
+  .rank-row{display:flex;align-items:center;gap:0.7rem;margin-bottom:0.8rem;flex-wrap:wrap;}
+  .rbadge{font-family:var(--font-mono);font-size:0.64rem;letter-spacing:0.09em;text-transform:uppercase;padding:0.2rem 0.6rem;border-radius:4px;border:1px solid;white-space:nowrap;}
+  .rtitle{font-size:0.95rem;font-weight:600;}
+  .rtier{margin-left:auto;font-family:var(--font-mono);font-size:0.64rem;color:var(--mist-dim);}
+
+  /* MEMBERS */
+  .members{display:flex;flex-wrap:wrap;gap:0.5rem;}
+  .chip{display:flex;align-items:center;gap:0.5rem;background:rgba(255,255,255,0.04);border:1px solid var(--line);border-radius:99px;padding:0.28rem 0.75rem 0.28rem 0.38rem;}
+  .chip-av{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:0.62rem;font-weight:700;color:#fff;flex-shrink:0;}
+  .chip-name{font-size:0.82rem;color:var(--ink);}
+  .no-members{font-size:0.82rem;color:var(--mist-dim);font-family:var(--font-mono);font-style:italic;}
+
+  /* BADGE COLOURS */
+  .c-gold{color:#f0c040;border-color:rgba(240,192,64,0.3);background:rgba(240,192,64,0.07);}
+  .c-blue{color:#7ca3ff;border-color:rgba(65,105,255,0.3);background:rgba(65,105,255,0.07);}
+  .c-violet{color:#c49bff;border-color:rgba(162,92,255,0.3);background:rgba(162,92,255,0.07);}
+  .c-discord{color:#9ba8ff;border-color:rgba(88,101,242,0.3);background:rgba(88,101,242,0.07);}
+  .c-orange{color:#ffaa60;border-color:rgba(255,140,66,0.3);background:rgba(255,140,66,0.07);}
+  .c-teal{color:#3dd6a3;border-color:rgba(0,200,150,0.3);background:rgba(0,200,150,0.07);}
+  .c-mist{color:var(--mist);border-color:rgba(139,146,166,0.25);background:rgba(139,146,166,0.06);}
+
+  /* DEPT THEMES */
+  .d-own .dept-bar{background:linear-gradient(90deg,var(--blue),var(--red));}
+  .d-own .dept-icon{background:rgba(65,105,255,0.1);}
+  .d-co .dept-bar{background:linear-gradient(90deg,#7a5cff,var(--blue));}
+  .d-co .dept-icon{background:rgba(122,92,255,0.1);}
+  .d-dmod .dept-bar{background:linear-gradient(90deg,#5865f2,#a25cff);}
+  .d-dmod .dept-icon{background:rgba(88,101,242,0.1);}
+  .d-emod .dept-bar{background:linear-gradient(90deg,#ff8c42,var(--red));}
+  .d-emod .dept-icon{background:rgba(255,140,66,0.1);}
+  .d-prod .dept-bar{background:linear-gradient(90deg,#00c896,#4169ff);}
+  .d-prod .dept-icon{background:rgba(0,200,150,0.1);}
+  .d-dev .dept-bar{background:linear-gradient(90deg,#a25cff,#ff3b4e);}
+  .d-dev .dept-icon{background:rgba(162,92,255,0.1);}
+  .d-staff .dept-bar{background:linear-gradient(90deg,var(--mist-dim),#8b92a6);}
+  .d-staff .dept-icon{background:rgba(139,146,166,0.1);}
+
+  /* REVEAL */
+  .reveal{opacity:0;transform:translateY(14px);transition:opacity 0.55s,transform 0.55s;}
+  .reveal.in{opacity:1;transform:translateY(0);}
+
+  /* FOOTER */
+  footer{border-top:1px solid var(--line-soft);padding-top:3.2rem;padding-bottom:2rem;}
+  .footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:2.5rem;padding-bottom:2.6rem;}
+  .footer-brand .brand{margin-bottom:0.9rem;}
+  .footer-brand p{color:var(--mist);font-size:0.88rem;max-width:280px;}
+  .footer-col h4{font-family:var(--font-mono);font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--mist-dim);margin-bottom:1rem;}
+  .footer-col a{display:block;color:var(--mist);font-size:0.9rem;padding-block:0.4rem;}
+  .footer-col a:hover{color:var(--ink);}
+  .footer-bottom{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line-soft);padding-top:1.6rem;font-family:var(--font-mono);font-size:0.74rem;color:var(--mist-dim);flex-wrap:wrap;gap:0.8rem;}
+
+  @media(max-width:1080px){.nav-links{display:none;}.nav-more{display:none;}.nav-burger{display:flex;}}
+  @media(max-width:640px){.dept-grid{grid-template-columns:1fr;}.footer-grid{grid-template-columns:1fr 1fr;gap:2rem 1.5rem;}.footer-brand{grid-column:span 2;}}
+  @media(prefers-reduced-motion:reduce){*{animation-duration:0.001s !important;transition-duration:0.1s !important;}}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a href="index.html" class="brand">
+      <svg class="brand-mark" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M16 2 L29 16 L16 30 L16 16 Z" fill="#4169ff"/>
+        <path d="M16 2 L3 16 L16 30 L16 16 Z" fill="#ff3b4e"/>
+      </svg>
+      UNIFIED EVENTS
+    </a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="index.html">Home</a>
+      <a href="event.html">Events</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="apply.html">Enlist</a>
+      <a href="schedule.html">Timings</a>
+      <a href="shop.html">Shop</a>
+      <a href="youtube.html">Content</a>
+      <a href="faq.html">Chat Bot</a>
+    </nav>
+    <div class="nav-more" id="moreMenu">
+      <button id="moreBtn" aria-expanded="false">More <span class="caret"></span></button>
+      <div class="dropdown" id="moreDropdown">
+        <a href="forms.html">Other Forms</a>
+        <a href="tickets.html">Claims</a>
+        <a href="notifications.html">Announcements</a>
+        <a href="perks.html">Advantages</a>
+        <a href="terms.html">Rules & Conditions</a>
+        <a href="staff.html" style="color:var(--ink)">Staff</a>
+      </div>
+    </div>
+    <div class="nav-actions">
+      <div class="auth-chip" id="authChip">
+        <div class="av" id="avatar">GU</div>
+        <span id="username">Guest</span>
+      </div>
+      <button class="btn btn-primary btn-small" data-auth-btn>Login with Discord</button>
+      <button class="nav-burger" id="burgerBtn" aria-label="Open menu"><span></span></button>
+    </div>
+  </div>
+  <div class="mobile-panel" id="mobilePanel">
+    <div class="wrap">
+      <a href="index.html">Home</a>
+      <a href="event.html">Events</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="apply.html">Enlist</a>
+      <a href="schedule.html">Timings</a>
+      <a href="shop.html">Shop</a>
+      <a href="youtube.html">Content</a>
+      <a href="faq.html">Chat Bot</a>
+      <div class="mobile-divider">More</div>
+      <a href="forms.html">Other Forms</a>
+      <a href="tickets.html">Claims</a>
+      <a href="notifications.html">Announcements</a>
+      <a href="perks.html">Advantages</a>
+      <a href="terms.html">Rules & Conditions</a>
+      <a href="staff.html">Staff</a>
+      <button class="btn btn-primary" data-auth-btn>Login with Discord</button>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="page-hero">
+  <div class="hglow b"></div>
+  <div class="hglow r"></div>
+  <div class="wrap">
+    <span class="eyebrow is-blue">Platform team</span>
+    <h1>Staff</h1>
+    <p>The people who keep Unified Events running. Click any department to expand it and see the full rank structure with who holds each position.</p>
+  </div>
+</section>
+
+<!-- STAFF CARDS -->
+<section class="staff-section">
+  <div class="wrap">
+    <div class="dept-grid">
+
+      <!-- ========== OWNERS ========== -->
+      <div class="dept-card d-own reveal">
+        <div class="dept-bar"></div>
+        <div class="dept-header" onclick="tog(this.parentElement)" role="button" tabindex="0" aria-expanded="false" onkeydown="ktog(event,this.parentElement)">
+          <div class="dept-icon">👑</div>
+          <div class="dept-info">
+            <div class="dept-name">Owners</div>
+            <div class="dept-sub">Top authority</div>
+          </div>
+          <div class="dept-chev"><svg viewBox="0 0 12 12"><polyline points="1,3.5 6,8.5 11,3.5"/></svg></div>
+        </div>
+        <div class="dept-body"><div class="dept-inner">
+
+          <div class="rank-block">
+            <div class="rank-row">
+              <span class="rbadge c-gold">Founder</span>
+              <span class="rtitle">Founder</span>
+              <span class="rtier">T1</span>
+            </div>
+            <div class="members">
+              <!-- ✏️ FOUNDER MEMBERS — copy a .chip div for each person, change initials + name -->
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#31e820,#10e73f)">AL</div>
+                <span class="chip-name">alphadarkman</span>
+                </div>
+          </div>
+
+        </div></div>
+      </div>
+
+      <!-- ========== CO-OWNERS ========== -->
+      <div class="dept-card d-co reveal">
+        <div class="dept-bar"></div>
+        <div class="dept-header" onclick="tog(this.parentElement)" role="button" tabindex="0" aria-expanded="false" onkeydown="ktog(event,this.parentElement)">
+          <div class="dept-icon">🛡️</div>
+          <div class="dept-info">
+            <div class="dept-name">Management Team</div>
+            <div class="dept-sub"></div>
+          </div>
+          <div class="dept-chev"><svg viewBox="0 0 12 12"><polyline points="1,3.5 6,8.5 11,3.5"/></svg></div>
+        </div>
+        <div class="dept-body"><div class="dept-inner">
+
+          <div class="rank-block">
+            <div class="rank-row">
+              <span class="rbadge c-violet">Head Co-Owner</span>
+              <span class="rtitle">Head Co-Owner</span>
+              <span class="rtier">T1</span>
+            </div>
+            <div class="members">
+              <!-- ✏️ HEAD CO-OWNER MEMBERS -->
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#31e820,#10e73f)">AL</div>
+                <span class="chip-name">alphadarkman</span>
+                </div>
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#31e820,#10e73f)">TX</div>
+                <span class="chip-name">Tixcy</span>
+                </div>
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#31e820,#10e73f)">1U</div>
+                <span class="chip-name">1kodu</span>
+<div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#31e820,#10e73f)">PR</div>
+                <span class="chip-name">_prite</span>
+              </div>
+            </div>
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#31e820,#10e73f)">NO</div>
+                <span class="chip-name">Nox 8x80</span>
+                </div>
+                 <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#31e820,#10e73f)">LI</div>
+                <span class="chip-name">Liquidds</span>
+                </div>
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#31e820,#10e73f)">CR</div>
+                <span class="chip-name">Crabby Obama8694</span>
+                </div>
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#31e820,#10e73f)">AR</div>
+                <span class="chip-name">archiex1</span>
+                </div>
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#31e820,#10e73f)">JC</div>
+                <span class="chip-name">Jcrimzy</span>
+                </div>
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#31e820,#10e73f)">TC</div>
+                <span class="chip-name">tcftw</span>
+                </div>
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#31e820,#10e73f)">FR</div>
+                <span class="chip-name">Frazer</span>
+                </div>
+                </div>                
+            </div>
+          </div>
+
+        </div></div>
+      </div>
+
+      <!-- ========== DISCORD MODERATORS ========== -->
+      <div class="dept-card d-dmod reveal">
+        <div class="dept-bar"></div>
+        <div class="dept-header" onclick="tog(this.parentElement)" role="button" tabindex="0" aria-expanded="false" onkeydown="ktog(event,this.parentElement)">
+          <div class="dept-icon">💬</div>
+          <div class="dept-info">
+            <div class="dept-name">Moderators</div>
+            <div class="dept-sub">3 ranks · Community safety</div>
+          </div>
+          <div class="dept-chev"><svg viewBox="0 0 12 12"><polyline points="1,3.5 6,8.5 11,3.5"/></svg></div>
+        </div>
+        <div class="dept-body"><div class="dept-inner">
+
+          <div class="rank-block">
+            <div class="rank-row">
+              <span class="rbadge c-discord">Head Moderator</span>
+              <span class="rtitle">Head Moderator</span>
+              <span class="rtier">T1</span>
+            </div>
+            <div class="members">
+              <!-- ✏️ HEAD MOD MEMBERS -->
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">TE</div>
+                <span class="chip-name">TransformerElite3</span>
+                </div>    
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">AG</div>
+                <span class="chip-name">ArshTheGreat</span>
+                </div>     
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">MW</div>
+                <span class="chip-name">mrwinstreak</span>
+                </div>    
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#31e820,#10e73f)">CS</div>
+                <span class="chip-name">Chloeskye</span>
+                </div>                                                                     
+              <span class="no-members"></span>
+            </div>
+          </div>
+
+          <div class="rank-block">
+            <div class="rank-row">
+              <span class="rbadge c-discord">Senior Moderator</span>
+              <span class="rtitle">Senior Moderator</span>
+              <span class="rtier">T2</span>
+            </div>
+            <div class="members">
+              <!-- ✏️ SENIOR MOD MEMBERS -->
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#31e820,#10e73f)">RO</div>
+                <span class="chip-name">Rostok</span>
+                </div>               
+              <span class="no-members"></span>
+            </div>
+          </div>
+
+          <div class="rank-block">
+            <div class="rank-row">
+              <span class="rbadge c-discord">Moderator</span>
+              <span class="rtitle">Moderator</span>
+              <span class="rtier">T3</span>
+            </div>
+            <div class="members">
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">BL</div>
+                <span class="chip-name">Blep</span>
+                </div>
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#31e820,#10e73f)">AG</div>
+                <span class="chip-name">undercoveragent6</span>
+                </div>
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">EG</div>
+                <span class="chip-name">EGLSupa
+                </span>
+                </div>
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#31e820,#10e73f)">PR</div>
+                <span class="chip-name">Pronty
+                </span>
+                                </div>  
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#31e820,#10e73f)">DE</div>
+                <span class="chip-name">Demi
+                </span>
+                                </div>  
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">PS</div>
+                <span class="chip-name">psychoku
+                </span>             
+                                 </div> 
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">LA</div>
+                <span class="chip-name">lagg3677</span>
+                </div>                                  
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">PO</div>
+                <span class="chip-name">Pongo
+                </span>
+                                </div>  
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#31e820,#10e73f)">KR</div>
+                <span class="chip-name">Kronos
+                </span>
+                                </div>  
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#31e820,#10e73f)">NR</div>
+                <span class="chip-name">NullRex
+                </span>
+                                </div>  
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">SP</div>
+                <span class="chip-name">Sophvste
+                </span>
+                                </div>  
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">BE</div>
+                <span class="chip-name">Braemmeke
+                </span>             
+                </div>
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">1T</div>
+                <span class="chip-name">1ntro</span>
+                </div>
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">OD</div>
+                <span class="chip-name">Odessa</span>
+                </div>
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">MA</div>
+                <span class="chip-name">martins</span>
+                </div>
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">OL</div>
+                <span class="chip-name">Oliver</span>
+                </div>
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">VE</div>
+                <span class="chip-name">venxurian</span>
+                </div>
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">WO</div>
+                <span class="chip-name">Wooper</span>
+                </div>
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">AR</div>
+                <span class="chip-name">Argon</span>
+                </div>
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">HN</div>
+                <span class="chip-name">HolyNight</span>
+                </div>
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">RE</div>
+                <span class="chip-name">Render</span>
+                </div>          
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#31e820,#10e73f)">MI</div>
+                <span class="chip-name">Milo</span>
+                </div>                      
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#31e820,#10e73f)">ME</div>
+                <span class="chip-name">Mustache</span>
+                </div>    
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">CT</div>
+                <span class="chip-name">Concreteman</span>
+                </div>  
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">CO</div>
+                <span class="chip-name">Coda</span>
+                </div>        
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">CT</div>
+                <span class="chip-name">Cinderest</span>
+                </div>   
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#31e820,#10e73f)">SG</div>
+                <span class="chip-name">Sage</span>
+                </div>   
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#31e820,#10e73f)">S</div>
+                <span class="chip-name">Sheep</span>
+                </div>    
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">TM</div>
+                <span class="chip-name">Thomas</span>
+                </div>  
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#31e820,#10e73f)">GD</div>
+                <span class="chip-name">Geodon</span>
+                </div>       
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">RX</div>
+                <span class="chip-name">Rex</span>
+                </div>         
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">RC</div>
+                <span class="chip-name">Rascal</span>
+                </div>                                                                                                                            
+              <span class="no-members">No members yet</span>
+            </div>
+          </div>
+
+        </div></div>
+      </div>
+
+      <!-- ========== EVENT MODERATORS ========== -->
+
+
+      <!-- ========== PRODUCTION ========== -->
+      <div class="dept-card d-prod reveal">
+        <div class="dept-bar"></div>
+        <div class="dept-header" onclick="tog(this.parentElement)" role="button" tabindex="0" aria-expanded="false" onkeydown="ktog(event,this.parentElement)">
+          <div class="dept-icon">🎬</div>
+          <div class="dept-info">
+            <div class="dept-name">Production</div>
+            <div class="dept-sub">3 ranks · Media &amp; content</div>
+          </div>
+          <div class="dept-chev"><svg viewBox="0 0 12 12"><polyline points="1,3.5 6,8.5 11,3.5"/></svg></div>
+        </div>
+        <div class="dept-body"><div class="dept-inner">
+
+          <div class="rank-block">
+            <div class="rank-row">
+              <span class="rbadge c-teal">Head Production</span>
+              <span class="rtitle">Head of Production</span>
+              <span class="rtier">T1</span>
+            </div>
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#31e820,#10e73f)">AP</div>
+                <span class="chip-name">alphadarkman</span>
+                </div>
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">OC</div>
+                <span class="chip-name">OrcaForever</span>
+                </div>
+            <div class="members">
+            </div>
+          </div>
+
+          <div class="rank-block">
+            <div class="rank-row">
+              <span class="rbadge c-teal">Senior Producer</span>
+              <span class="rtitle">Senior Producer</span>
+              <span class="rtier">T2</span>
+            </div>
+            <div class="members">
+              <!-- ✏️ SENIOR PRODUCER MEMBERS -->
+              <span class="no-members">No members yet</span>
+            </div>
+          </div>
+
+          <div class="rank-block">
+            <div class="rank-row">
+              <span class="rbadge c-teal">Producer</span>
+              <span class="rtitle">Producer</span>
+              <span class="rtier">T3</span>
+            </div>
+            <div class="members">
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">LT</div>
+                <span class="chip-name">Ltcz</span>
+                </div>
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">TA</div>
+                <span class="chip-name">Tamani</span>
+                </div>  
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">TA</div>
+                <span class="chip-name">Taimurxsu</span>
+                </div>   
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">CS</div>
+                <span class="chip-name">xx.chloeskye.xx</span>
+                </div>    
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">AS</div>
+                <span class="chip-name">AsianKobe</span>
+                </div>            
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">RL</div>
+                <span class="chip-name">Ruili</span>
+                </div>  
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">VG</div>
+                <span class="chip-name">Varg</span>
+                </div> 
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#31e820,#10e73f)">GF</div>
+                <span class="chip-name">GloFish3</span>
+                </div>                                                                                                                      
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#31e820,#10e73f)">RS</div>
+                <span class="chip-name">RealSaucer19443 Cheeseman</span>
+                </div>
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">HZ</div>
+                <span class="chip-name">hzel</span>
+                </div>          
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">CN</div>
+                <span class="chip-name">cinar511</span>
+                </div>     
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">EG</div>
+                <span class="chip-name">EGLSupa</span>
+                </div>
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">JK</div>
+                <span class="chip-name">Jenkqxz</span>
+                </div>                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">PG</div>
+                <span class="chip-name">piggoodie</span>
+                </div>
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">BB</div>
+                <span class="chip-name">BunsenBurner</span>
+                </div>
+              <span class="no-members">No members yet</span>
+            </div>
+          </div>
+
+        </div></div>
+      </div>
+
+      <!-- ========== DEVELOPERS ========== -->
+      <div class="dept-card d-dev reveal">
+        <div class="dept-bar"></div>
+        <div class="dept-header" onclick="tog(this.parentElement)" role="button" tabindex="0" aria-expanded="false" onkeydown="ktog(event,this.parentElement)">
+          <div class="dept-icon">💻</div>
+          <div class="dept-info">
+            <div class="dept-name">Developers</div>
+            <div class="dept-sub">3 ranks · Platform &amp; tools</div>
+          </div>
+          <div class="dept-chev"><svg viewBox="0 0 12 12"><polyline points="1,3.5 6,8.5 11,3.5"/></svg></div>
+        </div>
+        <div class="dept-body"><div class="dept-inner">
+
+          <div class="rank-block">
+            <div class="rank-row">
+              <span class="rbadge c-violet">Lead Developer</span>
+              <span class="rtitle">Lead Developer</span>
+              <span class="rtier">T1</span>
+            </div>
+            <div class="members">
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">SR</div>
+                <span class="chip-name">SUSRADIST</span>
+                </div>
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">AP</div>
+                <span class="chip-name">alphadarkman</span>
+                </div>                  
+              <span class="no-members">No members yet</span>
+            </div>
+          </div>
+
+          <div class="rank-block">
+            <div class="rank-row">
+              <span class="rbadge c-violet">Senior Developer</span>
+              <span class="rtitle">Senior Developer</span>
+              <span class="rtier">T2</span>
+            </div>
+            <div class="members">
+              <!-- ✏️ SENIOR DEVELOPER MEMBERS -->
+              <span class="no-members">No members yet</span>
+            </div>
+          </div>
+
+          <div class="rank-block">
+            <div class="rank-row">
+              <span class="rbadge c-violet">Developer</span>
+              <span class="rtitle">Developer</span>
+              <span class="rtier">T3</span>
+            </div>
+            <div class="members">
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">TG</div>
+                <span class="chip-name">TheDGamer5108</span>
+                </div>
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#31e820,#10e73f)">OL</div>
+                <span class="chip-name">Kessoky</span>
+                </div>
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#31e820,#10e73f)">OL</div>
+                <span class="chip-name">Oliver</span>
+                </div>                  
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">AH</div>
+                <span class="chip-name">ArshTyrant</span>
+                </div>
+                <div class="chip">
+                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">JN</div>
+                <span class="chip-name">Jinnati</span>
+                </div>
+              <span class="no-members">No members yet</span>
+            </div>
+          </div>
+
+        </div></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrap">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html" class="brand">
+          <svg class="brand-mark" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M16 2 L29 16 L16 30 L16 16 Z" fill="#4169ff"/>
+            <path d="M16 2 L3 16 L16 30 L16 16 Z" fill="#ff3b4e"/>
+          </svg>
+          UNIFIED EVENTS
+        </a>
+        <p>A competitive Minecraft civilization event platform, run on Discord identity and structured seasons.</p>
+        <button class="btn btn-ghost btn-small" style="margin-top:1.1rem" data-auth-btn>Login with Discord</button>
+      </div>
+      <div class="footer-col">
+        <h4>Platform</h4>
+        <a href="index.html">Home</a>
+        <a href="event.html">Events</a>
+        <a href="schedule.html">Timings</a>
+        <a href="shop.html">Shop</a>
+      </div>
+      <div class="footer-col">
+        <h4>Account</h4>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="apply.html">Enlist</a>
+        <a href="tickets.html">Claims</a>
+        <a href="notifications.html">Announcements</a>
+      </div>
+      <div class="footer-col">
+        <h4>Info</h4>
+        <a href="faq.html">Chat Bot</a>
+        <a href="terms.html">Rules & Conditions</a>
+        <a href="staff.html">Staff</a>
+        <a href="forms.html">Other Forms</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Unified Events. Not affiliated with Mojang or Microsoft.</span>
+      <span>Built for structured competition.</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+function tog(card){
+  const open=card.classList.toggle("open");
+  card.querySelector(".dept-header").setAttribute("aria-expanded",String(open));
+}
+function ktog(e,card){if(e.key==="Enter"||e.key===" "){e.preventDefault();tog(card);}}
+
+const burgerBtn=document.getElementById("burgerBtn");
+const mobilePanel=document.getElementById("mobilePanel");
+burgerBtn?.addEventListener("click",()=>mobilePanel.classList.toggle("open"));
+const moreMenu=document.getElementById("moreMenu");
+const moreBtn=document.getElementById("moreBtn");
+moreBtn?.addEventListener("click",e=>{e.stopPropagation();moreMenu.classList.toggle("open");moreBtn.setAttribute("aria-expanded",String(moreMenu.classList.contains("open")));});
+document.addEventListener("click",e=>{if(!moreMenu.contains(e.target))moreMenu.classList.remove("open");});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){moreMenu.classList.remove("open");mobilePanel.classList.remove("open");}});
+
+async function loadUser(){
+  try{
+    const res=await fetch("/api/me");
+    const user=await res.json();
+    const btns=document.querySelectorAll("[data-auth-btn]");
+    const chip=document.getElementById("authChip");
+    const unEl=document.getElementById("username");
+    const avEl=document.getElementById("avatar");
+    if(user.loggedIn){
+      document.body.classList.add("is-authed");
+      if(unEl)unEl.textContent=user.username;
+      if(avEl)avEl.textContent=user.username.slice(0,2).toUpperCase();
+      if(chip)chip.style.display="flex";
+      btns.forEach(b=>{b.textContent="Go to Dashboard";b.onclick=()=>window.location.href="/dashboard";});
+    } else {
+      btns.forEach(b=>{b.textContent="Login with Discord";b.onclick=()=>window.location.href="/auth/discord";});
+    }
+  } catch {
+    document.querySelectorAll("[data-auth-btn]").forEach(b=>{b.textContent="Login with Discord";b.onclick=()=>window.location.href="/auth/discord";});
+  }
+}
+loadUser();
+
+const revs=document.querySelectorAll(".reveal");
+if("IntersectionObserver" in window){
+  const obs=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");obs.unobserve(e.target);}}),{threshold:0.08});
+  revs.forEach(el=>obs.observe(el));
+} else {revs.forEach(el=>el.classList.add("in"));}
+</script>
+</body>
+
+</html>
+
+</html>
+

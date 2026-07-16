@@ -194,7 +194,7 @@
   .mobile-divider{padding-top:0.6rem;margin-top:0.4rem;border-top:1px solid var(--line-soft);font-family:var(--font-mono);font-size:0.68rem;color:var(--mist-dim);letter-spacing:0.12em;text-transform:uppercase;}
   .mobile-panel .btn{width:100%;justify-content:center;margin-top:1rem;}
 
-  /* ---------- PAGE HERO (shorter hero variant, shared pattern across inner pages) ---------- */
+  /* ---------- PAGE HERO ---------- */
   .hero{
     position:relative;
     padding-top:clamp(56px,9vw,84px);
@@ -268,7 +268,7 @@
   .reveal{opacity:0;transform:translateY(16px);transition:opacity 0.6s ease, transform 0.6s ease;}
   .reveal.in{opacity:1;transform:translateY(0);}
 
-  /* ---------- STATUS BADGES (shared visual language: blue = active/connected, red = live/intense, mist = archived/neutral) ---------- */
+  /* ---------- STATUS BADGES ---------- */
   .status-badge{
     display:inline-flex;align-items:center;gap:0.45rem;
     font-family:var(--font-mono);font-size:0.66rem;letter-spacing:0.08em;text-transform:uppercase;
@@ -349,7 +349,7 @@
   .ext-arrow{font-size:0.85em;}
   .civ-note{font-family:var(--font-mono);font-size:0.68rem;color:var(--mist-dim);letter-spacing:0.02em;}
 
-  /* ---------- MODAL (legacy civilization archive) ---------- */
+  /* ---------- MODAL ---------- */
   .modal-overlay{
     position:fixed;inset:0;z-index:200;
     background:rgba(6,8,13,0.78);backdrop-filter:blur(6px);
@@ -389,7 +389,7 @@
 
   .moment-item{display:flex;gap:0.8rem;align-items:flex-start;padding:0.65rem 0;border-bottom:1px solid var(--line-soft);}
   .moment-item:last-child{border-bottom:none;}
-  .moment-tag{flex-shrink:0;font-family:var(--font-mono);font-size:0.64rem;letter-spacing:0.05em;text-transform:uppercase;padding:0.28rem 0.5rem;border-radius:4px;min-width:88px;text-align:center;}
+  .moment-tag{flex-shrink:0;font-family:var(--font-mono);font-size:0.64rem;letter-spacing:0.05em;text-transform:uppercase;padding:0.28rem 0.5rem;border-radius:4px;min-width:88px;text-align:center;background:rgba(255,255,255,0.07);color:var(--ink);}
   .moment-tag.war{background:rgba(255,59,78,0.12);color:var(--red);}
   .moment-tag.alliance{background:rgba(65,105,255,0.12);color:var(--blue);}
   .moment-tag.betrayal{background:rgba(162,92,255,0.16);color:var(--violet);}
@@ -476,7 +476,7 @@
         <a href="tickets.html">Claims</a>
         <a href="notifications.html">Announcements</a>
         <a href="perks.html">Advantages</a>
-        <a href="terms.html">Rules &amp; & Conditions</a>
+        <a href="terms.html">Rules &amp; Conditions</a>
         <a href="staff.html">Staff</a>
       </div>
     </div>
@@ -484,7 +484,7 @@
     <div class="nav-actions">
       <div class="auth-chip" id="authChip">
         <span class="avatar">GU</span>
-        guest_user
+        <span class="username">guest_user</span>
       </div>
       <button class="btn btn-primary btn-small" id="navAuthBtn" data-auth-btn>Login with Discord</button>
       <button class="nav-burger" id="burgerBtn" aria-label="Open menu" aria-expanded="false">
@@ -508,7 +508,7 @@
       <a href="tickets.html">Claims</a>
       <a href="notifications.html">Announcements</a>
       <a href="perks.html">Advantages</a>
-      <a href="terms.html">Rules &amp; & Conditions</a>
+      <a href="terms.html">Rules &amp; Conditions</a>
       <a href="staff.html">Staff</a>
       <button class="btn btn-primary" data-auth-btn>Login with Discord</button>
     </div>
@@ -548,16 +548,18 @@
       </div>
 
       <div class="season-grid">
-  <article class="season-card reveal" data-status="upcoming">
-  <div class="season-card-top">
-    <h3 class="season-name">Season 1 - N/A</h3>
-    <span class="status-badge status-upcoming">
-      <span class="status-dot"></span>Upcoming
-    </span>
-  </div>
+        <article class="season-card reveal" data-status="upcoming">
+          <div class="season-card-top">
+            <h3 class="season-name">Season 1 - N/A</h3>
+            <span class="status-badge status-upcoming">
+              <span class="status-dot"></span>Upcoming
+            </span>
+          </div>
 
-  <p class="season-meta">No active season running yet</p>
-</article>
+          <p class="season-meta">No active season running yet</p>
+        </article>
+      </div>
+    </div>
   </section>
 
   <section id="network" class="civ-network">
@@ -570,67 +572,88 @@
 
       <div class="civ-grid">
 
-  <div class="civ-card reveal">
-    <span class="slot-tag">Slot 01</span>
-    <h3 class="civ-name">Liquid's Civilization Experiments</h3>
-    <p class="civ-desc">The biggest server in the Civilization Union, hosting fun events with really good PvPers!</p>
-    <span class="status-badge status-connected"><span class="status-dot"></span>External Website Available</span>
-    <div class="civ-footer">
-      <a class="btn btn-ghost btn-small" href="https://event.liquidmc.net/#home" target="_blank">Visit Website ↗</a>
-    </div>
-  </div>
+        <div class="civ-card reveal">
+          <span class="slot-tag">Slot 01</span>
+          <h3 class="civ-name">Liquid's Civilization Experiments</h3>
+          <p class="civ-desc">The biggest server in the Civilization Union, hosting fun events with really good PvPers!</p>
+          <span class="status-badge status-connected"><span class="status-dot"></span>External Website Available</span>
+          <div class="civ-footer">
+            <a class="btn btn-ghost btn-small" href="https://event.liquidmc.net/#home" target="_blank">Visit Website ↗</a>
+          </div>
+        </div>
 
-  <div class="civ-card reveal">
-    <span class="slot-tag">Slot 02</span>
-    <h3 class="civ-name">Prite's Events</h3>
-    <p class="civ-desc">Mini-events like Rising Lava and longer events like Medieval.</p>
-    <span class="status-badge status-connected"><span class="status-dot"></span>External Website Available</span>
-    <div class="civ-footer">
-      <a class="btn btn-ghost btn-small" href="https://prite-events.com/" target="_blank">Visit Website ↗</a>
-    </div>
-  </div>
+        <div class="civ-card reveal">
+          <span class="slot-tag">Slot 02</span>
+          <h3 class="civ-name">Prite's Events</h3>
+          <p class="civ-desc">Mini-events like Rising Lava and longer events like Medieval.</p>
+          <span class="status-badge status-connected"><span class="status-dot"></span>External Website Available</span>
+          <div class="civ-footer">
+            <a class="btn btn-ghost btn-small" href="https://prite-events.com/" target="_blank">Visit Website ↗</a>
+          </div>
+        </div>
 
-  <div class="civ-card reveal">
-    <span class="slot-tag">Slot 03</span>
-    <h3 class="civ-name">Crabby's Civilization Experiments</h3>
-    <p class="civ-desc">Oldest civ in the union, hosted 4 seasons already.</p>
-    <span class="status-badge status-connected"><span class="status-dot"></span>External Website Available</span>
-    <div class="civ-footer">
-      <a class="btn btn-ghost btn-small" href="https://mintsandbananasyaya-sys.github.io/Crabby-Official-Page/index.html" target="_blank">Visit Website ↗</a>
-    </div>
-  </div>
+        <div class="civ-card reveal">
+          <span class="slot-tag">Slot 03</span>
+          <h3 class="civ-name">Crabby's Civilization Experiments</h3>
+          <p class="civ-desc">Oldest civ in the union, hosted 4 seasons already.</p>
+          <span class="status-badge status-connected"><span class="status-dot"></span>External Website Available</span>
+          <div class="civ-footer">
+            <a class="btn btn-ghost btn-small" href="https://mintsandbananasyaya-sys.github.io/Crabby-Official-Page/index.html" target="_blank">Visit Website ↗</a>
+          </div>
+        </div>
 
-  <div class="civ-card is-legacy reveal">
-    <span class="slot-tag">Slot 04</span>
-    <h3 class="civ-name">Oracles</h3>
-    <p class="civ-desc">One of the platform's biggest civilization servers.</p>
-    <span class="status-badge status-archived"><span class="status-dot"></span>Legacy Archive</span>
-    <div class="civ-footer">
-      <button class="btn btn-ghost btn-small" data-legacy="oracles">View Past Events</button>
-    </div>
-  </div>
+        <div class="civ-card is-legacy reveal">
+          <span class="slot-tag">Slot 04</span>
+          <h3 class="civ-name">Oracles</h3>
+          <p class="civ-desc">One of the platform's biggest civilization servers.</p>
+          <span class="status-badge status-archived"><span class="status-dot"></span>Legacy Archive</span>
+          <div class="civ-footer">
+            <button class="btn btn-ghost btn-small" data-legacy="oracles">View Past Events</button>
+          </div>
+        </div>
 
-  <div class="civ-card is-legacy reveal">
-    <span class="slot-tag">Slot 05</span>
-    <h3 class="civ-name">JCrimzy's Civilization</h3>
-    <p class="civ-desc">Known for chaos events like Ants vs Humans.</p>
-    <span class="status-badge status-archived"><span class="status-dot"></span>Legacy Archive</span>
-    <div class="civ-footer">
-      <button class="btn btn-ghost btn-small" data-legacy="jcrimzy">View Past Events</button>
-    </div>
-  </div>
+        <div class="civ-card is-legacy reveal">
+          <span class="slot-tag">Slot 05</span>
+          <h3 class="civ-name">JCrimzy's Civilization</h3>
+          <p class="civ-desc">Known for chaos events like Ants vs Humans.</p>
+          <span class="status-badge status-archived"><span class="status-dot"></span>Legacy Archive</span>
+          <div class="civ-footer">
+            <button class="btn btn-ghost btn-small" data-legacy="jcrimzy">View Past Events</button>
+          </div>
+        </div>
 
-  <div class="civ-card is-legacy reveal">
-    <span class="slot-tag">Slot 06</span>
-    <h3 class="civ-name">Archie's Civilization</h3>
-    <p class="civ-desc">Small server but super active community.</p>
-    <span class="status-badge status-archived"><span class="status-dot"></span>Legacy Archive</span>
-    <div class="civ-footer">
-      <button class="btn btn-ghost btn-small" data-legacy="archie">View Past Events</button>
-    </div>
-  </div>
+        <div class="civ-card is-legacy reveal">
+          <span class="slot-tag">Slot 06</span>
+          <h3 class="civ-name">Archie's Civilization</h3>
+          <p class="civ-desc">Small server but super active community.</p>
+          <span class="status-badge status-archived"><span class="status-dot"></span>Legacy Archive</span>
+          <div class="civ-footer">
+            <button class="btn btn-ghost btn-small" data-legacy="archie">View Past Events</button>
+          </div>
+        </div>
 
-</div>
+        <div class="civ-card is-legacy reveal">
+          <span class="slot-tag">Slot 07</span>
+          <h3 class="civ-name">PrestonMC</h3>
+          <p class="civ-desc">100 Player Civilization events and more!</p>
+          <span class="status-badge status-archived"><span class="status-dot"></span>Legacy Archive</span>
+          <div class="civ-footer">
+            <button class="btn btn-ghost btn-small" data-legacy="preston">View Past Events</button>
+          </div>
+        </div>
+
+        <div class="civ-card is-legacy reveal">
+          <span class="slot-tag">Slot 08</span>
+          <h3 class="civ-name">Luna (Mc) Experiments</h3>
+          <p class="civ-desc">A very PvP-based community that occasionally does civ events.</p>
+          <span class="status-badge status-archived"><span class="status-dot"></span>Legacy Archive</span>
+          <div class="civ-footer">
+            <button class="btn btn-ghost btn-small" data-legacy="luna">View Past Events</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
   </section>
 
 </main>
@@ -669,7 +692,7 @@
       <div class="footer-col">
         <h4>Info</h4>
         <a href="faq.html">Chat Bot</a>
-        <a href="terms.html">Rules &amp; & Conditions</a>
+        <a href="terms.html">Rules &amp; Conditions</a>
         <a href="staff.html">Staff</a>
         <a href="forms.html">Other Forms</a>
       </div>
@@ -714,69 +737,48 @@
 </div>
 
 <script>
-/* =========================
-   AUTH STATE (LOCAL + SAFE)
-========================= */
+====
+   AUTH STATE
+====
 const state = {
   user: null // null = not logged in
 };
 
-/* load from storage */
 async function loadAuth() {
-  const res = await fetch("/api/me", {
-    credentials: "include"
-  });
-
-  if (res.ok) {
-    state.user = await res.json();
-  } else {
+  try {
+    const res = await fetch("/api/me", { credentials: "include" });
+    const data = await res.json();
+    state.user = data.loggedIn ? data : null;
+  } catch {
     state.user = null;
   }
 }
 
-/* save to storage */
-function saveAuth() {
-  if (state.user) {
-    localStorage.setItem("ue_user", JSON.stringify(state.user));
-  } else {
-    localStorage.removeItem("ue_user");
-  }
-}
-
-/* =========================
+====
    ELEMENTS
-========================= */
+====
 const authButtons = document.querySelectorAll("[data-auth-btn]");
 const authChip = document.getElementById("authChip");
 
-/* =========================
+====
    RENDER AUTH UI
-========================= */
+====
 function renderAuth() {
   const isLoggedIn = !!state.user;
 
-  // chip
   if (authChip) {
-    const avatar = authChip.querySelector(".avatar");
+    const avatarEl = authChip.querySelector(".avatar");
+    const usernameEl = authChip.querySelector(".username");
 
     if (isLoggedIn) {
-      if (avatar) avatar.textContent = state.user.avatar;
-
-      const usernameEl = authChip.querySelector(".username");
-    if (usernameEl) usernameEl.textContent = state.user.username;
+      if (avatarEl) avatarEl.textContent = state.user.username.slice(0, 2).toUpperCase();
+      if (usernameEl) usernameEl.textContent = state.user.username;
     } else {
-        if (avatar) avatar.textContent = "GU";
-        const usernameEl = authChip.querySelector(".username");
-    if (usernameEl) usernameEl.textContent = "guest_user";
-      authChip.querySelector(".username").textContent = state.user.username;
-    } else {
-        if (avatar) avatar.textContent = "GU";
-        authChip.querySelector(".username").textContent = "guest_user";
-
-      }
+      if (avatarEl) avatarEl.textContent = "GU";
+      if (usernameEl) usernameEl.textContent = "guest_user";
+    }
   }
 
-  // buttons
   authButtons.forEach(btn => {
     btn.textContent = isLoggedIn ? "Go to Dashboard" : "Login with Discord";
   });
@@ -784,35 +786,24 @@ function renderAuth() {
   document.body.classList.toggle("is-authed", isLoggedIn);
 }
 
-/* =========================
-   REAL LOGIN FLOW (HOOK POINT)
-   =========================
-   replace this with Discord OAuth redirect later
-========================= */
+====
+   AUTH ACTIONS
+====
 function login() {
   window.location.href = "/auth/discord";
 }
 
-/* logout */
-function logout() {
-  state.user = null;
-  saveAuth();
-  renderAuth();
-}
-
-/* toggle handler */
 function handleAuthClick() {
   if (!state.user) {
     login();
   } else {
-    alert("Already logged in 😭👉 going dashboard");
-    window.location.href = "dashboard.html";
+    window.location.href = "/dashboard";
   }
 }
 
-/* =========================
-   NAV / MOBILE (unchanged but safe)
-========================= */
+====
+   NAV / MOBILE
+====
 const burgerBtn = document.getElementById("burgerBtn");
 const mobilePanel = document.getElementById("mobilePanel");
 const moreMenu = document.getElementById("moreMenu");
@@ -836,11 +827,18 @@ function setupNav() {
       moreBtn?.setAttribute("aria-expanded", "false");
     }
   });
+
+  document.querySelectorAll("#mobilePanel a, #mobilePanel button").forEach(el => {
+    el.addEventListener("click", () => {
+      mobilePanel.classList.remove("open");
+      burgerBtn?.setAttribute("aria-expanded", "false");
+    });
+  });
 }
 
-/* =========================
-   SEASON FILTERS (same logic, cleaner)
-========================= */
+====
+   SEASON FILTERS
+====
 function setupFilters() {
   const tabs = document.querySelectorAll(".tab");
   const cards = document.querySelectorAll(".season-card");
@@ -860,46 +858,24 @@ function setupFilters() {
   });
 }
 
-/* =========================
-   INIT
-========================= */
-function init() {
-  loadAuth();
-  renderAuth();
-  setupNav();
-  document.querySelectorAll("#mobilePanel a, #mobilePanel button").forEach(el => {
-  el.addEventListener("click", () => {
-    mobilePanel.classList.remove("open");
-    burgerBtn?.setAttribute("aria-expanded", "false");
-  });
-});
-  setupFilters();
-
-  authButtons.forEach(btn => {
-    btn.addEventListener("click", handleAuthClick);
-  });
-}
-
-init();
-
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") {
-    moreMenu?.classList.remove("open");
-    moreBtn?.setAttribute("aria-expanded", "false");
-  }
-});
-
-  // Expandable season detail panels
+====
+   EXPANDABLE SEASON DETAILS
+====
+function setupSeasonToggles() {
   document.querySelectorAll('.season-toggle').forEach(btn => {
     btn.addEventListener('click', () => {
       const body = btn.nextElementSibling;
       const isOpen = body.classList.toggle('open');
       btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-      btn.querySelector('.toggle-label').textContent = isOpen ? 'Hide details' : 'Details';
+      const label = btn.querySelector('.toggle-label');
+      if (label) label.textContent = isOpen ? 'Hide details' : 'Details';
     });
   });
+}
 
-  // ---------- Legacy civilization archive data ----------
+====
+   LEGACY CIVILIZATION ARCHIVE
+====
 const legacyData = {
   oracles: {
     name: "Oracles",
@@ -956,35 +932,86 @@ const legacyData = {
       { type: "election", text: "DundeeYT won by landslide." },
       { type: "war", text: "Copperdale defeated Dundee forces." }
     ]
+  },
+
+  preston: {
+    name: "PrestonMC",
+    timeline: [
+      {
+        season: "Event 1",
+        role: "Arctic Island Stranding",
+        event: "Players stranded on an arctic island, competing under survival and elimination pressure.",
+        outcome: "Salem survives an assassination attempt",
+        source: "https://youtu.be/SpQ0Zy5hH9c?si=q-_hMeQa0bsWp5hM"
+      },
+      {
+        season: "Event 2",
+        role: "10 Countries Building Competition",
+        event: "Ten countries competed head-to-head in a Minecraft building competition, followed by a King of the Mountain challenge.",
+        outcome: "Poland wins building · Hungary wins King of the Mountain",
+        source: "https://youtu.be/XhX65ZZseLI?si=hIhkkf0NXlalz6wT"
+      },
+      {
+        season: "Event 3",
+        role: "Island Stranding",
+        event: "Players stranded on an island, with a tense fight breaking out over control of a blaze spawner.",
+        outcome: "Spawner-hoarding team wins the fight",
+        source: "https://youtu.be/iz40Kmg_Xnk?si=ZSsABrmTRr1TAOo6"
+      }
+    ],
+    moments: [
+      { type: "betrayal", text: "Assassination attempt on Salem — saved by Waddle at the last moment (12:29)." },
+      { type: "war", text: "Sacred and his teammate are hunted down as fugitives and both killed (15:58)." },
+      { type: "achievement", text: "Poland wins the 10-country building competition (4:37)." },
+      { type: "achievement", text: "Hungary takes King of the Mountain (13:51)." },
+      { type: "war", text: "The team hoarding the blaze spawner wins the fight over it (2:21)." },
+      { type: "betrayal", text: "Heisenberq's rescue attempt on Coke Cow fails — Coke Cow is sheared, turning from a mooshroom back into a normal cow (8:58)." }
+    ]
+  },
+
+  luna: {
+    name: "Luna (Mc) Experiments",
+    timeline: [
+      {
+        season: "Past Event",
+        role: "Lost Continent Civilization Experiment",
+        event: "A PvP-focused civilization experiment built around the discovery and settlement of a lost continent.",
+        outcome: "50 players ACTIVE!"
+      }
+    ],
+    moments: []
   }
 };
 
 const modal = document.getElementById("legacyModal");
-const title = document.getElementById("legacyModalTitle");
-const timeline = document.getElementById("legacyTimeline");
-const moments = document.getElementById("legacyMoments");
+const modalTitle = document.getElementById("legacyModalTitle");
+const legacyTimeline = document.getElementById("legacyTimeline");
+const legacyMoments = document.getElementById("legacyMoments");
 
 function openLegacy(id) {
   const data = legacyData[id];
   if (!data) return;
 
-  title.textContent = data.name;
+  modalTitle.textContent = data.name;
 
-  timeline.innerHTML = data.timeline.map(t => `
+  legacyTimeline.innerHTML = data.timeline.map(t => `
     <div class="timeline-item">
       <span class="t-season">${t.season}</span>
       <span class="t-role">${t.role}</span>
       <p class="t-event">${t.event}</p>
       <span class="t-outcome">${t.outcome}</span>
+      ${t.source ? `<div style="margin-top:0.5rem;"><a href="${t.source}" target="_blank" class="civ-note" style="text-decoration:underline;">Watch the video ↗</a></div>` : ""}
     </div>
   `).join("");
 
-  moments.innerHTML = data.moments.map(m => `
-    <div class="moment-item">
-      <span class="moment-tag ${m.type || ''}">${m.type || ''}</span>
-      <span class="moment-text">${m.text}</span>
-    </div>
-  `).join("");
+  legacyMoments.innerHTML = data.moments.length
+    ? data.moments.map(m => `
+        <div class="moment-item">
+          <span class="moment-tag ${m.type || ''}">${m.type || ''}</span>
+          <span class="moment-text">${m.text}</span>
+        </div>
+      `).join("")
+    : `<p class="civ-desc">No key moments recorded yet.</p>`;
 
   modal.classList.add("open");
   modal.setAttribute("aria-hidden", "false");
@@ -997,16 +1024,67 @@ function closeLegacy() {
   document.body.style.overflow = "";
 }
 
-document.querySelectorAll("[data-legacy]").forEach(btn => {
-  btn.addEventListener("click", () => openLegacy(btn.dataset.legacy));
-});
+function setupLegacyModal() {
+  document.querySelectorAll("[data-legacy]").forEach(btn => {
+    btn.addEventListener("click", () => openLegacy(btn.dataset.legacy));
+  });
 
-document.getElementById("modalClose").addEventListener("click", closeLegacy);
-document.getElementById("modalBack").addEventListener("click", closeLegacy);
+  document.getElementById("modalClose").addEventListener("click", closeLegacy);
+  document.getElementById("modalBack").addEventListener("click", closeLegacy);
 
-modal.addEventListener("click", (e) => {
-  if (e.target === modal) closeLegacy();
-});
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) closeLegacy();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      closeLegacy();
+      moreMenu?.classList.remove("open");
+      moreBtn?.setAttribute("aria-expanded", "false");
+    }
+  });
+}
+
+====
+   SCROLL REVEAL
+====
+function setupReveal() {
+  const targets = document.querySelectorAll(".reveal");
+  if (!("IntersectionObserver" in window)) {
+    targets.forEach(el => el.classList.add("in"));
+    return;
+  }
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("in");
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+  targets.forEach(el => observer.observe(el));
+}
+
+====
+   INIT
+====
+async function init() {
+  setupNav();
+  setupFilters();
+  setupSeasonToggles();
+  setupLegacyModal();
+  setupReveal();
+
+  authButtons.forEach(btn => {
+    btn.addEventListener("click", handleAuthClick);
+  });
+
+  renderAuth();
+  await loadAuth();
+  renderAuth();
+}
+
+init();
 </script>
 
 </body>

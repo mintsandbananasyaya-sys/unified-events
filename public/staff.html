@@ -3,166 +3,262 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Staff — Unified Events</title>
+<title>Staff Panel — Unified Events</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --void:#0a0d14;--void-soft:#11151f;--panel:#141925;
-    --line:rgba(255,255,255,0.09);--line-soft:rgba(255,255,255,0.05);
-    --ink:#edeff5;--mist:#8b92a6;--mist-dim:#5b6175;
-    --blue:#4169ff;--red:#ff3b4e;--violet:#a25cff;
-    --radius:7px;--radius-lg:10px;
-    --font-display:'Big Shoulders Display',sans-serif;
-    --font-body:'IBM Plex Sans',sans-serif;
-    --font-mono:'IBM Plex Mono',monospace;
-    --container:1180px;
+  :root {
+    --void: #0a0d14;
+    --void-soft: #11151f;
+    --panel: #141925;
+    --line: rgba(255,255,255,0.09);
+    --line-soft: rgba(255,255,255,0.05);
+    --ink: #edeff5;
+    --mist: #8b92a6;
+    --mist-dim: #5b6175;
+    --blue: #4169ff;
+    --blue-dim: #1c2c66;
+    --red: #ff3b4e;
+    --red-dim: #5e1620;
+    --green: #3b6d11;
+    --green-dim: #eaf3de;
+    --violet: #a25cff;
+    --radius: 7px;
+    --radius-lg: 10px;
+    --font-display: 'Big Shoulders Display', sans-serif;
+    --font-body: 'IBM Plex Sans', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+    --container: 1180px;
   }
-  *{margin:0;padding:0;box-sizing:border-box;}
-  html{scroll-behavior:smooth;}
-  body{background:var(--void);color:var(--ink);font-family:var(--font-body);line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
-  a{color:inherit;text-decoration:none;}
-  button{font-family:inherit;cursor:pointer;}
-  *:focus-visible{outline:2px solid var(--blue);outline-offset:3px;border-radius:3px;}
-  .wrap{max-width:var(--container);margin:0 auto;padding-inline:clamp(20px,5vw,56px);}
-  .eyebrow{font-family:var(--font-mono);font-size:0.72rem;letter-spacing:0.18em;text-transform:uppercase;font-weight:500;}
-  .eyebrow.is-blue{color:var(--blue);}
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--void);
+    color: var(--ink);
+    font-family: var(--font-body);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  a { color: inherit; text-decoration: none; }
+  ul { list-style: none; }
+  button { font-family: inherit; cursor: pointer; }
+  *:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; border-radius: 3px; }
+
+  .wrap { max-width: var(--container); margin: 0 auto; padding-inline: clamp(20px, 5vw, 56px); }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .eyebrow.is-red { color: var(--red); }
+  .eyebrow.is-blue { color: var(--blue); }
 
   /* BUTTONS */
-  .btn{display:inline-flex;align-items:center;gap:0.55rem;font-family:var(--font-body);font-weight:600;font-size:0.92rem;padding:0.8rem 1.5rem;border-radius:var(--radius);border:1px solid transparent;transition:transform 0.18s,box-shadow 0.18s,border-color 0.18s,background 0.18s;white-space:nowrap;}
-  .btn-primary{background:linear-gradient(115deg,var(--blue),var(--red));color:#fff;box-shadow:0 0 0 1px rgba(255,255,255,0.06) inset,0 10px 26px -12px rgba(255,59,78,0.45);}
-  .btn-primary:hover{transform:translateY(-1px);}
-  .btn-ghost{background:transparent;color:var(--ink);border-color:var(--line);}
-  .btn-ghost:hover{border-color:rgba(255,255,255,0.3);background:rgba(255,255,255,0.03);}
-  .btn-small{padding:0.55rem 1.05rem;font-size:0.82rem;}
+  .btn {
+    display: inline-flex; align-items: center; gap: 0.55rem;
+    font-family: var(--font-body); font-weight: 600; font-size: 0.92rem;
+    padding: 0.8rem 1.5rem; border-radius: var(--radius); border: 1px solid transparent;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+    white-space: nowrap;
+  }
+  .btn-primary {
+    background: linear-gradient(115deg, var(--blue), var(--red));
+    color: #fff;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.06) inset, 0 10px 26px -12px rgba(255,59,78,0.45);
+  }
+  .btn-primary:hover { transform: translateY(-1px); }
+  .btn-ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+  .btn-ghost:hover { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.03); }
+  .btn-small { padding: 0.55rem 1.05rem; font-size: 0.82rem; }
 
   /* NAV */
-  .nav{position:sticky;top:0;z-index:60;background:rgba(10,13,20,0.82);backdrop-filter:blur(14px);border-bottom:1px solid var(--line-soft);}
-  .nav-inner{display:flex;align-items:center;justify-content:space-between;height:72px;}
-  .brand{display:flex;align-items:center;gap:0.65rem;font-family:var(--font-display);font-weight:700;font-size:1.15rem;letter-spacing:0.01em;}
-  .brand-mark{width:30px;height:30px;flex-shrink:0;}
-  .nav-links{display:flex;align-items:center;gap:1.7rem;}
-  .nav-links a{font-family:var(--font-mono);font-size:0.78rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--mist);transition:color 0.15s;}
-  .nav-links a:hover,.nav-links a.active{color:var(--ink);}
-  .nav-more{position:relative;}
-  .nav-more>button{display:flex;align-items:center;gap:0.35rem;background:none;border:none;font-family:var(--font-mono);font-size:0.78rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--mist);}
-  .nav-more>button:hover{color:var(--ink);}
-  .caret{width:8px;height:8px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg);margin-top:-3px;transition:transform 0.15s;}
-  .nav-more.open .caret{transform:rotate(225deg);margin-top:3px;}
-  .dropdown{position:absolute;top:calc(100% + 14px);right:0;min-width:220px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-lg);padding:0.4rem;opacity:0;visibility:hidden;transform:translateY(-6px);transition:opacity 0.16s,transform 0.16s,visibility 0.16s;box-shadow:0 20px 40px -16px rgba(0,0,0,0.6);}
-  .nav-more.open .dropdown{opacity:1;visibility:visible;transform:translateY(0);}
-  .dropdown a{display:block;padding:0.6rem 0.75rem;font-size:0.88rem;color:var(--mist);border-radius:6px;}
-  .dropdown a:hover{background:var(--void-soft);color:var(--ink);}
-  .nav-actions{display:flex;align-items:center;gap:0.85rem;}
-  .auth-chip{display:none;align-items:center;gap:0.55rem;font-family:var(--font-mono);font-size:0.78rem;color:var(--mist);border:1px solid var(--line);border-radius:99px;padding:0.35rem 0.85rem 0.35rem 0.4rem;}
-  .auth-chip .av{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--red));display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:0.7rem;color:#fff;}
-  body.is-authed .auth-chip{display:flex;}
-  .nav-burger{display:none;width:38px;height:38px;align-items:center;justify-content:center;background:transparent;border:1px solid var(--line);border-radius:var(--radius);}
-  .nav-burger span{display:block;width:16px;height:1.5px;background:var(--ink);position:relative;}
-  .nav-burger span::before,.nav-burger span::after{content:"";position:absolute;left:0;width:16px;height:1.5px;background:var(--ink);transition:transform 0.2s;}
-  .nav-burger span::before{top:-5px;}
-  .nav-burger span::after{top:5px;}
-  .mobile-panel{display:none;border-top:1px solid var(--line-soft);background:var(--void-soft);}
-  .mobile-panel.open{display:block;}
-  .mobile-panel .wrap{padding-block:1.1rem;}
-  .mobile-panel a{display:block;padding:0.7rem 0;font-family:var(--font-mono);font-size:0.85rem;letter-spacing:0.04em;text-transform:uppercase;color:var(--mist);border-bottom:1px solid var(--line-soft);}
-  .mobile-divider{padding-top:0.6rem;margin-top:0.4rem;border-top:1px solid var(--line-soft);font-family:var(--font-mono);font-size:0.68rem;color:var(--mist-dim);letter-spacing:0.12em;text-transform:uppercase;}
-  .mobile-panel .btn{width:100%;justify-content:center;margin-top:1rem;}
+  .nav {
+    position: sticky; top: 0; z-index: 60;
+    background: rgba(10,13,20,0.78);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 72px; }
+  .brand { display: flex; align-items: center; gap: 0.65rem; font-family: var(--font-display); font-weight: 700; font-size: 1.15rem; letter-spacing: 0.01em; }
+  .brand-mark { width: 30px; height: 30px; flex-shrink: 0; }
+  .nav-links { display: flex; align-items: center; gap: 1.7rem; }
+  .nav-links a { font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--mist); transition: color 0.15s ease; }
+  .nav-links a:hover { color: var(--ink); }
+  .nav-links a.active { color: var(--ink); }
+  .nav-links a.active::before { content: ""; display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: linear-gradient(135deg, var(--blue), var(--red)); margin-right: 7px; vertical-align: middle; }
+  .nav-more { position: relative; }
+  .nav-more > button { display: flex; align-items: center; gap: 0.35rem; background: none; border: none; font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--mist); }
+  .nav-more > button:hover { color: var(--ink); }
+  .nav-more .caret { width: 8px; height: 8px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg); margin-top: -3px; transition: transform 0.15s ease; }
+  .nav-more.open .caret { transform: rotate(225deg); margin-top: 3px; }
+  .dropdown { position: absolute; top: calc(100% + 14px); right: 0; min-width: 220px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 0.4rem; opacity: 0; visibility: hidden; transform: translateY(-6px); transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s; box-shadow: 0 20px 40px -16px rgba(0,0,0,0.6); }
+  .nav-more.open .dropdown { opacity: 1; visibility: visible; transform: translateY(0); }
+  .dropdown a { display: block; padding: 0.6rem 0.75rem; font-family: var(--font-body); font-size: 0.88rem; color: var(--mist); border-radius: 6px; }
+  .dropdown a:hover { background: var(--void-soft); color: var(--ink); }
+  .nav-actions { display: flex; align-items: center; gap: 0.85rem; }
+  .auth-chip { display: none; align-items: center; gap: 0.55rem; font-family: var(--font-mono); font-size: 0.78rem; color: var(--mist); border: 1px solid var(--line); border-radius: 99px; padding: 0.35rem 0.85rem 0.35rem 0.4rem; }
+  .auth-chip .av { width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, var(--blue), var(--red)); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 0.7rem; color: #fff; overflow: hidden; }
+  .auth-chip .av img { width: 100%; height: 100%; object-fit: cover; }
+  body.is-authed .auth-chip { display: flex; }
+  .nav-burger { display: none; width: 38px; height: 38px; align-items: center; justify-content: center; background: transparent; border: 1px solid var(--line); border-radius: var(--radius); }
+  .nav-burger span { display: block; width: 16px; height: 1.5px; background: var(--ink); position: relative; }
+  .nav-burger span::before, .nav-burger span::after { content: ""; position: absolute; left: 0; width: 16px; height: 1.5px; background: var(--ink); transition: transform 0.2s ease; }
+  .nav-burger span::before { top: -5px; }
+  .nav-burger span::after { top: 5px; }
+  .mobile-panel { display: none; border-top: 1px solid var(--line-soft); background: var(--void-soft); }
+  .mobile-panel.open { display: block; }
+  .mobile-panel .wrap { padding-block: 1.1rem; }
+  .mobile-panel a { display: block; padding: 0.7rem 0; font-family: var(--font-mono); font-size: 0.85rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--mist); border-bottom: 1px solid var(--line-soft); }
+  .mobile-panel a:last-of-type { border-bottom: none; }
+  .mobile-divider { padding-top: 0.6rem; margin-top: 0.4rem; border-top: 1px solid var(--line-soft); font-family: var(--font-mono); font-size: 0.68rem; color: var(--mist-dim); letter-spacing: 0.12em; text-transform: uppercase; }
+  .mobile-panel .btn { width: 100%; justify-content: center; margin-top: 1rem; }
 
   /* HERO */
-  .page-hero{padding-top:clamp(56px,9vw,96px);padding-bottom:clamp(44px,7vw,72px);position:relative;overflow:hidden;}
-  .hglow{position:absolute;top:-30%;width:40%;height:120%;filter:blur(70px);opacity:0.25;border-radius:50%;pointer-events:none;}
-  .hglow.b{left:-8%;background:radial-gradient(circle,var(--blue) 0%,transparent 70%);}
-  .hglow.r{right:-8%;background:radial-gradient(circle,var(--red) 0%,transparent 70%);}
-  .page-hero h1{font-family:var(--font-display);font-weight:800;font-size:clamp(2.8rem,7vw,5.2rem);letter-spacing:0.01em;text-transform:uppercase;background:linear-gradient(92deg,var(--blue) 0%,var(--ink) 50%,var(--red) 100%);-webkit-background-clip:text;background-clip:text;color:transparent;margin-top:0.7rem;line-height:0.96;}
-  .page-hero p{margin-top:1.1rem;color:var(--mist);font-size:1.02rem;max-width:520px;}
+  .hero { position: relative; padding-top: clamp(48px, 8vw, 72px); padding-bottom: clamp(36px, 6vw, 56px); overflow: hidden; text-align: center; }
+  .hero-glow { position: absolute; top: -20%; width: 55%; height: 90%; filter: blur(60px); opacity: 0.4; border-radius: 50%; pointer-events: none; }
+  .hero-glow.blue { left: -12%; background: radial-gradient(circle, var(--blue) 0%, transparent 70%); animation: drift-a 14s ease-in-out infinite; }
+  .hero-glow.red { right: -12%; background: radial-gradient(circle, var(--red) 0%, transparent 70%); animation: drift-b 16s ease-in-out infinite; }
+  @keyframes drift-a { 0%,100%{transform:translate(0,0);}50%{transform:translate(18px,12px);} }
+  @keyframes drift-b { 0%,100%{transform:translate(0,0);}50%{transform:translate(-18px,16px);} }
+  .seam { position: absolute; top: -6%; left: 50%; height: 112%; width: 2px; background: linear-gradient(180deg, rgba(237,239,245,0.05), var(--ink) 45%, var(--ink) 55%, rgba(237,239,245,0.05)); box-shadow: -22px 0 70px -10px var(--blue), 22px 0 70px -10px var(--red); transform: translateX(-50%) rotate(5deg); pointer-events: none; }
+  .seam::after { content: ""; position: absolute; left: 50%; top: 0; width: 5px; height: 5px; border-radius: 50%; background: var(--ink); box-shadow: 0 0 14px 4px rgba(237,239,245,0.8); transform: translateX(-50%); animation: seam-scan 5s linear infinite; }
+  @keyframes seam-scan { 0%{top:2%;opacity:0;}10%{opacity:1;}90%{opacity:1;}100%{top:96%;opacity:0;} }
+  .hero-content { position: relative; z-index: 2; max-width: 680px; margin: 0 auto; }
+  .hero-content .eyebrow { display: inline-block; margin-bottom: 1.2rem; color: var(--mist); }
+  .wordmark { font-family: var(--font-display); font-weight: 800; line-height: 0.96; letter-spacing: 0.01em; text-transform: uppercase; background: linear-gradient(92deg, var(--blue) 0%, var(--blue) 32%, var(--ink) 50%, var(--red) 68%, var(--red) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .wordmark.page-wordmark { font-size: clamp(2.2rem, 7vw, 4.4rem); }
+  .hero-sub { margin-top: 1.1rem; font-size: clamp(0.95rem, 2vw, 1.05rem); color: var(--mist); max-width: 500px; margin-inline: auto; }
 
-  /* STAFF SECTION */
-  .staff-section{padding-block:clamp(48px,8vw,88px);}
-  .dept-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:1.2rem;}
+  /* ACCESS GATE */
+  .gate { display: none; text-align: center; padding: clamp(56px, 9vw, 104px) 0; }
+  .gate.visible { display: block; }
+  .gate-icon { width: 56px; height: 56px; border-radius: 50%; background: rgba(255,59,78,0.1); border: 1px solid rgba(255,59,78,0.25); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; }
+  .gate-icon svg { width: 24px; height: 24px; stroke: var(--red); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .gate h2 { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.5rem, 3vw, 2rem); margin-bottom: 0.8rem; }
+  .gate p { color: var(--mist); font-size: 1rem; }
 
-  /* DEPT CARD */
-  .dept-card{background:var(--void-soft);border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden;transition:border-color 0.2s,transform 0.2s;}
-  .dept-card:hover{border-color:rgba(255,255,255,0.15);transform:translateY(-2px);}
-  .dept-card.open{border-color:rgba(255,255,255,0.2);transform:none;}
-  .dept-bar{height:3px;width:100%;}
-  .dept-header{padding:1.45rem 1.5rem 1.3rem;display:flex;align-items:center;gap:1rem;cursor:pointer;user-select:none;}
-  .dept-icon{width:46px;height:46px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.35rem;flex-shrink:0;}
-  .dept-info{flex:1;min-width:0;}
-  .dept-name{font-family:var(--font-display);font-weight:700;font-size:1.22rem;letter-spacing:0.01em;text-transform:uppercase;}
-  .dept-sub{font-family:var(--font-mono);font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--mist-dim);margin-top:0.2rem;}
-  .dept-chev{width:30px;height:30px;border-radius:6px;flex-shrink:0;background:rgba(255,255,255,0.04);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;transition:background 0.15s,transform 0.25s;}
-  .dept-card.open .dept-chev{transform:rotate(180deg);background:rgba(255,255,255,0.08);}
-  .dept-chev svg{width:11px;height:11px;stroke:var(--mist);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
+  /* MAIN PANEL */
+  .staff-panel { display: none; padding-block: clamp(32px, 5vw, 56px); }
+  .staff-panel.visible { display: block; }
 
-  /* BODY */
-  .dept-body{max-height:0;overflow:hidden;transition:max-height 0.4s cubic-bezier(0.4,0,0.2,1);}
-  .dept-card.open .dept-body{max-height:1400px;}
-  .dept-inner{border-top:1px solid var(--line);padding:0 1.5rem 1.5rem;}
+  /* TABS */
+  .tab-bar { display: flex; gap: 0; border-bottom: 1px solid var(--line); margin-bottom: 2rem; }
+  .tab-btn { font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.85rem 1.4rem; background: transparent; border: none; color: var(--mist); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 0.15s ease, border-color 0.15s ease; }
+  .tab-btn:hover { color: var(--ink); }
+  .tab-btn.active { color: var(--ink); border-bottom-color: var(--blue); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
 
-  /* RANK BLOCKS */
-  .rank-block{padding-top:1.2rem;}
-  .rank-block+.rank-block{border-top:1px solid var(--line-soft);}
-  .rank-row{display:flex;align-items:center;gap:0.7rem;margin-bottom:0.8rem;flex-wrap:wrap;}
-  .rbadge{font-family:var(--font-mono);font-size:0.64rem;letter-spacing:0.09em;text-transform:uppercase;padding:0.2rem 0.6rem;border-radius:4px;border:1px solid;white-space:nowrap;}
-  .rtitle{font-size:0.95rem;font-weight:600;}
-  .rtier{margin-left:auto;font-family:var(--font-mono);font-size:0.64rem;color:var(--mist-dim);}
+  /* FILTER ROW */
+  .filter-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1.4rem; flex-wrap: wrap; }
+  .filter-chip { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.05em; text-transform: uppercase; padding: 0.4rem 0.9rem; border-radius: 99px; border: 1px solid var(--line); background: transparent; color: var(--mist); transition: all 0.15s ease; }
+  .filter-chip:hover { border-color: rgba(255,255,255,0.3); color: var(--ink); }
+  .filter-chip.active { background: linear-gradient(115deg, var(--blue), var(--red)); color: #fff; border-color: transparent; }
 
-  /* MEMBERS */
-  .members{display:flex;flex-wrap:wrap;gap:0.5rem;}
-  .chip{display:flex;align-items:center;gap:0.5rem;background:rgba(255,255,255,0.04);border:1px solid var(--line);border-radius:99px;padding:0.28rem 0.75rem 0.28rem 0.38rem;}
-  .chip-av{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:0.62rem;font-weight:700;color:#fff;flex-shrink:0;}
-  .chip-name{font-size:0.82rem;color:var(--ink);}
-  .no-members{font-size:0.82rem;color:var(--mist-dim);font-family:var(--font-mono);font-style:italic;}
+  /* TICKET CARDS */
+  .ticket-list { display: flex; flex-direction: column; gap: 1rem; }
+  .ticket-card { background: var(--void-soft); border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; }
+  .ticket-head { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.2rem; cursor: pointer; gap: 1rem; }
+  .ticket-head:hover { background: rgba(255,255,255,0.02); }
+  .ticket-left { display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
+  .ticket-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--blue-dim), var(--red-dim)); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 0.75rem; font-weight: 700; color: var(--ink); flex-shrink: 0; overflow: hidden; border: 1px solid var(--line); }
+  .ticket-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .ticket-info {}
+  .ticket-user { font-size: 0.9rem; font-weight: 600; }
+  .ticket-meta { font-family: var(--font-mono); font-size: 0.66rem; color: var(--mist-dim); margin-top: 0.15rem; letter-spacing: 0.03em; }
+  .ticket-right { display: flex; align-items: center; gap: 0.6rem; flex-shrink: 0; }
+  .badge { font-family: var(--font-mono); font-size: 0.64rem; letter-spacing: 0.06em; text-transform: uppercase; padding: 0.25rem 0.6rem; border-radius: 99px; border: 1px solid var(--line); }
+  .badge-open { color: var(--blue); border-color: rgba(65,105,255,0.4); background: rgba(65,105,255,0.08); }
+  .badge-closed { color: var(--mist); border-color: var(--line); background: rgba(255,255,255,0.03); }
+  .badge-report { color: var(--violet); border-color: rgba(162,92,255,0.3); background: rgba(162,92,255,0.07); }
+  .badge-support { color: var(--blue); border-color: rgba(65,105,255,0.3); background: rgba(65,105,255,0.07); }
+  .chevron { width: 8px; height: 8px; border-right: 1.5px solid var(--mist); border-bottom: 1.5px solid var(--mist); transform: rotate(45deg); transition: transform 0.2s ease; margin-top: -2px; }
+  .ticket-card.open .chevron { transform: rotate(225deg); margin-top: 2px; }
 
-  /* BADGE COLOURS */
-  .c-gold{color:#f0c040;border-color:rgba(240,192,64,0.3);background:rgba(240,192,64,0.07);}
-  .c-blue{color:#7ca3ff;border-color:rgba(65,105,255,0.3);background:rgba(65,105,255,0.07);}
-  .c-violet{color:#c49bff;border-color:rgba(162,92,255,0.3);background:rgba(162,92,255,0.07);}
-  .c-discord{color:#9ba8ff;border-color:rgba(88,101,242,0.3);background:rgba(88,101,242,0.07);}
-  .c-orange{color:#ffaa60;border-color:rgba(255,140,66,0.3);background:rgba(255,140,66,0.07);}
-  .c-teal{color:#3dd6a3;border-color:rgba(0,200,150,0.3);background:rgba(0,200,150,0.07);}
-  .c-mist{color:var(--mist);border-color:rgba(139,146,166,0.25);background:rgba(139,146,166,0.06);}
+  .ticket-body { display: none; border-top: 1px solid var(--line-soft); }
+  .ticket-card.open .ticket-body { display: block; }
+  .ticket-messages { padding: 1rem 1.2rem; display: flex; flex-direction: column; gap: 0.65rem; max-height: 420px; overflow-y: auto; }
+  .ticket-messages::-webkit-scrollbar { width: 4px; }
+  .ticket-messages::-webkit-scrollbar-track { background: transparent; }
+  .ticket-messages::-webkit-scrollbar-thumb { background: var(--line); border-radius: 2px; }
+  .msg { display: flex; flex-direction: column; gap: 0.2rem; max-width: 80%; }
+  .msg.staff { align-self: flex-end; align-items: flex-end; }
+  .msg.user { align-self: flex-start; align-items: flex-start; }
+  .msg-bubble { padding: 0.55rem 0.85rem; border-radius: 10px; font-size: 0.875rem; line-height: 1.5; word-break: break-word; }
+  .msg.staff .msg-bubble { background: rgba(65,105,255,0.15); border: 1px solid rgba(65,105,255,0.2); border-bottom-right-radius: 3px; }
+  .msg.user .msg-bubble { background: var(--panel); border: 1px solid var(--line); border-bottom-left-radius: 3px; }
+  .msg-time { font-family: var(--font-mono); font-size: 0.6rem; color: var(--mist-dim); }
+  .msg-sender { font-family: var(--font-mono); font-size: 0.62rem; color: var(--mist-dim); }
+  .no-messages { padding: 1.5rem 1.2rem; font-family: var(--font-mono); font-size: 0.76rem; color: var(--mist-dim); text-align: center; }
 
-  /* DEPT THEMES */
-  .d-own .dept-bar{background:linear-gradient(90deg,var(--blue),var(--red));}
-  .d-own .dept-icon{background:rgba(65,105,255,0.1);}
-  .d-co .dept-bar{background:linear-gradient(90deg,#7a5cff,var(--blue));}
-  .d-co .dept-icon{background:rgba(122,92,255,0.1);}
-  .d-dmod .dept-bar{background:linear-gradient(90deg,#5865f2,#a25cff);}
-  .d-dmod .dept-icon{background:rgba(88,101,242,0.1);}
-  .d-emod .dept-bar{background:linear-gradient(90deg,#ff8c42,var(--red));}
-  .d-emod .dept-icon{background:rgba(255,140,66,0.1);}
-  .d-prod .dept-bar{background:linear-gradient(90deg,#00c896,#4169ff);}
-  .d-prod .dept-icon{background:rgba(0,200,150,0.1);}
-  .d-dev .dept-bar{background:linear-gradient(90deg,#a25cff,#ff3b4e);}
-  .d-dev .dept-icon{background:rgba(162,92,255,0.1);}
-  .d-staff .dept-bar{background:linear-gradient(90deg,var(--mist-dim),#8b92a6);}
-  .d-staff .dept-icon{background:rgba(139,146,166,0.1);}
+  /* LOG ENTRIES */
+  .log-list { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; }
+  .log-entry { display: flex; align-items: flex-start; gap: 0.9rem; padding: 0.85rem 1.1rem; border-bottom: 1px solid var(--line-soft); transition: background 0.12s ease; }
+  .log-entry:last-child { border-bottom: none; }
+  .log-entry:hover { background: rgba(255,255,255,0.02); }
+  .log-type-badge { flex-shrink: 0; font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.06em; text-transform: uppercase; padding: 0.22rem 0.55rem; border-radius: 4px; min-width: 110px; text-align: center; border: 1px solid var(--line); color: var(--mist); background: rgba(255,255,255,0.04); margin-top: 0.1rem; }
+  .log-type-badge.BAN { color: var(--red); border-color: rgba(255,59,78,0.35); background: rgba(255,59,78,0.07); }
+  .log-type-badge.KICK { color: #f5a623; border-color: rgba(245,166,35,0.35); background: rgba(245,166,35,0.07); }
+  .log-type-badge.MUTE { color: var(--violet); border-color: rgba(162,92,255,0.35); background: rgba(162,92,255,0.07); }
+  .log-type-badge.PURGE { color: var(--red); border-color: rgba(255,59,78,0.25); background: rgba(255,59,78,0.05); }
+  .log-type-badge.NOTIFY { color: var(--blue); border-color: rgba(65,105,255,0.35); background: rgba(65,105,255,0.07); }
+  .log-type-badge.NOTIFY_ALL { color: var(--blue); border-color: rgba(65,105,255,0.35); background: rgba(65,105,255,0.07); }
+  .log-type-badge.BOT_MESSAGE { color: #27c4a0; border-color: rgba(39,196,160,0.35); background: rgba(39,196,160,0.07); }
+  .log-type-badge.MESSAGE_EDIT { color: var(--mist); border-color: var(--line); background: rgba(255,255,255,0.03); }
+  .log-type-badge.MESSAGE_DELETE { color: var(--red); border-color: rgba(255,59,78,0.2); background: rgba(255,59,78,0.04); }
+  .log-type-badge.SETIGN { color: #27c4a0; border-color: rgba(39,196,160,0.3); background: rgba(39,196,160,0.05); }
+  .log-body { flex: 1; min-width: 0; }
+  .log-actor { font-size: 0.86rem; font-weight: 600; margin-bottom: 0.2rem; }
+  .log-actor span { font-weight: 400; color: var(--mist); }
+  .log-detail { font-size: 0.82rem; color: var(--mist); word-break: break-word; line-height: 1.5; }
+  .log-time { font-family: var(--font-mono); font-size: 0.62rem; color: var(--mist-dim); flex-shrink: 0; margin-top: 0.15rem; white-space: nowrap; }
 
-  /* REVEAL */
-  .reveal{opacity:0;transform:translateY(14px);transition:opacity 0.55s,transform 0.55s;}
-  .reveal.in{opacity:1;transform:translateY(0);}
+  /* PAGINATION */
+  .pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 1.4rem; }
+  .page-info { font-family: var(--font-mono); font-size: 0.74rem; color: var(--mist-dim); }
+  .page-btns { display: flex; gap: 0.5rem; }
+  .page-btn { font-family: var(--font-mono); font-size: 0.76rem; padding: 0.45rem 0.9rem; border-radius: var(--radius); border: 1px solid var(--line); background: transparent; color: var(--mist); transition: all 0.15s ease; }
+  .page-btn:hover:not(:disabled) { border-color: rgba(255,255,255,0.3); color: var(--ink); }
+  .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  /* EMPTY / LOADING STATES */
+  .state-empty { text-align: center; padding: 3rem 0; }
+  .state-empty p { font-family: var(--font-mono); font-size: 0.8rem; color: var(--mist-dim); }
+  .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.1); border-top-color: var(--ink); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-row { text-align: center; padding: 2.5rem 0; }
+
+  /* STATS ROW */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 1.8rem; }
+  .stat-cell { background: var(--void-soft); padding: 1.1rem 1.4rem; }
+  .stat-cell-val { font-family: var(--font-display); font-weight: 700; font-size: 1.6rem; background: linear-gradient(135deg, var(--blue), var(--red)); -webkit-background-clip: text; background-clip: text; color: transparent; line-height: 1; margin-bottom: 0.3rem; }
+  .stat-cell-label { font-family: var(--font-mono); font-size: 0.64rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mist-dim); }
 
   /* FOOTER */
-  footer{border-top:1px solid var(--line-soft);padding-top:3.2rem;padding-bottom:2rem;}
-  .footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:2.5rem;padding-bottom:2.6rem;}
-  .footer-brand .brand{margin-bottom:0.9rem;}
-  .footer-brand p{color:var(--mist);font-size:0.88rem;max-width:280px;}
-  .footer-col h4{font-family:var(--font-mono);font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--mist-dim);margin-bottom:1rem;}
-  .footer-col a{display:block;color:var(--mist);font-size:0.9rem;padding-block:0.4rem;}
-  .footer-col a:hover{color:var(--ink);}
-  .footer-bottom{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line-soft);padding-top:1.6rem;font-family:var(--font-mono);font-size:0.74rem;color:var(--mist-dim);flex-wrap:wrap;gap:0.8rem;}
+  footer { border-top: 1px solid var(--line-soft); padding-top: 3.2rem; padding-bottom: 2rem; }
+  .footer-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 2.5rem; padding-bottom: 2.6rem; }
+  .footer-brand .brand { margin-bottom: 0.9rem; }
+  .footer-brand p { color: var(--mist); font-size: 0.88rem; max-width: 280px; }
+  .footer-col h4 { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mist-dim); margin-bottom: 1rem; }
+  .footer-col a { display: block; color: var(--mist); font-size: 0.9rem; padding-block: 0.4rem; }
+  .footer-col a:hover { color: var(--ink); }
+  .footer-bottom { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line-soft); padding-top: 1.6rem; font-family: var(--font-mono); font-size: 0.74rem; color: var(--mist-dim); flex-wrap: wrap; gap: 0.8rem; }
 
-  @media(max-width:1080px){.nav-links{display:none;}.nav-more{display:none;}.nav-burger{display:flex;}}
-  @media(max-width:640px){.dept-grid{grid-template-columns:1fr;}.footer-grid{grid-template-columns:1fr 1fr;gap:2rem 1.5rem;}.footer-brand{grid-column:span 2;}}
-  @media(prefers-reduced-motion:reduce){*{animation-duration:0.001s !important;transition-duration:0.1s !important;}}
+  /* RESPONSIVE */
+  @media (max-width: 1080px) { .nav-links { display: none; } .nav-more { display: none; } .nav-burger { display: flex; } }
+  @media (max-width: 700px) { .stats-row { grid-template-columns: repeat(2, 1fr); } .log-entry { flex-wrap: wrap; } .log-time { width: 100%; order: -1; } }
+  @media (max-width: 640px) { .footer-grid { grid-template-columns: 1fr 1fr; gap: 2rem 1.5rem; } .footer-brand { grid-column: span 2; } }
+  @media (prefers-reduced-motion: reduce) { *, .seam::after { animation-duration: 0.001s !important; transition-duration: 0.1s !important; } .seam::after { display: none; } }
 </style>
 </head>
 <body>
 
-<!-- NAV -->
 <header class="nav">
   <div class="wrap nav-inner">
     <a href="index.html" class="brand">
@@ -181,25 +277,26 @@
       <a href="shop.html">Shop</a>
       <a href="youtube.html">Content</a>
       <a href="faq.html">Chat Bot</a>
+      <a href="staff.html" class="active" aria-current="page">Staff</a>
     </nav>
     <div class="nav-more" id="moreMenu">
-      <button id="moreBtn" aria-expanded="false">More <span class="caret"></span></button>
+      <button id="moreBtn" aria-expanded="false" aria-controls="moreDropdown">More <span class="caret"></span></button>
       <div class="dropdown" id="moreDropdown">
         <a href="forms.html">Other Forms</a>
         <a href="tickets.html">Claims</a>
         <a href="notifications.html">Announcements</a>
         <a href="perks.html">Advantages</a>
-        <a href="terms.html">Rules & Conditions</a>
-        <a href="staff.html" style="color:var(--ink)">Staff</a>
+        <a href="terms.html">Rules &amp; Conditions</a>
+        <a href="staff.html">Staff</a>
       </div>
     </div>
     <div class="nav-actions">
       <div class="auth-chip" id="authChip">
-        <div class="av" id="avatar">GU</div>
-        <span id="username">Guest</span>
+        <span class="av" id="navAvatar">GU</span>
+        <span id="navUsername">guest_user</span>
       </div>
-      <button class="btn btn-primary btn-small" data-auth-btn>Login with Discord</button>
-      <button class="nav-burger" id="burgerBtn" aria-label="Open menu"><span></span></button>
+      <button class="btn btn-primary btn-small" id="navAuthBtn" data-auth-btn>Login with Discord</button>
+      <button class="nav-burger" id="burgerBtn" aria-label="Open menu" aria-expanded="false"><span></span></button>
     </div>
   </div>
   <div class="mobile-panel" id="mobilePanel">
@@ -212,559 +309,137 @@
       <a href="shop.html">Shop</a>
       <a href="youtube.html">Content</a>
       <a href="faq.html">Chat Bot</a>
+      <a href="staff.html" class="active">Staff</a>
       <div class="mobile-divider">More</div>
       <a href="forms.html">Other Forms</a>
       <a href="tickets.html">Claims</a>
       <a href="notifications.html">Announcements</a>
       <a href="perks.html">Advantages</a>
-      <a href="terms.html">Rules & Conditions</a>
-      <a href="staff.html">Staff</a>
+      <a href="terms.html">Rules &amp; Conditions</a>
       <button class="btn btn-primary" data-auth-btn>Login with Discord</button>
     </div>
   </div>
 </header>
 
-<!-- HERO -->
-<section class="page-hero">
-  <div class="hglow b"></div>
-  <div class="hglow r"></div>
+<main>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-glow blue"></div>
+    <div class="hero-glow red"></div>
+    <div class="seam"></div>
+    <div class="wrap hero-content">
+      <span class="eyebrow is-red">Restricted Access</span>
+      <h1 class="wordmark page-wordmark">STAFF PANEL</h1>
+      <p class="hero-sub">Ticket management, audit logs, and moderation history. Visible to Staff role only.</p>
+    </div>
+  </section>
+
   <div class="wrap">
-    <span class="eyebrow is-blue">Platform team</span>
-    <h1>Staff</h1>
-    <p>The people who keep Unified Events running. Click any department to expand it and see the full rank structure with who holds each position.</p>
-  </div>
-</section>
 
-<!-- STAFF CARDS -->
-<section class="staff-section">
-  <div class="wrap">
-    <div class="dept-grid">
+    <!-- NOT LOGGED IN GATE -->
+    <div class="gate" id="gateLogin">
+      <div class="gate-icon">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </div>
+      <h2>Login required</h2>
+      <p>You need to be logged in with Discord to access the staff panel.</p>
+      <br>
+      <button class="btn btn-primary" data-auth-btn>Login with Discord</button>
+    </div>
 
-      <!-- ========== OWNERS ========== -->
-      <div class="dept-card d-own reveal">
-        <div class="dept-bar"></div>
-        <div class="dept-header" onclick="tog(this.parentElement)" role="button" tabindex="0" aria-expanded="false" onkeydown="ktog(event,this.parentElement)">
-          <div class="dept-icon">👑</div>
-          <div class="dept-info">
-            <div class="dept-name">Owners</div>
-            <div class="dept-sub">Top authority</div>
-          </div>
-          <div class="dept-chev"><svg viewBox="0 0 12 12"><polyline points="1,3.5 6,8.5 11,3.5"/></svg></div>
-        </div>
-        <div class="dept-body"><div class="dept-inner">
+    <!-- NOT STAFF GATE -->
+    <div class="gate" id="gateStaff">
+      <div class="gate-icon">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+      </div>
+      <h2>Access denied</h2>
+      <p>You don't have the <strong>Staff</strong> role in the Unified Events Discord server.</p>
+    </div>
 
-          <div class="rank-block">
-            <div class="rank-row">
-              <span class="rbadge c-gold">Founder</span>
-              <span class="rtitle">Founder</span>
-              <span class="rtier">T1</span>
-            </div>
-            <div class="members">
-              <!-- ✏️ FOUNDER MEMBERS — copy a .chip div for each person, change initials + name -->
-              <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#f0c040,#ff8c42)">PR</div>
-                <span class="chip-name">_prite</span>
-              </div>
-            </div>
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">NO</div>
-                <span class="chip-name">Nox 8x80</span>
-                </div>
-                 <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">LI</div>
-                <span class="chip-name">Liquidds</span>
-                </div>
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">CR</div>
-                <span class="chip-name">Crabby Obama8694</span>
-                </div>
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">AR</div>
-                <span class="chip-name">archiex1</span>
-                </div>
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">JC</div>
-                <span class="chip-name">Jcrimzy</span>
-                </div>
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">TC</div>
-                <span class="chip-name">tcftw</span>
-                </div>
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">FR</div>
-                <span class="chip-name">Frazer</span>
-                </div>
-          </div>
+    <!-- STAFF PANEL -->
+    <div class="staff-panel" id="staffPanel">
 
-        </div></div>
+      <!-- STATS -->
+      <div class="stats-row" id="statsRow">
+        <div class="stat-cell"><div class="stat-cell-val" id="statTickets">—</div><div class="stat-cell-label">Total tickets</div></div>
+        <div class="stat-cell"><div class="stat-cell-val" id="statOpen">—</div><div class="stat-cell-label">Open tickets</div></div>
+        <div class="stat-cell"><div class="stat-cell-val" id="statLogs">—</div><div class="stat-cell-label">Log entries</div></div>
+        <div class="stat-cell"><div class="stat-cell-val" id="statActions">—</div><div class="stat-cell-label">Mod actions</div></div>
       </div>
 
-      <!-- ========== CO-OWNERS ========== -->
-      <div class="dept-card d-co reveal">
-        <div class="dept-bar"></div>
-        <div class="dept-header" onclick="tog(this.parentElement)" role="button" tabindex="0" aria-expanded="false" onkeydown="ktog(event,this.parentElement)">
-          <div class="dept-icon">🛡️</div>
-          <div class="dept-info">
-            <div class="dept-name">Co-Owners</div>
-            <div class="dept-sub">2 ranks · Senior leadership</div>
-          </div>
-          <div class="dept-chev"><svg viewBox="0 0 12 12"><polyline points="1,3.5 6,8.5 11,3.5"/></svg></div>
-        </div>
-        <div class="dept-body"><div class="dept-inner">
-
-          <div class="rank-block">
-            <div class="rank-row">
-              <span class="rbadge c-violet">Head Co-Owner</span>
-              <span class="rtitle">Head Co-Owner</span>
-              <span class="rtier">T1</span>
-            </div>
-            <div class="members">
-              <!-- ✏️ HEAD CO-OWNER MEMBERS -->
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">AL</div>
-                <span class="chip-name">alphadarkman</span>
-                </div>
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">TX</div>
-                <span class="chip-name">Tixcy</span>
-                </div>
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">1U</div>
-                <span class="chip-name">1kodu</span>
-                </div>                
-            </div>
-          </div>
-
-        </div></div>
+      <!-- TABS -->
+      <div class="tab-bar" role="tablist">
+        <button class="tab-btn active" role="tab" aria-selected="true" data-tab="tickets">Tickets</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="logs">Audit Logs</button>
       </div>
 
-      <!-- ========== DISCORD MODERATORS ========== -->
-      <div class="dept-card d-dmod reveal">
-        <div class="dept-bar"></div>
-        <div class="dept-header" onclick="tog(this.parentElement)" role="button" tabindex="0" aria-expanded="false" onkeydown="ktog(event,this.parentElement)">
-          <div class="dept-icon">💬</div>
-          <div class="dept-info">
-            <div class="dept-name">Moderators</div>
-            <div class="dept-sub">3 ranks · Community safety</div>
-          </div>
-          <div class="dept-chev"><svg viewBox="0 0 12 12"><polyline points="1,3.5 6,8.5 11,3.5"/></svg></div>
+      <!-- TICKETS TAB -->
+      <div class="tab-content active" id="tab-tickets">
+        <div class="filter-row" id="ticketFilters">
+          <button class="filter-chip active" data-ticket-filter="all">All</button>
+          <button class="filter-chip" data-ticket-filter="open">Open</button>
+          <button class="filter-chip" data-ticket-filter="closed">Closed</button>
+          <button class="filter-chip" data-ticket-filter="support">Support</button>
+          <button class="filter-chip" data-ticket-filter="report">Reports</button>
         </div>
-        <div class="dept-body"><div class="dept-inner">
 
-          <div class="rank-block">
-            <div class="rank-row">
-              <span class="rbadge c-discord">Head Moderator</span>
-              <span class="rtitle">Head Moderator</span>
-              <span class="rtier">T1</span>
-            </div>
-            <div class="members">
-              <!-- ✏️ HEAD MOD MEMBERS -->
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">AS</div>
-                <span class="chip-name">Aesily</span>
-                </div>  
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">TE</div>
-                <span class="chip-name">TransformerElite3</span>
-                </div>    
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">AG</div>
-                <span class="chip-name">ArshTheGreat</span>
-                </div>     
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">MW</div>
-                <span class="chip-name">mrwinstreak</span>
-                </div>    
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">CS</div>
-                <span class="chip-name">Chloeskye</span>
-                </div>                                                                     
-              <span class="no-members"></span>
-            </div>
+        <div id="ticketList" class="ticket-list">
+          <div class="loading-row"><span class="spinner"></span></div>
+        </div>
+
+        <div class="pagination" id="ticketPagination" style="display:none;">
+          <span class="page-info" id="ticketPageInfo"></span>
+          <div class="page-btns">
+            <button class="page-btn" id="ticketPrevBtn" disabled>← Prev</button>
+            <button class="page-btn" id="ticketNextBtn" disabled>Next →</button>
           </div>
-
-          <div class="rank-block">
-            <div class="rank-row">
-              <span class="rbadge c-discord">Senior Moderator</span>
-              <span class="rtitle">Senior Moderator</span>
-              <span class="rtier">T2</span>
-            </div>
-            <div class="members">
-              <!-- ✏️ SENIOR MOD MEMBERS -->
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">RO</div>
-                <span class="chip-name">Rostok</span>
-                </div>               
-              <span class="no-members"></span>
-            </div>
-          </div>
-
-          <div class="rank-block">
-            <div class="rank-row">
-              <span class="rbadge c-discord">Moderator</span>
-              <span class="rtitle">Moderator</span>
-              <span class="rtier">T3</span>
-            </div>
-            <div class="members">
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">BL</div>
-                <span class="chip-name">Blep</span>
-                </div>
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">AG</div>
-                <span class="chip-name">undercoveragent6</span>
-                </div>
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">EG</div>
-                <span class="chip-name">EGLSupa
-                </span>
-                </div>
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">PR</div>
-                <span class="chip-name">Pronty
-                </span>
-                                </div>  
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">DE</div>
-                <span class="chip-name">Demi
-                </span>
-                                </div>  
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">PS</div>
-                <span class="chip-name">psychoku
-                </span>             
-                                 </div> 
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">LA</div>
-                <span class="chip-name">lagg3677</span>
-                </div>                                  
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">PO</div>
-                <span class="chip-name">Pongo
-                </span>
-                                </div>  
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">KR</div>
-                <span class="chip-name">Kronos
-                </span>
-                                </div>  
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">NU</div>
-                <span class="chip-name">NullRex
-                </span>
-                                </div>  
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">SP</div>
-                <span class="chip-name">Sophvste
-                </span>
-                                </div>  
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">BE</div>
-                <span class="chip-name">Braemmeke
-                </span>             
-                </div>
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">1T</div>
-                <span class="chip-name">1ntro</span>
-                </div>
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">OD</div>
-                <span class="chip-name">Odessa</span>
-                </div>
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">MA</div>
-                <span class="chip-name">martins</span>
-                </div>
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">OL</div>
-                <span class="chip-name">Oliver</span>
-                </div>
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">VE</div>
-                <span class="chip-name">venxurian</span>
-                </div>
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">WO</div>
-                <span class="chip-name">Wooper</span>
-                </div>
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">AR</div>
-                <span class="chip-name">Argon</span>
-                </div>
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">HN</div>
-                <span class="chip-name">HolyNight</span>
-                </div>
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">RE</div>
-                <span class="chip-name">Render</span>
-                </div>          
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">MI</div>
-                <span class="chip-name">Milo</span>
-                </div>                      
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">ME</div>
-                <span class="chip-name">Mustache</span>
-                </div>    
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">CT</div>
-                <span class="chip-name">Concreteman</span>
-                </div>  
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">CO</div>
-                <span class="chip-name">Coda</span>
-                </div>        
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">CT</div>
-                <span class="chip-name">Cinderest</span>
-                </div>   
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">SA</div>
-                <span class="chip-name">Sage</span>
-                </div>   
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">SH</div>
-                <span class="chip-name">Sheep</span>
-                </div>    
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">TM</div>
-                <span class="chip-name">Thomas</span>
-                </div>  
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">GD</div>
-                <span class="chip-name">Geodon</span>
-                </div>       
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">RX</div>
-                <span class="chip-name">Rex</span>
-                </div>         
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">RC</div>
-                <span class="chip-name">Rascal</span>
-                </div>                                                                                                                            
-              <span class="no-members">No members yet</span>
-            </div>
-          </div>
-
-        </div></div>
+        </div>
       </div>
 
-      <!-- ========== EVENT MODERATORS ========== -->
-
-
-      <!-- ========== PRODUCTION ========== -->
-      <div class="dept-card d-prod reveal">
-        <div class="dept-bar"></div>
-        <div class="dept-header" onclick="tog(this.parentElement)" role="button" tabindex="0" aria-expanded="false" onkeydown="ktog(event,this.parentElement)">
-          <div class="dept-icon">🎬</div>
-          <div class="dept-info">
-            <div class="dept-name">Production</div>
-            <div class="dept-sub">3 ranks · Media &amp; content</div>
-          </div>
-          <div class="dept-chev"><svg viewBox="0 0 12 12"><polyline points="1,3.5 6,8.5 11,3.5"/></svg></div>
+      <!-- LOGS TAB -->
+      <div class="tab-content" id="tab-logs">
+        <div class="filter-row" id="logFilters">
+          <button class="filter-chip active" data-log-filter="">All</button>
+          <button class="filter-chip" data-log-filter="BAN">Bans</button>
+          <button class="filter-chip" data-log-filter="KICK">Kicks</button>
+          <button class="filter-chip" data-log-filter="MUTE">Mutes</button>
+          <button class="filter-chip" data-log-filter="PURGE">Purges</button>
+          <button class="filter-chip" data-log-filter="NOTIFY">Notifies</button>
+          <button class="filter-chip" data-log-filter="BOT_MESSAGE">Bot messages</button>
+          <button class="filter-chip" data-log-filter="MESSAGE_EDIT">Edits</button>
+          <button class="filter-chip" data-log-filter="MESSAGE_DELETE">Deletes</button>
         </div>
-        <div class="dept-body"><div class="dept-inner">
 
-          <div class="rank-block">
-            <div class="rank-row">
-              <span class="rbadge c-teal">Head Production</span>
-              <span class="rtitle">Head of Production</span>
-              <span class="rtier">T1</span>
-            </div>
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">AP</div>
-                <span class="chip-name">alphadarkman</span>
-                </div>
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">OC</div>
-                <span class="chip-name">OrcaForever</span>
-                </div>
-            <div class="members">
-            </div>
+        <div id="logList" class="log-list" style="display:none;"></div>
+        <div id="logLoading" class="loading-row"><span class="spinner"></span></div>
+        <div id="logEmpty" class="state-empty" style="display:none;"><p>No log entries found.</p></div>
+
+        <div class="pagination" id="logPagination" style="display:none;">
+          <span class="page-info" id="logPageInfo"></span>
+          <div class="page-btns">
+            <button class="page-btn" id="logPrevBtn" disabled>← Prev</button>
+            <button class="page-btn" id="logNextBtn" disabled>Next →</button>
           </div>
-
-          <div class="rank-block">
-            <div class="rank-row">
-              <span class="rbadge c-teal">Senior Producer</span>
-              <span class="rtitle">Senior Producer</span>
-              <span class="rtier">T2</span>
-            </div>
-            <div class="members">
-              <!-- ✏️ SENIOR PRODUCER MEMBERS -->
-              <span class="no-members">No members yet</span>
-            </div>
-          </div>
-
-          <div class="rank-block">
-            <div class="rank-row">
-              <span class="rbadge c-teal">Producer</span>
-              <span class="rtitle">Producer</span>
-              <span class="rtier">T3</span>
-            </div>
-            <div class="members">
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">LT</div>
-                <span class="chip-name">Ltcz</span>
-                </div>
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">TA</div>
-                <span class="chip-name">Tamani</span>
-                </div>  
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">TA</div>
-                <span class="chip-name">Taimurxsu</span>
-                </div>   
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">CS</div>
-                <span class="chip-name">xx.chloeskye.xx</span>
-                </div>    
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">AS</div>
-                <span class="chip-name">AsianKobe</span>
-                </div>            
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">RL</div>
-                <span class="chip-name">Ruili</span>
-                </div>  
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">VG</div>
-                <span class="chip-name">Varg</span>
-                </div> 
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">GF</div>
-                <span class="chip-name">GloFish3</span>
-                </div>                                                                                                                      
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">RS</div>
-                <span class="chip-name">RealSaucer19443 Cheeseman</span>
-                </div>
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">HZ</div>
-                <span class="chip-name">hzel</span>
-                </div>          
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">CN</div>
-                <span class="chip-name">cinar511</span>
-                </div>     
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">EG</div>
-                <span class="chip-name">EGLSupa</span>
-                </div>
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">JK</div>
-                <span class="chip-name">Jenkqxz</span>
-                </div>                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">PG</div>
-                <span class="chip-name">piggoodie</span>
-                </div>
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">BB</div>
-                <span class="chip-name">BunsenBurner</span>
-                </div>
-              <span class="no-members">No members yet</span>
-            </div>
-          </div>
-
-        </div></div>
-      </div>
-
-      <!-- ========== DEVELOPERS ========== -->
-      <div class="dept-card d-dev reveal">
-        <div class="dept-bar"></div>
-        <div class="dept-header" onclick="tog(this.parentElement)" role="button" tabindex="0" aria-expanded="false" onkeydown="ktog(event,this.parentElement)">
-          <div class="dept-icon">💻</div>
-          <div class="dept-info">
-            <div class="dept-name">Developers</div>
-            <div class="dept-sub">3 ranks · Platform &amp; tools</div>
-          </div>
-          <div class="dept-chev"><svg viewBox="0 0 12 12"><polyline points="1,3.5 6,8.5 11,3.5"/></svg></div>
         </div>
-        <div class="dept-body"><div class="dept-inner">
-
-          <div class="rank-block">
-            <div class="rank-row">
-              <span class="rbadge c-violet">Lead Developer</span>
-              <span class="rtitle">Lead Developer</span>
-              <span class="rtier">T1</span>
-            </div>
-            <div class="members">
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">SR</div>
-                <span class="chip-name">SUSRADIST</span>
-                </div>
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">AP</div>
-                <span class="chip-name">alphadarkman</span>
-                </div>                  
-              <span class="no-members">No members yet</span>
-            </div>
-          </div>
-
-          <div class="rank-block">
-            <div class="rank-row">
-              <span class="rbadge c-violet">Senior Developer</span>
-              <span class="rtitle">Senior Developer</span>
-              <span class="rtier">T2</span>
-            </div>
-            <div class="members">
-              <!-- ✏️ SENIOR DEVELOPER MEMBERS -->
-              <span class="no-members">No members yet</span>
-            </div>
-          </div>
-
-          <div class="rank-block">
-            <div class="rank-row">
-              <span class="rbadge c-violet">Developer</span>
-              <span class="rtitle">Developer</span>
-              <span class="rtier">T3</span>
-            </div>
-            <div class="members">
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">TG</div>
-                <span class="chip-name">TheDGamer5108</span>
-                </div>
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">KS</div>
-                <span class="chip-name">Kessoky</span>
-                </div>
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">OL</div>
-                <span class="chip-name">Oliver</span>
-                </div>                  
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">AH</div>
-                <span class="chip-name">ArshTyrant</span>
-                </div>
-                <div class="chip">
-                <div class="chip-av" style="background:linear-gradient(135deg,#4169ff,#a25cff)">JN</div>
-                <span class="chip-name">Jinnati</span>
-                </div>
-              <span class="no-members">No members yet</span>
-            </div>
-          </div>
-
-        </div></div>
       </div>
 
     </div>
   </div>
-</section>
+</main>
 
-<!-- FOOTER -->
 <footer>
   <div class="wrap">
     <div class="footer-grid">
       <div class="footer-brand">
         <a href="index.html" class="brand">
-          <svg class="brand-mark" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <svg class="brand-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
             <path d="M16 2 L29 16 L16 30 L16 16 Z" fill="#4169ff"/>
             <path d="M16 2 L3 16 L16 30 L16 16 Z" fill="#ff3b4e"/>
           </svg>
           UNIFIED EVENTS
         </a>
         <p>A competitive Minecraft civilization event platform, run on Discord identity and structured seasons.</p>
-        <button class="btn btn-ghost btn-small" style="margin-top:1.1rem" data-auth-btn>Login with Discord</button>
+        <button class="btn btn-ghost btn-small" style="margin-top:1.1rem;" data-auth-btn>Login with Discord</button>
       </div>
       <div class="footer-col">
         <h4>Platform</h4>
@@ -783,7 +458,7 @@
       <div class="footer-col">
         <h4>Info</h4>
         <a href="faq.html">Chat Bot</a>
-        <a href="terms.html">Rules & Conditions</a>
+        <a href="terms.html">Rules &amp; Conditions</a>
         <a href="staff.html">Staff</a>
         <a href="forms.html">Other Forms</a>
       </div>
@@ -796,53 +471,384 @@
 </footer>
 
 <script>
-function tog(card){
-  const open=card.classList.toggle("open");
-  card.querySelector(".dept-header").setAttribute("aria-expanded",String(open));
+
+   STATE
+
+const appState = {
+  user: null,
+  isStaff: false,
+  tickets: { page: 1, pages: 1, total: 0, filter: 'all', data: [] },
+  logs: { page: 1, pages: 1, total: 0, filter: '', data: [] },
+};
+
+
+   UTILS
+
+function formatTs(ts) {
+  if (!ts) return '—';
+  const d = new Date(typeof ts === 'string' ? ts : Number(ts));
+  return d.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
-function ktog(e,card){if(e.key==="Enter"||e.key===" "){e.preventDefault();tog(card);}}
 
-const burgerBtn=document.getElementById("burgerBtn");
-const mobilePanel=document.getElementById("mobilePanel");
-burgerBtn?.addEventListener("click",()=>mobilePanel.classList.toggle("open"));
-const moreMenu=document.getElementById("moreMenu");
-const moreBtn=document.getElementById("moreBtn");
-moreBtn?.addEventListener("click",e=>{e.stopPropagation();moreMenu.classList.toggle("open");moreBtn.setAttribute("aria-expanded",String(moreMenu.classList.contains("open")));});
-document.addEventListener("click",e=>{if(!moreMenu.contains(e.target))moreMenu.classList.remove("open");});
-document.addEventListener("keydown",e=>{if(e.key==="Escape"){moreMenu.classList.remove("open");mobilePanel.classList.remove("open");}});
+function avatarUrl(discordId, avatarHash) {
+  if (!avatarHash) return null;
+  return `https://cdn.discordapp.com/avatars/${discordId}/${avatarHash}.png?size=64`;
+}
 
-async function loadUser(){
-  try{
-    const res=await fetch("/api/me");
-    const user=await res.json();
-    const btns=document.querySelectorAll("[data-auth-btn]");
-    const chip=document.getElementById("authChip");
-    const unEl=document.getElementById("username");
-    const avEl=document.getElementById("avatar");
-    if(user.loggedIn){
-      document.body.classList.add("is-authed");
-      if(unEl)unEl.textContent=user.username;
-      if(avEl)avEl.textContent=user.username.slice(0,2).toUpperCase();
-      if(chip)chip.style.display="flex";
-      btns.forEach(b=>{b.textContent="Go to Dashboard";b.onclick=()=>window.location.href="/dashboard";});
-    } else {
-      btns.forEach(b=>{b.textContent="Login with Discord";b.onclick=()=>window.location.href="/auth/discord";});
-    }
+function initials(name) {
+  return (name || '?').slice(0, 2).toUpperCase();
+}
+
+
+   AUTH
+
+async function loadAuth() {
+  try {
+    const res = await fetch('/api/me', { credentials: 'include' });
+    const data = await res.json();
+    appState.user = data.loggedIn ? data : null;
   } catch {
-    document.querySelectorAll("[data-auth-btn]").forEach(b=>{b.textContent="Login with Discord";b.onclick=()=>window.location.href="/auth/discord";});
+    appState.user = null;
+  }
+  renderAuth();
+  if (appState.user) await checkStaffAccess();
+  else showGate('login');
+}
+
+async function checkStaffAccess() {
+  try {
+    // Probe the staff tickets endpoint — server checks the Staff role
+    const res = await fetch('/api/staff/tickets?page=1', { credentials: 'include' });
+    if (res.status === 403 || res.status === 401) {
+      appState.isStaff = false;
+      showGate('staff');
+      return;
+    }
+    appState.isStaff = true;
+    showPanel();
+    const data = await res.json();
+    handleTicketsResponse(data);
+    loadStats();
+    loadLogs();
+  } catch {
+    appState.isStaff = false;
+    showGate('staff');
   }
 }
-loadUser();
 
-const revs=document.querySelectorAll(".reveal");
-if("IntersectionObserver" in window){
-  const obs=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");obs.unobserve(e.target);}}),{threshold:0.08});
-  revs.forEach(el=>obs.observe(el));
-} else {revs.forEach(el=>el.classList.add("in"));}
+function renderAuth() {
+  const isLoggedIn = !!appState.user;
+  document.querySelectorAll('[data-auth-btn]').forEach(btn => {
+    btn.textContent = isLoggedIn ? 'Go to Dashboard' : 'Login with Discord';
+  });
+  document.body.classList.toggle('is-authed', isLoggedIn);
+
+  if (isLoggedIn && appState.user) {
+    const avatarEl = document.getElementById('navAvatar');
+    const usernameEl = document.getElementById('navUsername');
+    const url = avatarUrl(appState.user.id, appState.user.avatar);
+    if (url && avatarEl) {
+      avatarEl.innerHTML = `<img src="${url}" alt="${appState.user.username}">`;
+    } else if (avatarEl) {
+      avatarEl.textContent = initials(appState.user.username);
+    }
+    if (usernameEl) usernameEl.textContent = appState.user.username || '';
+  }
+}
+
+document.querySelectorAll('[data-auth-btn]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (!appState.user) window.location.href = '/auth/discord';
+    else window.location.href = '/dashboard';
+  });
+});
+
+
+function showGate(type) {
+  document.getElementById('gateLogin').classList.toggle('visible', type === 'login');
+  document.getElementById('gateStaff').classList.toggle('visible', type === 'staff');
+  document.getElementById('staffPanel').classList.remove('visible');
+}
+
+function showPanel() {
+  document.getElementById('gateLogin').classList.remove('visible');
+  document.getElementById('gateStaff').classList.remove('visible');
+  document.getElementById('staffPanel').classList.add('visible');
+}
+
+
+   NAV
+
+const burgerBtn = document.getElementById('burgerBtn');
+const mobilePanel = document.getElementById('mobilePanel');
+const moreMenu = document.getElementById('moreMenu');
+const moreBtn = document.getElementById('moreBtn');
+
+burgerBtn?.addEventListener('click', () => {
+  const open = mobilePanel.classList.toggle('open');
+  burgerBtn.setAttribute('aria-expanded', open);
+});
+moreBtn?.addEventListener('click', e => {
+  e.stopPropagation();
+  const open = moreMenu.classList.toggle('open');
+  moreBtn.setAttribute('aria-expanded', open);
+});
+document.addEventListener('click', e => {
+  if (!moreMenu?.contains(e.target)) {
+    moreMenu?.classList.remove('open');
+    moreBtn?.setAttribute('aria-expanded', 'false');
+  }
+});
+
+
+   TABS
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    btn.setAttribute('aria-selected', 'true');
+    document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
+  });
+});
+
+
+   STATS
+
+async function loadStats() {
+  try {
+    const [tRes, lRes] = await Promise.all([
+      fetch('/api/staff/tickets?page=1', { credentials: 'include' }),
+      fetch('/api/staff/logs?page=1', { credentials: 'include' }),
+    ]);
+    const tData = await tRes.json();
+    const lData = await lRes.json();
+
+    document.getElementById('statTickets').textContent = tData.total ?? '—';
+    document.getElementById('statLogs').textContent = lData.total ?? '—';
+
+    // Count open tickets
+    const openRes = await fetch('/api/staff/tickets?page=1&status=open', { credentials: 'include' });
+    // We'll just count from first page data for now
+    const openCount = tData.tickets?.filter(t => t.status === 'open').length ?? '—';
+    document.getElementById('statOpen').textContent = tData.total > 0 ? '↗' : '0';
+
+    // Count mod actions (BAN, KICK, MUTE)
+    const modRes = await fetch('/api/staff/logs?type=BAN', { credentials: 'include' });
+    const modData = await modRes.json();
+    document.getElementById('statActions').textContent = modData.total ?? '—';
+    document.getElementById('statOpen').textContent = tData.tickets?.filter(t => t.status === 'open').length ?? '0';
+  } catch (err) {
+    console.error('Stats load failed:', err);
+  }
+}
+
+
+   TICKETS
+
+async function loadTickets(page = 1) {
+  document.getElementById('ticketList').innerHTML = '<div class="loading-row"><span class="spinner"></span></div>';
+
+  try {
+    const res = await fetch(`/api/staff/tickets?page=${page}`, { credentials: 'include' });
+    const data = await res.json();
+    handleTicketsResponse(data);
+    appState.tickets.page = page;
+  } catch (err) {
+    document.getElementById('ticketList').innerHTML = '<div class="state-empty"><p>Failed to load tickets.</p></div>';
+  }
+}
+
+function handleTicketsResponse(data) {
+  appState.tickets.data = data.tickets || [];
+  appState.tickets.pages = data.pages || 1;
+  appState.tickets.total = data.total || 0;
+  renderTickets();
+  renderTicketPagination();
+}
+
+function renderTickets() {
+  const list = document.getElementById('ticketList');
+  let tickets = appState.tickets.data;
+  const filter = appState.tickets.filter;
+
+  if (filter !== 'all') {
+    if (filter === 'open' || filter === 'closed') {
+      tickets = tickets.filter(t => t.status === filter);
+    } else {
+      tickets = tickets.filter(t => t.kind === filter);
+    }
+  }
+
+  if (tickets.length === 0) {
+    list.innerHTML = '<div class="state-empty"><p>No tickets found.</p></div>';
+    return;
+  }
+
+  list.innerHTML = tickets.map(ticket => {
+    const av = ticket.avatar ? `<img src="${avatarUrl(ticket.user_id, ticket.avatar)}" alt="${ticket.username || 'User'}">` : initials(ticket.username);
+    const msgs = (ticket.messages || []).map(m => {
+      // sender is either "user", "staff", or "staff:Username"
+      const isStaff = m.sender === 'staff' || m.sender.startsWith('staff:');
+      const side = isStaff ? 'staff' : 'user';
+      let label;
+      if (isStaff) {
+        label = m.sender.startsWith('staff:') ? m.sender.slice(6) : 'Staff';
+      } else {
+        label = ticket.username || 'User';
+      }
+      return `<div class="msg ${side}">
+        <span class="msg-sender">${label}</span>
+        <div class="msg-bubble">${escHtml(m.content)}</div>
+        <span class="msg-time">${formatTs(m.created_at)}</span>
+      </div>`;
+    }).join('');
+
+    return `<div class="ticket-card" data-id="${ticket.id}">
+      <div class="ticket-head" onclick="toggleTicket(${ticket.id})">
+        <div class="ticket-left">
+          <div class="ticket-avatar">${av}</div>
+          <div class="ticket-info">
+            <div class="ticket-user">${escHtml(ticket.username || ticket.user_id)}</div>
+            <div class="ticket-meta">#${ticket.id} · ${formatTs(ticket.created_at)}</div>
+          </div>
+        </div>
+        <div class="ticket-right">
+          <span class="badge badge-${ticket.kind}">${ticket.kind}</span>
+          <span class="badge badge-${ticket.status}">${ticket.status}</span>
+          <span class="chevron"></span>
+        </div>
+      </div>
+      <div class="ticket-body">
+        <div class="ticket-messages">
+          ${msgs || '<div class="no-messages">No messages yet.</div>'}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleTicket(id) {
+  const card = document.querySelector(`.ticket-card[data-id="${id}"]`);
+  if (card) card.classList.toggle('open');
+}
+
+function renderTicketPagination() {
+  const pg = document.getElementById('ticketPagination');
+  const { page, pages, total } = appState.tickets;
+  if (pages <= 1) { pg.style.display = 'none'; return; }
+  pg.style.display = 'flex';
+  document.getElementById('ticketPageInfo').textContent = `Page ${page} of ${pages} (${total} total)`;
+  document.getElementById('ticketPrevBtn').disabled = page <= 1;
+  document.getElementById('ticketNextBtn').disabled = page >= pages;
+}
+
+document.getElementById('ticketPrevBtn').addEventListener('click', () => loadTickets(appState.tickets.page - 1));
+document.getElementById('ticketNextBtn').addEventListener('click', () => loadTickets(appState.tickets.page + 1));
+
+document.querySelectorAll('[data-ticket-filter]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-ticket-filter]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    appState.tickets.filter = btn.dataset.ticketFilter;
+    renderTickets();
+  });
+});
+
+
+   LOGS
+
+async function loadLogs(page = 1) {
+  document.getElementById('logList').style.display = 'none';
+  document.getElementById('logEmpty').style.display = 'none';
+  document.getElementById('logLoading').style.display = 'block';
+  document.getElementById('logPagination').style.display = 'none';
+
+  const type = appState.logs.filter;
+  const url = `/api/staff/logs?page=${page}${type ? `&type=${type}` : ''}`;
+
+  try {
+    const res = await fetch(url, { credentials: 'include' });
+    const data = await res.json();
+
+    appState.logs.data = data.logs || [];
+    appState.logs.pages = data.pages || 1;
+    appState.logs.total = data.total || 0;
+    appState.logs.page = page;
+
+    document.getElementById('logLoading').style.display = 'none';
+
+    if (appState.logs.data.length === 0) {
+      document.getElementById('logEmpty').style.display = 'block';
+      return;
+    }
+
+    renderLogs();
+    renderLogPagination();
+  } catch (err) {
+    document.getElementById('logLoading').style.display = 'none';
+    document.getElementById('logEmpty').style.display = 'block';
+    document.getElementById('logEmpty').querySelector('p').textContent = 'Failed to load logs.';
+  }
+}
+
+function renderLogs() {
+  const list = document.getElementById('logList');
+  list.style.display = 'flex';
+  list.innerHTML = appState.logs.data.map(log => {
+    const actor = log.actor_tag || log.actor_id || 'Unknown';
+    const target = log.target_tag ? `→ <span>${escHtml(log.target_tag)}</span>` : '';
+
+    return `<div class="log-entry">
+      <span class="log-type-badge ${log.type}">${log.type.replace('_', ' ')}</span>
+      <div class="log-body">
+        <div class="log-actor">${escHtml(actor)} ${target}</div>
+        ${log.detail ? `<div class="log-detail">${escHtml(log.detail)}</div>` : ''}
+      </div>
+      <span class="log-time">${formatTs(log.created_at)}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderLogPagination() {
+  const pg = document.getElementById('logPagination');
+  const { page, pages, total } = appState.logs;
+  if (pages <= 1) { pg.style.display = 'none'; return; }
+  pg.style.display = 'flex';
+  document.getElementById('logPageInfo').textContent = `Page ${page} of ${pages} (${total} total)`;
+  document.getElementById('logPrevBtn').disabled = page <= 1;
+  document.getElementById('logNextBtn').disabled = page >= pages;
+}
+
+document.getElementById('logPrevBtn').addEventListener('click', () => loadLogs(appState.logs.page - 1));
+document.getElementById('logNextBtn').addEventListener('click', () => loadLogs(appState.logs.page + 1));
+
+document.querySelectorAll('[data-log-filter]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-log-filter]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    appState.logs.filter = btn.dataset.logFilter;
+    loadLogs(1);
+  });
+});
+
+
+
+function escHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+
+   INIT
+
+loadAuth();
 </script>
 </body>
-
 </html>
-
-</html>
-

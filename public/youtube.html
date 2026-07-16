@@ -513,6 +513,21 @@
     </div>
   </section>
 
+  <section class="creator-section" id="preston">
+    <div class="wrap">
+      <div class="creator-head">
+        <div class="creator-id">
+          <div class="mark" style="background:linear-gradient(135deg,#ffff00,#22ff00);">OR</div>
+          <div class="text">
+            <div class="label">Channel</div>
+            <h2>Preston's Civilization</h2>
+          </div>
+        </div>
+      </div>
+      <div class="video-grid" id="grid-preston"></div>
+    </div>
+  </section>
+
 </main>
 
 <footer>
@@ -565,7 +580,7 @@
 </footer>
 
 <script>
-/* ================================================================
+===========================================
    VIDEO DATA
    ----------------------------------------------------------------
    Add your own videos here. Each entry needs a YouTube video ID
@@ -578,7 +593,7 @@
 
    Leave an array empty ([]) if that creator has no videos yet —
    the section will show an empty state instead of breaking.
-   ================================================================ */
+   ===========================================
 
 const channels = {
   prite: [
@@ -604,6 +619,11 @@ const channels = {
   oracles: [
      { id: "k9KfiRk5Hh0", title: "Vacation Disaster", sub: "" },
   ],
+  preston: [
+     { id: "SpQ0Zy5hH9c", title: "Arctic Experiment", sub:""},
+     { id: "XhX65ZZseLI", title: "10 Countries Olympics", sub:""},
+     { id: "iz40Kmg_Xnk", title: "10 Countries Olympics", sub:""},
+  ]
 };
 
 function escapeHtml(str) {
