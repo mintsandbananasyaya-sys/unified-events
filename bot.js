@@ -9,7 +9,7 @@ const {
   EmbedBuilder,
 } = require("discord.js");
 
-const { getResponse } = require("./brain");
+const { getBestAnswer } = require("./bot/search");
 const db = require("./database");
 
 /* ================= ENV VALIDATION ================= */
@@ -759,11 +759,16 @@ client.on("interactionCreate", async (interaction) => {
   }
 
   /* ================= /ask ================= */
-  if (interaction.commandName === "ask") {
-    const q = interaction.options.getString("question");
-    const reply = getResponse(q);
-    return safeReply(interaction, { content: reply, flags: MessageFlags.Ephemeral });
-  }
+const q = interaction.options.getString("question");
+
+const askReply = getBestAnswer(q);
+
+    "I couldn't find anything about that. Try rewording your question.";
+
+return safeReply(interaction, {
+    content: reply,
+    flags: MessageFlags.Ephemeral
+});
 
   /* ================= /notify ================= */
   if (interaction.commandName === "notify") {
@@ -1119,12 +1124,15 @@ client.on("messageCreate", async (message) => {
     const content = message.content?.trim();
     if (!content) return;
 
-    if (message.guild && FAQ_CHANNEL_ID && message.channelId === FAQ_CHANNEL_ID) {
-      const reply = getResponse(content);
-      return message.reply(reply);
-    }
+if (message.guild && FAQ_CHANNEL_ID && message.channelId === FAQ_CHANNEL_ID) {
+  const reply =
+    getBestAnswer(content) ??
+    "I couldn't find anything about that.";
 
-    if (message.guild) {
+  return message.reply(reply);
+} // ← THIS BRACE WAS MISSING
+
+if (message.guild) {
       const session = await getSessionByThread(message.channelId);
       if (!session) return;
 
@@ -1212,12 +1220,17 @@ client.on("messageCreate", async (message) => {
       return message.reply("Didn't catch that — please reply with a number from 1 to 4, or run `/forms` again.");
     }
 
-    if (mentionsFormsKeyword(content)) {
-      return message.reply("Looking for support, staff, or to apply? Run `/forms` to get started.");
+       if (mentionsFormsKeyword(content)) {
+      return message.reply(
+        "Looking for support, staff, or to apply? Run `/forms` to get started."
+      );
     }
 
-    const reply = getResponse(content);
-    return message.reply(reply);
+    const reply = getBestAnswer(content);
+
+    if (reply) {
+      return message.reply(reply);
+    }
   } catch (err) {
     console.error("bot error:", err);
   }
