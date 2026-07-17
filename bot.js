@@ -1339,7 +1339,14 @@ if (
 const previousMessages = getConversationMemory(message.author.id);
 
 const searchQuestion = content;
-const results = searchKnowledge(searchQuestion, 5);
+const rawResults = searchKnowledge(searchQuestion, 5);
+
+// Fuse scores: 0 = excellent match, 1 = poor match
+const results = rawResults.filter(
+  (result) =>
+    typeof result.score === "number" &&
+    result.score <= 0.35
+);
 
 if (results.length === 0) {
   const conversationContext =
