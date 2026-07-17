@@ -58,6 +58,62 @@ const STAFF_ROLE_IDS = (process.env.STAFF_ROLE_IDS || "")
 const FORMS_KEYWORDS = ["support", "help", "staff", "apply"];
 const MAX_RELAY_LENGTH = 1800;
 
+/* ================= AI CONVERSATION MEMORY ================= */
+
+const conversationMemory = new Map();
+
+const MEMORY_TTL_MS = 10 * 60 * 1000;
+const MAX_MEMORY_EXCHANGES = 3;
+
+function getConversationMemory(userId) {
+  const memory = conversationMemory.get(userId);
+
+  if (!memory) {
+    return [];
+  }
+
+  if (Date.now() - memory.updatedAt > MEMORY_TTL_MS) {
+    conversationMemory.delete(userId);
+    return [];
+  }
+
+  return memory.messages;
+}
+
+function saveConversationExchange(userId, question, answer) {
+  const messages = getConversationMemory(userId);
+
+  messages.push({
+    question,
+    answer,
+  });
+
+  while (messages.length > MAX_MEMORY_EXCHANGES) {
+    messages.shift();
+  }
+
+  conversationMemory.set(userId, {
+    messages,
+    updatedAt: Date.now(),
+  });
+}
+
+function formatConversationMemory(messages) {
+  if (!messages.length) {
+    return "No previous conversation.";
+  }
+
+  return messages
+    .map((entry, index) => {
+      return [
+        `Previous exchange ${index + 1}:`,
+        `User: ${entry.question}`,
+        `Assistant: ${entry.answer}`,
+      ].join("\n");
+    })
+    .join("\n\n");
+}
+
 /* ================= CLIENT ================= */
 
 const client = new Client({
@@ -767,13 +823,13 @@ client.on("interactionCreate", async (interaction) => {
   /* ================= /ask ================= */
 const q = interaction.options.getString("question");
 
-const askReply = getBestAnswer(q);
-
-    "I couldn't find anything about that. Try rewording your question.";
+const askReply =
+  getBestAnswer(q) ??
+  "I couldn't find anything about that. Try rewording your question.";
 
 return safeReply(interaction, {
-    content: reply,
-    flags: MessageFlags.Ephemeral
+  content: askReply,
+  flags: MessageFlags.Ephemeral,
 });
 
   /* ================= /notify ================= */
@@ -1135,13 +1191,22 @@ if (
   FAQ_CHANNEL_ID &&
   message.channelId === FAQ_CHANNEL_ID
 ) {
-  const results = searchKnowledge(content, 3);
+  const previousMessages = getConversationMemory(message.author.id);
+
+const searchQuestion = previousMessages.length
+  ? `${previousMessages.at(-1).question} ${content}`
+  : content;
+
+const results = searchKnowledge(searchQuestion, 5);
 
   if (results.length === 0) {
     return message.reply(
       "I couldn't find anything about that in the Unified Events documentation."
     );
   }
+
+  const conversationContext =
+  formatConversationMemory(previousMessages);
 
   const context = results
     .map((result, index) => {
@@ -1154,14 +1219,39 @@ if (
     })
     .join("\n\n---\n\n");
 
-  const aiReply = await askAI(content, context);
+  const aiReply = await askAI(
+  content,
+  [
+    "Recent conversation:",
+    conversationContext,
+    "",
+    "Retrieved Unified Events documentation:",
+    context,
+  ].join("\n")
+);
 
   if (aiReply) {
-    return message.reply(aiReply.slice(0, 2000));
-  }
+  const finalReply = aiReply.slice(0, 2000);
 
-  // OpenRouter unavailable or free quota reached:
-  return message.reply(results[0].content.slice(0, 2000));
+  saveConversationExchange(
+    message.author.id,
+    content,
+    finalReply
+  );
+
+  return message.reply(finalReply);
+}
+
+// OpenRouter unavailable or free quota reached.
+const fallbackReply = results[0].content.slice(0, 2000);
+
+saveConversationExchange(
+  message.author.id,
+  content,
+  fallbackReply
+);
+
+return message.reply(fallbackReply);
 }
 
 if (message.guild) {
