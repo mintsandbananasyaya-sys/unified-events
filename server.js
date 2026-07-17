@@ -43,7 +43,7 @@ try {
   require("./bot.js");
   console.log("Bot loaded");
 } catch (err) {
-  console.log("Bot failed:", err.message);
+  console.error("Bot failed:", err);
 }
 
 /* =====================
