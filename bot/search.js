@@ -133,15 +133,54 @@ function searchKnowledge(question, limit = 3) {
     return [];
   }
 
-  return fuse.search(question.trim(), { limit }).map((result) => ({
-    id: result.item.id,
-    title: result.item.title,
-    category: result.item.category,
-    aliases: result.item.aliases,
-    content: result.item.content,
-    source: result.item.source,
-    score: result.score,
-  }));
+  const cleanedQuestion = question.trim();
+
+  const stopWords = new Set([
+    "what", "when", "where", "which", "who", "why", "how",
+    "does", "did", "have", "with", "from", "that", "this",
+    "should", "would", "could", "about", "your", "their",
+    "been", "were", "was", "are", "and", "the", "for",
+    "but", "not", "can", "into", "then"
+  ]);
+
+  const terms = cleanedQuestion
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, " ")
+    .split(/\s+/)
+    .filter((word) => word.length >= 4 && !stopWords.has(word));
+
+  const merged = new Map();
+
+  function addResults(results) {
+    for (const result of results) {
+      const existing = merged.get(result.item.id);
+
+      if (!existing || result.score < existing.score) {
+        merged.set(result.item.id, result);
+      }
+    }
+  }
+
+  // Search the full question.
+  addResults(fuse.search(cleanedQuestion, { limit: 10 }));
+
+  // Also search important words separately.
+  for (const term of terms) {
+    addResults(fuse.search(term, { limit: 5 }));
+  }
+
+  return [...merged.values()]
+    .sort((a, b) => a.score - b.score)
+    .slice(0, limit)
+    .map((result) => ({
+      id: result.item.id,
+      title: result.item.title,
+      category: result.item.category,
+      aliases: result.item.aliases,
+      content: result.item.content,
+      source: result.item.source,
+      score: result.score,
+    }));
 }
 
 function getBestAnswer(question) {
