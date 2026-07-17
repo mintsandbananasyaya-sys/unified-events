@@ -160,6 +160,16 @@ Initiation request recorded. The archive is now active for queries.
 
 ---
 
+## Milo
+
+Milo shall be sacrified to Homonculus!
+
+<!-- aliases: `Milo`, `Sacrifice`, `Milo_Teddy` -->
+
+<!-- source: brain.js; id: brain-21 -->
+
+---
+
 ## Oracles Weakness
 
 Unconfirmed historical interpretation suggests that Oracles may struggle against highly chaotic or unpredictable opponents, where pre-planned strategy becomes harder to execute. Their structured approach is a strength in stable scenarios but can be a vulnerability when forced into improvisation.
