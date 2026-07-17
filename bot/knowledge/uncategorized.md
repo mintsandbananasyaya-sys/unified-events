@@ -162,7 +162,7 @@ Initiation request recorded. The archive is now active for queries.
 
 ## Milo
 
-Milo shall be sacrified to Prite!
+Milo shall be sacrified to Homonculus!
 
 <!-- aliases: `Milo`, `Sacrifice`, `Milo_Teddy` -->
 
