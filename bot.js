@@ -1336,11 +1336,10 @@ if (
   FAQ_CHANNEL_ID &&
   message.channelId === FAQ_CHANNEL_ID
 ) {
-  const previousMessages = getConversationMemory(message.author.id);
+const previousMessages = getConversationMemory(message.author.id);
 
 const searchQuestion = content;
-
-
+const results = searchKnowledge(searchQuestion, 5);
 
 if (results.length === 0) {
   const conversationContext =
