@@ -162,6 +162,23 @@ function addKnowledgeArticle(article) {
   rebuildFuse();
 }
 
+function removeKnowledgeArticle(articleId) {
+  const formattedId = `database-${articleId}`;
+
+  const previousLength = knowledge.length;
+
+  knowledge = knowledge.filter(
+    (item) => item.id !== formattedId
+  );
+
+  if (knowledge.length !== previousLength) {
+    rebuildFuse();
+    return true;
+  }
+
+  return false;
+}
+
 function setDatabaseKnowledge(articles) {
   const databaseArticles = articles.map(formatDatabaseArticle);
 
@@ -249,5 +266,6 @@ module.exports = {
   searchKnowledge,
   getBestAnswer,
   addKnowledgeArticle,
+  removeKnowledgeArticle,
   setDatabaseKnowledge,
 };
