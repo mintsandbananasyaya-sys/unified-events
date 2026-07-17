@@ -93,6 +93,19 @@ const commands = [
     )
     .toJSON(),
 
+
+    new SlashCommandBuilder()
+  .setName("removeknowledge")
+  .setDescription("Remove an article from the bot's knowledge base")
+  .setDMPermission(false)
+  .addIntegerOption((option) =>
+    option
+      .setName("id")
+      .setDescription("The article ID shown when it was added")
+      .setRequired(true)
+      .setMinValue(1)
+  )
+  .toJSON(),
   new SlashCommandBuilder()
     .setName("forms")
     .setDescription("Open the support, report, application, or staff menu")
