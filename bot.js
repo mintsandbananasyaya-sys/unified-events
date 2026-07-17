@@ -181,6 +181,18 @@ async function setupTables() {
     )
   `);
 
+  await db.query(`
+  CREATE TABLE IF NOT EXISTS knowledge_articles (
+    id SERIAL PRIMARY KEY,
+    title TEXT NOT NULL,
+    aliases TEXT[] NOT NULL DEFAULT '{}',
+    content TEXT NOT NULL,
+    created_by TEXT NOT NULL,
+    created_at BIGINT NOT NULL,
+    updated_at BIGINT NOT NULL
+  )
+`);
+
   await db.query(`CREATE INDEX IF NOT EXISTS idx_tickets_user ON tickets(user_id)`);
   await db.query(`CREATE INDEX IF NOT EXISTS idx_ticket_messages_ticket ON ticket_messages(ticket_id)`);
   await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS ign TEXT`);
