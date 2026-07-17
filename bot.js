@@ -680,6 +680,53 @@ client.on("interactionCreate", async (interaction) => {
     );
   }
 
+  /* ================= /addknowledge ================= */
+if (interaction.commandName === "addknowledge") {
+  if (!memberCanNotify(interaction.member)) {
+    return safeReply(interaction, {
+      content: "You don't have permission to use this command.",
+      flags: MessageFlags.Ephemeral,
+    });
+  }
+
+  const title = interaction.options.getString("title").trim();
+  const answer = interaction.options.getString("answer").trim();
+
+  const aliasesInput =
+    interaction.options.getString("aliases") || "";
+
+  const aliases = aliasesInput
+    .split(",")
+    .map((alias) => alias.trim().toLowerCase())
+    .filter(Boolean);
+
+  const now = Date.now();
+
+  const { rows } = await db.query(
+    `
+      INSERT INTO knowledge_articles
+        (title, aliases, content, created_by, created_at, updated_at)
+      VALUES
+        ($1, $2, $3, $4, $5, $5)
+      RETURNING id
+    `,
+    [
+      title,
+      aliases,
+      answer,
+      interaction.user.id,
+      now,
+    ]
+  );
+
+  return safeReply(interaction, {
+    content:
+      `✅ Added knowledge article **#${rows[0].id} — ${title}**.\n` +
+      `Aliases: ${aliases.length ? aliases.join(", ") : "None"}`,
+    flags: MessageFlags.Ephemeral,
+  });
+}
+
   /* ================= /forms ================= */
   if (interaction.commandName === "forms") {
     if (await getSessionByUser(interaction.user.id)) {
