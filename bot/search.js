@@ -321,4 +321,4 @@ module.exports = {
   addKnowledgeArticle,
   removeKnowledgeArticle,
   setDatabaseKnowledge,
-
+};
