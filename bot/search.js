@@ -261,6 +261,31 @@ function searchKnowledge(question, limit = 3) {
     );
   }
 
+  const finalResults = [...merged.values()]
+  .sort((a, b) => a.score - b.score);
+
+console.log(
+  "[SEARCH]",
+  cleanedQuestion,
+  finalResults.slice(0, 3).map(r => ({
+    title: r.item.title,
+    score: r.score,
+    source: r.item.source
+  }))
+);
+
+return finalResults
+  .slice(0, limit)
+  .map((result) => ({
+    id: result.item.id,
+    title: result.item.title,
+    category: result.item.category,
+    aliases: result.item.aliases,
+    content: result.item.content,
+    source: result.item.source,
+    score: result.score,
+  }));
+
   return [...merged.values()]
     .sort((a, b) => a.score - b.score)
     .slice(0, limit)

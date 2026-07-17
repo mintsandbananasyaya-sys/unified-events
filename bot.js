@@ -17,7 +17,10 @@ const {
   setDatabaseKnowledge,
 } = require("./bot/search");
 
-const { askAI } = require("./bot/ai");
+const {
+  askAI,
+  askGeneralAI,
+} = require("./bot/ai");
 
 const db = require("./database");
 
@@ -1337,12 +1340,32 @@ if (
 
 const searchQuestion = content;
 
-const results = searchKnowledge(searchQuestion, 5);
+
 
 if (results.length === 0) {
-  return message.reply(
-    "I don't have information about that. Try asking a question related to Unified Events."
+  const conversationContext =
+    formatConversationMemory(previousMessages);
+
+  const generalReply = await askGeneralAI(
+    content,
+    conversationContext
   );
+
+  if (!generalReply) {
+    return message.reply(
+      "Sorry, I couldn't generate a response right now."
+    );
+  }
+
+  const finalReply = generalReply.slice(0, 2000);
+
+  saveConversationExchange(
+    message.author.id,
+    content,
+    finalReply
+  );
+
+  return message.reply(finalReply);
 }
 
   const conversationContext =
