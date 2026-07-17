@@ -12,6 +12,8 @@ const {
 const {
   getBestAnswer,
   searchKnowledge,
+  addKnowledgeArticle,
+  setDatabaseKnowledge,
 } = require("./bot/search");
 
 const { askAI } = require("./bot/ai");
@@ -192,6 +194,18 @@ async function setupTables() {
     updated_at BIGINT NOT NULL
   )
 `);
+
+const { rows: savedKnowledge } = await db.query(`
+  SELECT id, title, aliases, content
+  FROM knowledge_articles
+  ORDER BY id ASC
+`);
+
+setDatabaseKnowledge(savedKnowledge);
+
+console.log(
+  `Loaded ${savedKnowledge.length} database knowledge article(s)`
+);
 
   await db.query(`CREATE INDEX IF NOT EXISTS idx_tickets_user ON tickets(user_id)`);
   await db.query(`CREATE INDEX IF NOT EXISTS idx_ticket_messages_ticket ON ticket_messages(ticket_id)`);
@@ -703,21 +717,30 @@ if (interaction.commandName === "addknowledge") {
   const now = Date.now();
 
   const { rows } = await db.query(
-    `
-      INSERT INTO knowledge_articles
-        (title, aliases, content, created_by, created_at, updated_at)
-      VALUES
-        ($1, $2, $3, $4, $5, $5)
-      RETURNING id
-    `,
-    [
-      title,
-      aliases,
-      answer,
-      interaction.user.id,
-      now,
-    ]
-  );
+  `
+    INSERT INTO knowledge_articles
+      (title, aliases, content, created_by, created_at, updated_at)
+    VALUES
+      ($1, $2, $3, $4, $5, $5)
+    RETURNING id, title, aliases, content
+  `,
+  [
+    title,
+    aliases,
+    answer,
+    interaction.user.id,
+    now,
+  ]
+);
+
+addKnowledgeArticle(rows[0]);
+
+return safeReply(interaction, {
+  content:
+    `✅ Added knowledge article **#${rows[0].id} — ${title}**.\n` +
+    `Aliases: ${aliases.length ? aliases.join(", ") : "None"}`,
+  flags: MessageFlags.Ephemeral,
+});
 
   return safeReply(interaction, {
     content:
