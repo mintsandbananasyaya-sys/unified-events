@@ -736,6 +736,27 @@ if (interaction.commandName === "addknowledge") {
 
 addKnowledgeArticle(rows[0]);
 
+await createLog({
+  type: "ADD_KNOWLEDGE",
+  actorId: interaction.user.id,
+  actorTag: interaction.user.tag,
+  detail:
+    `Article ID: ${rows[0].id} | ` +
+    `Title: ${title} | ` +
+    `Aliases: ${aliases.length ? aliases.join(", ") : "None"} | ` +
+    `Answer: ${answer}`,
+  guildId: interaction.guild?.id,
+  channelId: interaction.channelId,
+});
+
+await postToLogsChannel(
+  `🧠 **Knowledge added** — ${interaction.user.tag}\n` +
+  `**ID:** ${rows[0].id}\n` +
+  `**Title:** ${title}\n` +
+  `**Aliases:** ${aliases.length ? aliases.join(", ") : "None"}\n` +
+  `**Answer:** ${truncateForLog(answer)}`
+);
+
 return safeReply(interaction, {
   content:
     `✅ Added knowledge article **#${rows[0].id} — ${title}**.\n` +
