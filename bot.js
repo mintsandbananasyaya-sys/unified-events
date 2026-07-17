@@ -9,7 +9,13 @@ const {
   EmbedBuilder,
 } = require("discord.js");
 
-const { getBestAnswer } = require("./bot/search");
+const {
+  getBestAnswer,
+  searchKnowledge,
+} = require("./bot/search");
+
+const { askAI } = require("./bot/ai");
+
 const db = require("./database");
 
 /* ================= ENV VALIDATION ================= */
@@ -1124,13 +1130,39 @@ client.on("messageCreate", async (message) => {
     const content = message.content?.trim();
     if (!content) return;
 
-if (message.guild && FAQ_CHANNEL_ID && message.channelId === FAQ_CHANNEL_ID) {
-  const reply =
-    getBestAnswer(content) ??
-    "I couldn't find anything about that.";
+if (
+  message.guild &&
+  FAQ_CHANNEL_ID &&
+  message.channelId === FAQ_CHANNEL_ID
+) {
+  const results = searchKnowledge(content, 3);
 
-  return message.reply(reply);
-} // ← THIS BRACE WAS MISSING
+  if (results.length === 0) {
+    return message.reply(
+      "I couldn't find anything about that in the Unified Events documentation."
+    );
+  }
+
+  const context = results
+    .map((result, index) => {
+      return [
+        `Document ${index + 1}`,
+        `Title: ${result.title}`,
+        `Category: ${result.category}`,
+        result.content,
+      ].join("\n");
+    })
+    .join("\n\n---\n\n");
+
+  const aiReply = await askAI(content, context);
+
+  if (aiReply) {
+    return message.reply(aiReply.slice(0, 2000));
+  }
+
+  // OpenRouter unavailable or free quota reached:
+  return message.reply(results[0].content.slice(0, 2000));
+}
 
 if (message.guild) {
       const session = await getSessionByThread(message.channelId);
@@ -1226,11 +1258,27 @@ if (message.guild) {
       );
     }
 
-    const reply = getBestAnswer(content);
+const reply = getBestAnswer(content);
 
-    if (reply) {
-      return message.reply(reply);
-    }
+if (reply) {
+  // If Fuse found a good answer, use it.
+  return message.reply(reply);
+}
+
+// Nothing found? Let the AI try.
+const aiReply = await askAI(
+  content,
+  "No relevant documentation was found."
+);
+
+if (aiReply) {
+  return message.reply(aiReply);
+}
+
+return message.reply(
+  "I couldn't find anything about that."
+);
+
   } catch (err) {
     console.error("bot error:", err);
   }
