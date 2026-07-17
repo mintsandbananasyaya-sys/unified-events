@@ -110,7 +110,7 @@ let fuse;
 
 const fuseOptions = {
   includeScore: true,
-  threshold: 0.5,
+  threshold: 0.32,
   ignoreLocation: true,
   minMatchCharLength: 2,
   keys: [
@@ -197,26 +197,48 @@ function searchKnowledge(question, limit = 3) {
     return [];
   }
 
-  const cleanedQuestion = question.trim();
+  const cleanedQuestion = question
+    .trim()
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, " ")
+    .replace(/\s+/g, " ");
 
   const stopWords = new Set([
     "what", "when", "where", "which", "who", "why", "how",
     "does", "did", "have", "with", "from", "that", "this",
     "should", "would", "could", "about", "your", "their",
     "been", "were", "was", "are", "and", "the", "for",
-    "but", "not", "can", "into", "then"
+    "but", "not", "can", "into", "then", "just", "really",
+    "feel", "feeling", "thing", "doing", "anymore", "hello",
+    "hey", "okay", "yeah", "yes", "nope"
   ]);
 
   const terms = cleanedQuestion
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, " ")
     .split(/\s+/)
-    .filter((word) => word.length >= 4 && !stopWords.has(word));
+    .filter(
+      (word) =>
+        word.length >= 4 &&
+        !stopWords.has(word)
+    );
+
+  // Reject questions with no useful searchable words.
+  if (terms.length === 0) {
+    return [];
+  }
 
   const merged = new Map();
 
-  function addResults(results) {
+  function addResults(results, maximumScore) {
     for (const result of results) {
+      if (typeof result.score !== "number") {
+        continue;
+      }
+
+      // Do not keep weak or unrelated matches.
+      if (result.score > maximumScore) {
+        continue;
+      }
+
       const existing = merged.get(result.item.id);
 
       if (!existing || result.score < existing.score) {
@@ -225,13 +247,44 @@ function searchKnowledge(question, limit = 3) {
     }
   }
 
-  // Search the full question.
-  addResults(fuse.search(cleanedQuestion, { limit: 10 }));
+  // Full-question matches may be slightly broader.
+  addResults(
+    fuse.search(cleanedQuestion, { limit: 10 }),
+    0.32
+  );
 
-  // Also search important words separately.
+  // Single-word searches must be much stronger.
   for (const term of terms) {
-    addResults(fuse.search(term, { limit: 5 }));
+    addResults(
+      fuse.search(term, { limit: 5 }),
+      0.2
+    );
   }
+
+  const finalResults = [...merged.values()]
+  .sort((a, b) => a.score - b.score);
+
+console.log(
+  "[SEARCH]",
+  cleanedQuestion,
+  finalResults.slice(0, 3).map(r => ({
+    title: r.item.title,
+    score: r.score,
+    source: r.item.source
+  }))
+);
+
+return finalResults
+  .slice(0, limit)
+  .map((result) => ({
+    id: result.item.id,
+    title: result.item.title,
+    category: result.item.category,
+    aliases: result.item.aliases,
+    content: result.item.content,
+    source: result.item.source,
+    score: result.score,
+  }));
 
   return [...merged.values()]
     .sort((a, b) => a.score - b.score)
@@ -255,7 +308,7 @@ function getBestAnswer(question) {
   }
 
   // Lower score means a better match.
-  if (best.score > 0.4) {
+  if (best.score > 0.28) {
     return null;
   }
 
