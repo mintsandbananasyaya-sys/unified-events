@@ -101,11 +101,16 @@ function loadKnowledge() {
   return documents;
 }
 
-const knowledge = loadKnowledge();
 
-const fuse = new Fuse(knowledge, {
+
+const markdownKnowledge = loadKnowledge();
+
+let knowledge = [...markdownKnowledge];
+let fuse;
+
+const fuseOptions = {
   includeScore: true,
-  threshold: 0.5,
+  threshold: 0.32,
   ignoreLocation: true,
   minMatchCharLength: 2,
   keys: [
@@ -126,33 +131,114 @@ const fuse = new Fuse(knowledge, {
       weight: 0.1,
     },
   ],
-});
+};
+
+function rebuildFuse() {
+  fuse = new Fuse(knowledge, fuseOptions);
+}
+
+function formatDatabaseArticle(article) {
+  return {
+    id: `database-${article.id}`,
+    title: article.title,
+    category: "staff-added",
+    aliases: Array.isArray(article.aliases)
+      ? article.aliases.map((alias) => alias.toLowerCase())
+      : [],
+    content: article.content,
+    source: "database",
+  };
+}
+
+function addKnowledgeArticle(article) {
+  const formatted = formatDatabaseArticle(article);
+
+  // Remove an older copy if this article is being reloaded.
+  knowledge = knowledge.filter(
+    (item) => item.id !== formatted.id
+  );
+
+  knowledge.push(formatted);
+  rebuildFuse();
+}
+
+function removeKnowledgeArticle(articleId) {
+  const formattedId = `database-${articleId}`;
+
+  const previousLength = knowledge.length;
+
+  knowledge = knowledge.filter(
+    (item) => item.id !== formattedId
+  );
+
+  if (knowledge.length !== previousLength) {
+    rebuildFuse();
+    return true;
+  }
+
+  return false;
+}
+
+function setDatabaseKnowledge(articles) {
+  const databaseArticles = articles.map(formatDatabaseArticle);
+
+  knowledge = [
+    ...markdownKnowledge,
+    ...databaseArticles,
+  ];
+
+  rebuildFuse();
+}
+
+rebuildFuse();
 
 function searchKnowledge(question, limit = 3) {
   if (typeof question !== "string" || !question.trim()) {
     return [];
   }
 
-  const cleanedQuestion = question.trim();
+  const cleanedQuestion = question
+    .trim()
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, " ")
+    .replace(/\s+/g, " ");
 
   const stopWords = new Set([
     "what", "when", "where", "which", "who", "why", "how",
     "does", "did", "have", "with", "from", "that", "this",
     "should", "would", "could", "about", "your", "their",
     "been", "were", "was", "are", "and", "the", "for",
-    "but", "not", "can", "into", "then"
+    "but", "not", "can", "into", "then", "just", "really",
+    "feel", "feeling", "thing", "doing", "anymore", "hello",
+    "hey", "okay", "yeah", "yes", "nope"
   ]);
 
   const terms = cleanedQuestion
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, " ")
     .split(/\s+/)
-    .filter((word) => word.length >= 4 && !stopWords.has(word));
+    .filter(
+      (word) =>
+        word.length >= 4 &&
+        !stopWords.has(word)
+    );
+
+  // Reject questions with no useful searchable words.
+  if (terms.length === 0) {
+    return [];
+  }
 
   const merged = new Map();
 
-  function addResults(results) {
+  function addResults(results, maximumScore) {
     for (const result of results) {
+      if (typeof result.score !== "number") {
+        continue;
+      }
+
+      // Do not keep weak or unrelated matches.
+      if (result.score > maximumScore) {
+        continue;
+      }
+
       const existing = merged.get(result.item.id);
 
       if (!existing || result.score < existing.score) {
@@ -161,12 +247,18 @@ function searchKnowledge(question, limit = 3) {
     }
   }
 
-  // Search the full question.
-  addResults(fuse.search(cleanedQuestion, { limit: 10 }));
+  // Full-question matches may be slightly broader.
+  addResults(
+    fuse.search(cleanedQuestion, { limit: 10 }),
+    0.32
+  );
 
-  // Also search important words separately.
+  // Single-word searches must be much stronger.
   for (const term of terms) {
-    addResults(fuse.search(term, { limit: 5 }));
+    addResults(
+      fuse.search(term, { limit: 5 }),
+      0.2
+    );
   }
 
   return [...merged.values()]
@@ -191,7 +283,7 @@ function getBestAnswer(question) {
   }
 
   // Lower score means a better match.
-  if (best.score > 0.4) {
+  if (best.score > 0.28) {
     return null;
   }
 
@@ -201,4 +293,7 @@ function getBestAnswer(question) {
 module.exports = {
   searchKnowledge,
   getBestAnswer,
+  addKnowledgeArticle,
+  removeKnowledgeArticle,
+  setDatabaseKnowledge,
 };

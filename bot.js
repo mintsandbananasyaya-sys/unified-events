@@ -12,6 +12,9 @@ const {
 const {
   getBestAnswer,
   searchKnowledge,
+  addKnowledgeArticle,
+  removeKnowledgeArticle,
+  setDatabaseKnowledge,
 } = require("./bot/search");
 
 const { askAI } = require("./bot/ai");
@@ -192,6 +195,18 @@ async function setupTables() {
     updated_at BIGINT NOT NULL
   )
 `);
+
+const { rows: savedKnowledge } = await db.query(`
+  SELECT id, title, aliases, content
+  FROM knowledge_articles
+  ORDER BY id ASC
+`);
+
+setDatabaseKnowledge(savedKnowledge);
+
+console.log(
+  `Loaded ${savedKnowledge.length} database knowledge article(s)`
+);
 
   await db.query(`CREATE INDEX IF NOT EXISTS idx_tickets_user ON tickets(user_id)`);
   await db.query(`CREATE INDEX IF NOT EXISTS idx_ticket_messages_ticket ON ticket_messages(ticket_id)`);
@@ -680,6 +695,118 @@ client.on("interactionCreate", async (interaction) => {
     );
   }
 
+  /* ================= /addknowledge ================= */
+if (interaction.commandName === "addknowledge") {
+  if (!memberCanNotify(interaction.member)) {
+    return safeReply(interaction, {
+      content: "You don't have permission to use this command.",
+      flags: MessageFlags.Ephemeral,
+    });
+  }
+
+  const title = interaction.options.getString("title").trim();
+  const answer = interaction.options.getString("answer").trim();
+
+  const aliasesInput =
+    interaction.options.getString("aliases") || "";
+
+  const aliases = aliasesInput
+    .split(",")
+    .map((alias) => alias.trim().toLowerCase())
+    .filter(Boolean);
+
+  const now = Date.now();
+
+  const { rows } = await db.query(
+  `
+    INSERT INTO knowledge_articles
+      (title, aliases, content, created_by, created_at, updated_at)
+    VALUES
+      ($1, $2, $3, $4, $5, $5)
+    RETURNING id, title, aliases, content
+  `,
+  [
+    title,
+    aliases,
+    answer,
+    interaction.user.id,
+    now,
+  ]
+);
+
+addKnowledgeArticle(rows[0]);
+
+await createLog({
+  type: "ADD_KNOWLEDGE",
+  actorId: interaction.user.id,
+  actorTag: interaction.user.tag,
+  detail:
+    `Article ID: ${rows[0].id} | ` +
+    `Title: ${title} | ` +
+    `Aliases: ${aliases.length ? aliases.join(", ") : "None"} | ` +
+    `Answer: ${answer}`,
+  guildId: interaction.guild?.id,
+  channelId: interaction.channelId,
+});
+
+await postToLogsChannel(
+  `🧠 **Knowledge added** — ${interaction.user.tag}\n` +
+  `**ID:** ${rows[0].id}\n` +
+  `**Title:** ${title}\n` +
+  `**Aliases:** ${aliases.length ? aliases.join(", ") : "None"}\n` +
+  `**Answer:** ${truncateForLog(answer)}`
+);
+
+return safeReply(interaction, {
+  content:
+    `✅ Added knowledge article **#${rows[0].id} — ${title}**.\n` +
+    `Aliases: ${aliases.length ? aliases.join(", ") : "None"}`,
+  flags: MessageFlags.Ephemeral,
+});
+
+  return safeReply(interaction, {
+    content:
+      `✅ Added knowledge article **#${rows[0].id} — ${title}**.\n` +
+      `Aliases: ${aliases.length ? aliases.join(", ") : "None"}`,
+    flags: MessageFlags.Ephemeral,
+  });
+}
+
+/* ================= /removeknowledge ================= */
+if (interaction.commandName === "removeknowledge") {
+  if (!memberCanNotify(interaction.member)) {
+    return safeReply(interaction, {
+      content: "You don't have permission to use this command.",
+      flags: MessageFlags.Ephemeral,
+    });
+  }
+
+  const articleId = interaction.options.getInteger("id");
+
+  const { rows } = await db.query(
+    `
+      DELETE FROM knowledge_articles
+      WHERE id = $1
+      RETURNING id, title
+    `,
+    [articleId]
+  );
+
+  if (rows.length === 0) {
+    return safeReply(interaction, {
+      content: `⚠️ No staff-added knowledge article with ID **#${articleId}** exists.`,
+      flags: MessageFlags.Ephemeral,
+    });
+  }
+
+  removeKnowledgeArticle(articleId);
+
+  return safeReply(interaction, {
+    content: `✅ Removed knowledge article **#${articleId} — ${rows[0].title}**.`,
+    flags: MessageFlags.Ephemeral,
+  });
+}
+
   /* ================= /forms ================= */
   if (interaction.commandName === "forms") {
     if (await getSessionByUser(interaction.user.id)) {
@@ -832,17 +959,20 @@ client.on("interactionCreate", async (interaction) => {
     return safeReply(interaction, { content: `Sent to <#${targetChannel.id}>.`, flags: MessageFlags.Ephemeral });
   }
 
-  /* ================= /ask ================= */
-const q = interaction.options.getString("question");
 
-const askReply =
-  getBestAnswer(q) ??
-  "I couldn't find anything about that. Try rewording your question.";
+/* ================= /ask ================= */
+if (interaction.commandName === "ask") {
+  const q = interaction.options.getString("question", true).trim();
 
-return safeReply(interaction, {
-  content: askReply,
-  flags: MessageFlags.Ephemeral,
-});
+  const askReply =
+    getBestAnswer(q) ??
+    "I couldn't find anything about that. Try rewording your question.";
+
+  return safeReply(interaction, {
+    content: askReply,
+    flags: MessageFlags.Ephemeral,
+  });
+}
 
   /* ================= /notify ================= */
   if (interaction.commandName === "notify") {
@@ -1205,17 +1335,15 @@ if (
 ) {
   const previousMessages = getConversationMemory(message.author.id);
 
-const searchQuestion = previousMessages.length
-  ? `${previousMessages.at(-1).question} ${content}`
-  : content;
+const searchQuestion = content;
 
 const results = searchKnowledge(searchQuestion, 5);
 
-  if (results.length === 0) {
-    return message.reply(
-      "I couldn't find anything about that in the Unified Events documentation."
-    );
-  }
+if (results.length === 0) {
+  return message.reply(
+    "I don't have information about that. Try asking a question related to Unified Events."
+  );
+}
 
   const conversationContext =
   formatConversationMemory(previousMessages);
