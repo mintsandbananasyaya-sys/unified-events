@@ -13,6 +13,7 @@ const {
   getBestAnswer,
   searchKnowledge,
   addKnowledgeArticle,
+  removeKnowledgeArticle,
   setDatabaseKnowledge,
 } = require("./bot/search");
 
@@ -746,6 +747,41 @@ return safeReply(interaction, {
     content:
       `✅ Added knowledge article **#${rows[0].id} — ${title}**.\n` +
       `Aliases: ${aliases.length ? aliases.join(", ") : "None"}`,
+    flags: MessageFlags.Ephemeral,
+  });
+}
+
+/* ================= /removeknowledge ================= */
+if (interaction.commandName === "removeknowledge") {
+  if (!memberCanNotify(interaction.member)) {
+    return safeReply(interaction, {
+      content: "You don't have permission to use this command.",
+      flags: MessageFlags.Ephemeral,
+    });
+  }
+
+  const articleId = interaction.options.getInteger("id");
+
+  const { rows } = await db.query(
+    `
+      DELETE FROM knowledge_articles
+      WHERE id = $1
+      RETURNING id, title
+    `,
+    [articleId]
+  );
+
+  if (rows.length === 0) {
+    return safeReply(interaction, {
+      content: `⚠️ No staff-added knowledge article with ID **#${articleId}** exists.`,
+      flags: MessageFlags.Ephemeral,
+    });
+  }
+
+  removeKnowledgeArticle(articleId);
+
+  return safeReply(interaction, {
+    content: `✅ Removed knowledge article **#${articleId} — ${rows[0].title}**.`,
     flags: MessageFlags.Ephemeral,
   });
 }
