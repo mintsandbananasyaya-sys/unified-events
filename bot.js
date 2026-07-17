@@ -959,17 +959,20 @@ if (interaction.commandName === "removeknowledge") {
     return safeReply(interaction, { content: `Sent to <#${targetChannel.id}>.`, flags: MessageFlags.Ephemeral });
   }
 
-  /* ================= /ask ================= */
-const q = interaction.options.getString("question");
 
-const askReply =
-  getBestAnswer(q) ??
-  "I couldn't find anything about that. Try rewording your question.";
+/* ================= /ask ================= */
+if (interaction.commandName === "ask") {
+  const q = interaction.options.getString("question", true).trim();
 
-return safeReply(interaction, {
-  content: askReply,
-  flags: MessageFlags.Ephemeral,
-});
+  const askReply =
+    getBestAnswer(q) ??
+    "I couldn't find anything about that. Try rewording your question.";
+
+  return safeReply(interaction, {
+    content: askReply,
+    flags: MessageFlags.Ephemeral,
+  });
+}
 
   /* ================= /notify ================= */
   if (interaction.commandName === "notify") {
