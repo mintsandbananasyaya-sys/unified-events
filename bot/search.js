@@ -101,9 +101,14 @@ function loadKnowledge() {
   return documents;
 }
 
-const knowledge = loadKnowledge();
 
-const fuse = new Fuse(knowledge, {
+
+const markdownKnowledge = loadKnowledge();
+
+let knowledge = [...markdownKnowledge];
+let fuse;
+
+const fuseOptions = {
   includeScore: true,
   threshold: 0.5,
   ignoreLocation: true,
@@ -126,7 +131,49 @@ const fuse = new Fuse(knowledge, {
       weight: 0.1,
     },
   ],
-});
+};
+
+function rebuildFuse() {
+  fuse = new Fuse(knowledge, fuseOptions);
+}
+
+function formatDatabaseArticle(article) {
+  return {
+    id: `database-${article.id}`,
+    title: article.title,
+    category: "staff-added",
+    aliases: Array.isArray(article.aliases)
+      ? article.aliases.map((alias) => alias.toLowerCase())
+      : [],
+    content: article.content,
+    source: "database",
+  };
+}
+
+function addKnowledgeArticle(article) {
+  const formatted = formatDatabaseArticle(article);
+
+  // Remove an older copy if this article is being reloaded.
+  knowledge = knowledge.filter(
+    (item) => item.id !== formatted.id
+  );
+
+  knowledge.push(formatted);
+  rebuildFuse();
+}
+
+function setDatabaseKnowledge(articles) {
+  const databaseArticles = articles.map(formatDatabaseArticle);
+
+  knowledge = [
+    ...markdownKnowledge,
+    ...databaseArticles,
+  ];
+
+  rebuildFuse();
+}
+
+rebuildFuse();
 
 function searchKnowledge(question, limit = 3) {
   if (typeof question !== "string" || !question.trim()) {
@@ -201,4 +248,6 @@ function getBestAnswer(question) {
 module.exports = {
   searchKnowledge,
   getBestAnswer,
+  addKnowledgeArticle,
+  setDatabaseKnowledge,
 };
